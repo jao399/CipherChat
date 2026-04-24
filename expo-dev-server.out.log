@@ -1,0 +1,22 @@
+Starting project at C:\Users\amgd3\Desktop\CipherChat
+Starting Metro Bundler
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+iOS .\index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+iOS .\index.ts ▓░░░░░░░░░░░░░░░  9.0% ( 17/118)
+iOS .\index.ts ▓▓▓▓▓░░░░░░░░░░░ 34.8% (246/417)
+iOS .\index.ts ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 73.6% (790/921)
+iOS .\index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.8% (1181/1182)
+iOS Bundled 16407ms index.ts (1192 modules)
+iOS .\index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+iOS Bundled 243ms index.ts (1 module)
+Android .\index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android .\index.ts ▓▓▓▓▓▓▓▓░░░░░░░░ 55.5% (563/756)
+Android .\index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.6% (989/996)
+Android .\index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (1193/1193)
+Android Bundled 11106ms index.ts (1193 modules)
+iOS .\index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+iOS Bundled 210ms index.ts (1 module)
+Android .\index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 424ms index.ts (1 module)
+iOS Bundled 584ms index.ts (1 module)
