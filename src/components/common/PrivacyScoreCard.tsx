@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Line } from 'react-native-svg';
 
-import { colors, radii, spacing, typography } from '../../theme';
+import { colors, spacing, typography } from '../../theme';
 
 type PrivacyScoreCardProps = {
   score: number;
@@ -16,21 +16,40 @@ export function PrivacyScoreCard({ score }: PrivacyScoreCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.ring}>
-        <Svg width={174} height={174} viewBox="0 0 174 174">
-          <Circle cx="87" cy="87" r="80" stroke="rgba(255,255,255,0.06)" strokeWidth="1" fill="none" />
-          <Circle cx="87" cy="87" r="62" stroke="rgba(139,61,255,0.24)" strokeWidth="14" fill="none" />
+        <Svg width={236} height={236} viewBox="0 0 236 236">
+          {[102, 82, 62, 42].map((ring) => (
+            <Circle key={ring} cx="118" cy="118" r={ring} stroke="rgba(255,255,255,0.055)" strokeWidth="1" fill="none" />
+          ))}
+          {[0, 30, 60, 90, 120, 150].map((angle) => {
+            const radians = (Math.PI * angle) / 180;
+            const x = Math.cos(radians) * 106;
+            const y = Math.sin(radians) * 106;
+            return (
+              <Line
+                key={angle}
+                x1={118 - x}
+                y1={118 - y}
+                x2={118 + x}
+                y2={118 + y}
+                stroke="rgba(124,45,255,0.16)"
+                strokeWidth="1"
+              />
+            );
+          })}
+          <Circle cx="118" cy="118" r="66" stroke="rgba(124,45,255,0.45)" strokeWidth="15" fill="none" />
+          <Circle cx="118" cy="118" r="88" stroke="rgba(30,112,255,0.42)" strokeWidth="2" fill="none" />
           <Circle
-            cx="87"
-            cy="87"
+            cx="118"
+            cy="118"
             r={radius}
             stroke={colors.security}
-            strokeWidth="14"
+            strokeWidth="15"
             fill="none"
             strokeLinecap="round"
             strokeDasharray={`${circumference} ${circumference}`}
             strokeDashoffset={offset}
             rotation="-90"
-            origin="87, 87"
+            origin="118, 118"
           />
         </Svg>
         <View style={styles.shield}>
@@ -47,16 +66,12 @@ export function PrivacyScoreCard({ score }: PrivacyScoreCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.22)',
-    backgroundColor: 'rgba(17,17,26,0.86)',
-    padding: spacing.xl,
     alignItems: 'center',
+    paddingTop: spacing.sm,
   },
   ring: {
-    width: 174,
-    height: 174,
+    width: 236,
+    height: 236,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -67,19 +82,25 @@ const styles = StyleSheet.create({
     ...typography.small,
     textTransform: 'uppercase',
     color: colors.textSecondary,
-    marginTop: spacing.sm,
+    marginTop: -spacing.md,
+    fontSize: 14,
+    letterSpacing: 1.2,
   },
   score: {
     ...typography.hero,
+    fontSize: 44,
+    lineHeight: 52,
     marginTop: spacing.xs,
   },
   status: {
     ...typography.small,
     color: colors.security,
     textTransform: 'uppercase',
+    fontSize: 15,
+    letterSpacing: 1.5,
   },
   detail: {
-    ...typography.small,
+    ...typography.body,
     color: colors.security,
     marginTop: spacing.xs,
   },

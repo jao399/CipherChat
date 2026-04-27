@@ -11,20 +11,35 @@ type ChatListItemProps = {
 };
 
 export function ChatListItem({ chat, onPress }: ChatListItemProps) {
+  const isGroup = chat.group || chat.id === 'aurora';
+  const isTimer = chat.id === 'off-record';
+
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-      <View style={[styles.avatar, { backgroundColor: chat.avatarColor }]}>
-        <Text style={styles.avatarText}>{chat.avatar}</Text>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${chat.name}. ${chat.preview}. ${chat.unread > 0 ? `${chat.unread} unread messages.` : 'No unread messages.'}`}
+      testID={`chat-row-${chat.id}`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+    >
+      <View style={[styles.avatar, isTimer && styles.timerAvatar, { backgroundColor: chat.avatarColor }]}>
+        {isTimer ? (
+          <Ionicons name="timer" size={27} color={colors.text} />
+        ) : isGroup ? (
+          <Ionicons name="people" size={24} color={colors.muted} />
+        ) : (
+          <Text style={styles.avatarText}>{chat.avatar}</Text>
+        )}
       </View>
       <View style={styles.body}>
         <View style={styles.nameRow}>
           <Text style={styles.name} numberOfLines={1}>{chat.name}</Text>
-          {chat.verified ? <SecureBadge /> : chat.locked ? <Ionicons name="lock-closed" size={12} color={colors.textSecondary} /> : null}
+          {chat.verified ? <SecureBadge tone="purple" /> : chat.locked ? <Ionicons name="lock-closed" size={13} color={colors.textSecondary} /> : null}
         </View>
         <Text style={styles.preview} numberOfLines={1}>{chat.preview}</Text>
       </View>
       <View style={styles.meta}>
-        <Text style={styles.time}>{chat.time}</Text>
+        <Text style={[styles.time, isTimer && styles.timerText]}>{chat.time}</Text>
         {chat.unread > 0 ? (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{chat.unread}</Text>
@@ -42,7 +57,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    minHeight: 76,
+    minHeight: 78,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
   },
@@ -50,13 +65,19 @@ const styles = StyleSheet.create({
     opacity: 0.78,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.18)',
+  },
+  timerAvatar: {
+    shadowColor: colors.primaryBright,
+    shadowOpacity: 0.48,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
   },
   avatarText: {
     ...typography.button,
@@ -75,11 +96,13 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontWeight: '800',
+    fontSize: 17,
     flexShrink: 1,
   },
   preview: {
     ...typography.small,
     color: colors.textSecondary,
+    fontSize: 13,
   },
   meta: {
     alignItems: 'flex-end',
@@ -88,6 +111,10 @@ const styles = StyleSheet.create({
   time: {
     ...typography.small,
     fontSize: 11,
+  },
+  timerText: {
+    color: colors.primaryBright,
+    fontSize: 14,
   },
   badge: {
     minWidth: 22,

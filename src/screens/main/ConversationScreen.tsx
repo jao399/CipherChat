@@ -26,7 +26,7 @@ export function ConversationScreen({ navigation, route }: Props) {
   const [timer, setTimer] = useState('30s');
   const chat = chats.find((item) => item.id === route.params.chatId) ?? chats[0];
   const chatMessages = useMemo(
-    () => messages.filter((message) => message.chatId === chat.id || message.chatId === 'eleanor'),
+    () => messages.filter((message) => message.chatId === chat.id || message.chatId === 'eleanor').slice(0, 4),
     [chat.id],
   );
 
@@ -34,7 +34,13 @@ export function ConversationScreen({ navigation, route }: Props) {
     <ScreenContainer padded={false}>
       <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`Back from conversation with ${chat.name}`}
+            testID="conversation-back"
+            style={styles.back}
+            onPress={() => navigation.goBack()}
+          >
             <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
           <View style={[styles.avatar, { backgroundColor: chat.avatarColor }]}>
@@ -47,10 +53,10 @@ export function ConversationScreen({ navigation, route }: Props) {
             </View>
             <Text style={styles.online}>{chat.online ? 'Online' : 'Encrypted session'}</Text>
           </View>
-          <TouchableOpacity style={styles.headerIcon}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Start secure call with ${chat.name}`} testID="conversation-call" style={styles.headerIcon}>
             <Ionicons name="call" size={19} color={colors.text} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerIcon}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Start secure video with ${chat.name}`} testID="conversation-video" style={styles.headerIcon}>
             <Ionicons name="videocam" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
@@ -64,6 +70,10 @@ export function ConversationScreen({ navigation, route }: Props) {
             <View style={styles.timerRow}>
               {timers.map((item) => (
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`Set disappearing timer to ${item}`}
+                  accessibilityState={{ selected: timer === item }}
+                  testID={`timer-${item}`}
                   key={item}
                   style={[styles.timer, timer === item && styles.timerActive]}
                   onPress={() => setTimer(item)}
@@ -76,14 +86,17 @@ export function ConversationScreen({ navigation, route }: Props) {
         </ScrollView>
 
         <View style={styles.composer}>
-          <TouchableOpacity style={styles.composerIcon}>
-            <Ionicons name="add" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-          <TextInput placeholder="Type a message..." placeholderTextColor={colors.muted} style={styles.input} />
-          <TouchableOpacity style={styles.composerIcon}>
+          <TextInput
+            accessibilityLabel="Message composer"
+            testID="conversation-composer"
+            placeholder="Type a message..."
+            placeholderTextColor={colors.muted}
+            style={styles.input}
+          />
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open emoji picker" testID="conversation-emoji" style={styles.composerIcon}>
             <Ionicons name="happy" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.mic}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Record voice message" testID="conversation-mic" style={styles.mic}>
             <Ionicons name="mic" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
@@ -97,13 +110,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    minHeight: 66,
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
+    minHeight: 76,
+    paddingHorizontal: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   back: {
     width: 34,
@@ -112,9 +123,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -134,10 +145,16 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontWeight: '800',
+    fontSize: 20,
   },
   verified: {
     ...typography.small,
     color: colors.security,
+    backgroundColor: 'rgba(34,197,94,0.18)',
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    textTransform: 'uppercase',
   },
   online: {
     ...typography.small,
@@ -150,8 +167,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   messages: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
   },
   timerCard: {
     borderRadius: radii.md,
@@ -159,7 +177,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: 'rgba(17,17,26,0.86)',
     padding: spacing.md,
-    marginTop: spacing.lg,
+    marginTop: spacing.xl,
     gap: spacing.md,
   },
   timerLabel: {
@@ -173,7 +191,7 @@ const styles = StyleSheet.create({
   },
   timer: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 52,
     borderRadius: radii.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -185,13 +203,14 @@ const styles = StyleSheet.create({
   timerText: {
     ...typography.small,
     color: colors.textSecondary,
+    fontSize: 18,
   },
   timerActiveText: {
     color: colors.text,
   },
   composer: {
-    minHeight: 74,
-    paddingHorizontal: spacing.lg,
+    minHeight: 84,
+    paddingHorizontal: spacing.xl,
     paddingBottom: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.divider,
@@ -209,16 +228,17 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 58,
     borderRadius: radii.md,
     backgroundColor: colors.surface,
     color: colors.text,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
     fontWeight: '600',
+    fontSize: 17,
   },
   mic: {
-    width: 44,
-    height: 44,
+    width: 58,
+    height: 58,
     borderRadius: radii.md,
     backgroundColor: colors.primary,
     alignItems: 'center',

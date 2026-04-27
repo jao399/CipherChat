@@ -26,16 +26,29 @@ export function SignInScreen({ navigation }: Props) {
         <TouchableOpacity style={styles.forgot}>
           <Text style={styles.forgotText}>Forgot password?</Text>
         </TouchableOpacity>
-        <GlowButton onPress={() => navigation.replace('MainTabs')} icon="lock-closed">
+        <GlowButton
+          accessibilityLabel="Sign in securely"
+          testID="signin-submit"
+          onPress={() => navigation.replace('MainTabs')}
+          icon="lock-closed"
+        >
           Sign In Securely
         </GlowButton>
-        <SecondaryButton icon="finger-print">Use Biometric Sign In</SecondaryButton>
+        <SecondaryButton accessibilityLabel="Use biometric sign in" testID="signin-biometric" icon="finger-print">
+          Use Biometric Sign In
+        </SecondaryButton>
         <View style={styles.note}>
           <SecureBadge label="End-to-end encrypted" />
           <Text style={styles.noteText}>All data is end-to-end encrypted.</Text>
         </View>
       </GlassCard>
-      <TouchableOpacity style={styles.switch} onPress={() => navigation.navigate('SignUp')}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="Create a new CipherChat account"
+        testID="signin-create-account"
+        style={styles.switch}
+        onPress={() => navigation.navigate('SignUp')}
+      >
         <Text style={styles.switchText}>New to CipherChat? Create an account</Text>
       </TouchableOpacity>
     </ScreenContainer>

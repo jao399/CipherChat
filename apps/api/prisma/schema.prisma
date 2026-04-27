@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DeviceTrustState {
+  UNVERIFIED
+  VERIFIED
+  CHANGED
+  REVOKED
+}
+
+enum EnvelopeDeliveryState {
+  QUEUED
+  DELIVERED
+  ACKNOWLEDGED
+  EXPIRED
+}
+
+model Account {
+  id          String   @id @default(uuid())
+  displayName String
+  username    String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  devices      Device[]
+  sessions     DeviceSession[]
+  challenges   DeviceSessionChallenge[]
+  sentReports  AbuseReport[] @relation("ReporterAccount")
+  auditEvents  AuditEvent[]
+}
+
+model Device {
+  id            String           @id @default(uuid())
+  accountId     String
+  displayName   String
+  identityKey   String
+  trustState    DeviceTrustState @default(UNVERIFIED)
+  lastSeenAt    DateTime?
+  revokedAt     DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  account      Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  prekeyBundle PrekeyBundle?
+  sessions     DeviceSession[]
+  challenges   DeviceSessionChallenge[]
+
+  @@index([accountId])
+}
+
+model DeviceSessionChallenge {
+  id         String    @id @default(uuid())
+  accountId  String
+  deviceId   String
+  challenge  String    @unique
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  consumedAt DateTime?
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  device  Device  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, deviceId, consumedAt])
+  @@index([expiresAt])
+}
+
+model DeviceSession {
+  id         String    @id @default(uuid())
+  accountId  String
+  deviceId   String
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  device  Device  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, deviceId, revokedAt])
+  @@index([expiresAt])
+}
+
+model PrekeyBundle {
+  id                    String   @id @default(uuid())
+  deviceId              String   @unique
+  signedPrekey          String
+  signedPrekeySignature String
+  oneTimePrekeys        Json
+  publishedAt           DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+model EncryptedMessageEnvelope {
+  id                String                @id @default(uuid())
+  messageId         String                @unique
+  conversationId    String
+  senderAccountId   String
+  senderDeviceId    String
+  recipientAccountId String
+  recipientDeviceId String
+  headerCiphertext  String
+  bodyCiphertext    String
+  deliveryState     EnvelopeDeliveryState @default(QUEUED)
+  queuedAt          DateTime              @default(now())
+  deliveredAt       DateTime?
+  acknowledgedAt    DateTime?
+  expiresAt         DateTime?
+
+  @@index([recipientAccountId, recipientDeviceId, deliveryState])
+  @@index([conversationId])
+  @@index([queuedAt, id])
+}
+
+model EncryptedFileObject {
+  id              String    @id @default(uuid())
+  ownerAccountId  String
+  objectRef       String    @unique
+  sizeBytes       BigInt
+  contentDigest   String
+  encryptedName   String?
+  encryptedMimeType String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime?
+  deletedAt       DateTime?
+
+  @@index([ownerAccountId])
+}
+
+model AbuseReport {
+  id                 String   @id @default(uuid())
+  reporterAccountId  String
+  reportedAccountId  String?
+  selectedDisclosure Json
+  createdAt          DateTime @default(now())
+
+  reporter Account @relation("ReporterAccount", fields: [reporterAccountId], references: [id], onDelete: Cascade)
+}
+
+model AuditEvent {
+  id        String   @id @default(uuid())
+  accountId String?
+  eventType String
+  actorId   String?
+  targetId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  account Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@index([accountId, eventType])
+  @@index([createdAt])
+}

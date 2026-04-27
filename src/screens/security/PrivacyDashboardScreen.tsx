@@ -2,10 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { DarkCard } from '../../components/common/DarkCard';
 import { PrivacyScoreCard } from '../../components/common/PrivacyScoreCard';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
-import { ScreenHeader } from '../../components/common/ScreenHeader';
 import { privacyMetrics } from '../../data/mockData';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
@@ -14,12 +12,31 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PrivacyDashboard'>;
 
 export function PrivacyDashboardScreen({ navigation }: Props) {
   return (
-    <ScreenContainer scroll>
-      <ScreenHeader title="Privacy Dashboard" subtitle="Transparency and control" back />
+    <ScreenContainer scroll contentContainerStyle={styles.screen}>
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Back from privacy dashboard"
+          testID="privacy-dashboard-back"
+          style={styles.back}
+          onPress={() => navigation.goBack()}
+          hitSlop={8}
+        >
+          <Ionicons name="chevron-back" size={30} color={colors.text} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.screenTitle}>Privacy Dashboard</Text>
       <PrivacyScoreCard score={97} />
       <View style={styles.metrics}>
         {privacyMetrics.map((metric) => (
-          <TouchableOpacity key={metric.id} activeOpacity={0.78} style={styles.metricRow}>
+          <TouchableOpacity
+            key={metric.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${metric.title}. ${metric.detail}. ${metric.value}.`}
+            testID={`privacy-metric-${metric.id}`}
+            activeOpacity={0.78}
+            style={styles.metricRow}
+          >
             <View style={[styles.metricIcon, { borderColor: metric.accent }]}>
               <Ionicons name={metric.icon as keyof typeof Ionicons.glyphMap} size={22} color={metric.accent} />
             </View>
@@ -32,27 +49,41 @@ export function PrivacyDashboardScreen({ navigation }: Props) {
           </TouchableOpacity>
         ))}
       </View>
-      <DarkCard style={styles.audit}>
-        <Text style={styles.auditTitle}>Future audit trail</Text>
-        <Text style={styles.auditText}>
-          Server events can later be audited without exposing message content, identities, or keys.
-        </Text>
-      </DarkCard>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    justifyContent: 'center',
+  },
+  topBar: {
+    height: 42,
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  back: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  screenTitle: {
+    ...typography.subtitle,
+    textAlign: 'center',
+    fontSize: 26,
+    marginBottom: spacing.sm,
+  },
   metrics: {
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: 'rgba(17,17,26,0.82)',
     paddingHorizontal: spacing.lg,
-    marginTop: spacing.xl,
+    marginTop: spacing.xxl,
   },
   metricRow: {
-    minHeight: 72,
+    minHeight: 76,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
@@ -60,13 +91,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider,
   },
   metricIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: radii.md,
-    borderWidth: 1,
+    width: 44,
+    height: 44,
+    borderRadius: radii.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(25,217,142,0.08)',
+    backgroundColor: 'transparent',
   },
   metricBody: {
     flex: 1,
@@ -75,22 +105,14 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontWeight: '800',
+    fontSize: 18,
   },
   metricDetail: {
-    ...typography.small,
+    ...typography.body,
+    color: colors.textSecondary,
   },
   metricValue: {
     ...typography.small,
     color: colors.security,
-  },
-  audit: {
-    marginTop: spacing.xl,
-  },
-  auditTitle: {
-    ...typography.subtitle,
-    marginBottom: spacing.xs,
-  },
-  auditText: {
-    ...typography.body,
   },
 });

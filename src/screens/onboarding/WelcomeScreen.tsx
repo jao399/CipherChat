@@ -1,145 +1,124 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, StyleSheet, Text, View } from 'react-native';
 
-import { AppLogo } from '../../components/common/AppLogo';
 import { GlowButton, SecondaryButton } from '../../components/common/Buttons';
 import { LogoMark } from '../../components/common/LogoMark';
-import { ScreenContainer } from '../../components/common/ScreenContainer';
-import { colors, gradients, radii, spacing, typography } from '../../theme';
+import { colors, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
+const welcomeHero = require('../../assets/images/welcome-hero.png');
+
 export function WelcomeScreen({ navigation }: Props) {
   return (
-    <ScreenContainer>
+    <View style={styles.screen}>
       <View style={styles.content}>
-        <View style={styles.heroWrap}>
-          <LinearGradient colors={gradients.card} style={styles.hero}>
-            <View style={styles.moon} />
-            <View style={styles.tower}>
-              <View style={styles.spire} />
-              <View style={styles.towerBody} />
-              <View style={styles.towerBase} />
-            </View>
-            <View style={styles.logoFloat}>
-              <LogoMark size={76} />
-            </View>
-          </LinearGradient>
-        </View>
+        <ImageBackground source={welcomeHero} resizeMode="cover" style={styles.hero}>
+          <LinearGradient colors={['rgba(5,5,9,0.05)', 'rgba(5,5,9,0.12)', '#050509']} style={styles.heroFade} />
+        </ImageBackground>
 
         <View style={styles.brand}>
-          <AppLogo size={64} variant="horizontal" />
-          <Text style={styles.title}>Secure. Private. Yours alone.</Text>
-          <Text style={styles.text}>Zero-knowledge messaging for a world that values privacy.</Text>
+          <LogoMark size={78} />
+          <Text style={styles.title}>
+            Cipher<Text style={styles.titlePurple}>Chat</Text>
+          </Text>
+          <Text style={styles.text}>Private messaging.{'\n'}Reimagined for a safer world.</Text>
+          <View style={styles.dots}>
+            {[0, 1, 2, 3].map((dot) => (
+              <View key={dot} style={[styles.dot, dot === 0 && styles.activeDot]} />
+            ))}
+          </View>
         </View>
 
         <View style={styles.actions}>
-          <GlowButton onPress={() => navigation.navigate('SignUp')} icon="arrow-forward">
-            Get Started
+          <GlowButton
+            accessibilityLabel="Create a CipherChat account"
+            testID="welcome-get-started"
+            onPress={() => navigation.navigate('SignUp')}
+          >
+            GET STARTED
           </GlowButton>
-          <SecondaryButton onPress={() => navigation.navigate('SignIn')} icon="log-in">
-            I Already Have an Account
+          <SecondaryButton
+            accessibilityLabel="Sign in to an existing CipherChat account"
+            testID="welcome-sign-in"
+            onPress={() => navigation.navigate('SignIn')}
+          >
+            I ALREADY HAVE AN ACCOUNT
           </SecondaryButton>
         </View>
-
-        <Text style={styles.credit}>Made by Amgad Alzomi</Text>
       </View>
-    </ScreenContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   content: {
     flex: 1,
-    justifyContent: 'space-between',
-    paddingTop: spacing.lg,
-    gap: spacing.xl,
-  },
-  heroWrap: {
-    alignItems: 'center',
-  },
-  hero: {
-    width: '100%',
-    maxWidth: 342,
-    height: 300,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.24)',
-    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    paddingHorizontal: spacing.xxl,
+    paddingBottom: spacing.xxxl,
   },
-  moon: {
+  hero: {
     position: 'absolute',
-    top: 28,
-    width: 210,
-    height: 210,
-    borderRadius: 105,
-    borderWidth: 2,
-    borderColor: colors.primaryBright,
-    opacity: 0.58,
-    shadowColor: colors.primaryBright,
-    shadowOpacity: 0.9,
-    shadowRadius: 22,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '62%',
+    overflow: 'hidden',
   },
-  tower: {
-    alignItems: 'center',
-    marginBottom: 42,
-  },
-  spire: {
-    width: 3,
-    height: 72,
-    backgroundColor: colors.primaryBright,
-  },
-  towerBody: {
-    width: 72,
-    height: 92,
-    backgroundColor: 'rgba(91,33,182,0.86)',
-    borderTopLeftRadius: radii.sm,
-    borderTopRightRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.36)',
-  },
-  towerBase: {
-    width: 176,
-    height: 42,
-    backgroundColor: 'rgba(10,8,18,0.94)',
-    borderTopLeftRadius: radii.md,
-    borderTopRightRadius: radii.md,
-    borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.28)',
-  },
-  logoFloat: {
+  heroFade: {
     position: 'absolute',
-    bottom: 22,
-    width: 86,
-    height: 86,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(7,7,11,0.88)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    top: 0,
+    height: '100%',
   },
   brand: {
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
+    marginBottom: spacing.xxxl,
   },
   title: {
     ...typography.hero,
+    fontSize: 40,
+    lineHeight: 48,
     textAlign: 'center',
+  },
+  titlePurple: {
+    color: colors.primary,
   },
   text: {
     ...typography.body,
     textAlign: 'center',
-    maxWidth: 310,
+    fontSize: 18,
+    lineHeight: 31,
+    maxWidth: 330,
+    marginTop: spacing.sm,
+  },
+  dots: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.xxxl,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#30313C',
+  },
+  activeDot: {
+    backgroundColor: colors.primary,
   },
   actions: {
     gap: spacing.md,
-  },
-  credit: {
-    ...typography.small,
-    color: colors.muted,
-    textAlign: 'center',
+    width: '100%',
   },
 });

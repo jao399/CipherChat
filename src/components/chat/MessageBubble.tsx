@@ -85,20 +85,20 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 const styles = StyleSheet.create({
   notice: {
     alignSelf: 'center',
-    maxWidth: '92%',
+    width: '100%',
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: 'rgba(17,17,26,0.86)',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     flexDirection: 'row',
     gap: spacing.sm,
     alignItems: 'center',
     marginVertical: spacing.md,
   },
   noticeText: {
-    ...typography.small,
+    ...typography.body,
     color: colors.textSecondary,
     flex: 1,
   },
@@ -110,9 +110,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   bubble: {
-    maxWidth: '78%',
+    maxWidth: '76%',
     borderRadius: radii.md,
-    padding: spacing.md,
+    padding: spacing.lg,
     gap: spacing.xs,
   },
   mine: {
@@ -126,6 +126,8 @@ const styles = StyleSheet.create({
   text: {
     ...typography.body,
     color: colors.text,
+    fontSize: 18,
+    lineHeight: 27,
   },
   mineText: {
     color: colors.text,
@@ -144,12 +146,12 @@ const styles = StyleSheet.create({
     color: '#D9CCFF',
   },
   fileBubble: {
-    maxWidth: '86%',
+    width: '100%',
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: 'rgba(25,217,142,0.32)',
     backgroundColor: 'rgba(18,185,129,0.20)',
-    padding: spacing.md,
+    padding: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
@@ -158,8 +160,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(18,185,129,0.28)',
   },
   fileIcon: {
-    width: 46,
-    height: 46,
+    width: 60,
+    height: 60,
     borderRadius: radii.sm,
     backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
@@ -172,9 +174,10 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontWeight: '800',
+    fontSize: 18,
   },
   fileMeta: {
-    ...typography.small,
+    ...typography.body,
     color: colors.security,
   },
   voiceRow: {

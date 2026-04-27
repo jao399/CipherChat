@@ -51,7 +51,7 @@ export const chats: Chat[] = [
   },
   {
     id: 'aurora',
-    name: 'Project Aurora',
+    name: 'Project Blackout',
     avatar: 'PA',
     avatarColor: colors.primaryDeep,
     preview: 'Alice: Status update encrypted.',
@@ -78,7 +78,7 @@ export const chats: Chat[] = [
     avatar: 'OR',
     avatarColor: '#7C2BD3',
     preview: 'This message will self-destruct.',
-    time: '8:58 AM',
+    time: '25s',
     unread: 0,
     verified: false,
     locked: true,

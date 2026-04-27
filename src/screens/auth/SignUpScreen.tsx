@@ -25,17 +25,36 @@ export function SignUpScreen({ navigation }: Props) {
         <InputField label="Phone (optional)" icon="call" placeholder="+1 555 014 0092" keyboardType="phone-pad" />
         <PasswordField label="Password" placeholder="Create a strong password" />
         <PasswordField label="Confirm password" placeholder="Repeat your password" />
-        <TouchableOpacity style={styles.checkRow} onPress={() => setAgreed((value) => !value)}>
+        <TouchableOpacity
+          accessibilityRole="checkbox"
+          accessibilityLabel="Agree to privacy-first terms and secure messaging policy"
+          accessibilityState={{ checked: agreed }}
+          testID="signup-terms"
+          style={styles.checkRow}
+          onPress={() => setAgreed((value) => !value)}
+        >
           <View style={[styles.checkbox, agreed && styles.checked]}>
             {agreed ? <Ionicons name="checkmark" size={16} color={colors.text} /> : null}
           </View>
           <Text style={styles.terms}>I agree to the privacy-first terms and secure messaging policy.</Text>
         </TouchableOpacity>
-        <GlowButton disabled={!agreed} onPress={() => navigation.replace('DeviceVerification')} icon="shield-checkmark">
+        <GlowButton
+          accessibilityLabel="Create account"
+          testID="signup-submit"
+          disabled={!agreed}
+          onPress={() => navigation.replace('DeviceVerification')}
+          icon="shield-checkmark"
+        >
           Create Account
         </GlowButton>
       </GlassCard>
-      <TouchableOpacity style={styles.switch} onPress={() => navigation.navigate('SignIn')}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="Sign in to an existing CipherChat account"
+        testID="signup-sign-in"
+        style={styles.switch}
+        onPress={() => navigation.navigate('SignIn')}
+      >
         <Text style={styles.switchText}>Already have an account? Sign in</Text>
       </TouchableOpacity>
     </ScreenContainer>

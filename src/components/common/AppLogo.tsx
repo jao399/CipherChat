@@ -16,11 +16,25 @@ export function AppLogo({ size = 70, variant = 'stacked', subtitle }: AppLogoPro
 
   const isHorizontal = variant === 'horizontal';
 
+  if (isHorizontal) {
+    return (
+      <View style={[styles.container, styles.horizontal]}>
+        <LogoMark size={size} />
+        <View style={styles.wordmarkLeft}>
+          <Text style={[styles.wordmark, styles.wordmarkSmall]}>
+            Cipher<Text style={styles.purple}>Chat</Text>
+          </Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={[styles.container, isHorizontal && styles.horizontal]}>
+    <View style={styles.container}>
       <LogoMark size={size} />
-      <View style={isHorizontal ? styles.wordmarkLeft : styles.wordmarkCenter}>
-        <Text style={[styles.wordmark, isHorizontal && styles.wordmarkSmall]}>
+      <View style={styles.wordmarkCenter}>
+        <Text style={styles.wordmark}>
           Cipher<Text style={styles.purple}>Chat</Text>
         </Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}

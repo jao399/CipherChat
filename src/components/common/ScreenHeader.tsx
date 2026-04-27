@@ -18,7 +18,14 @@ export function ScreenHeader({ title, subtitle, back = false, children }: Screen
     <View style={styles.header}>
       <View style={styles.left}>
         {back ? (
-          <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()} hitSlop={8}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`Back from ${title}`}
+            testID={`back-${title.toLowerCase().replace(/\s+/g, '-')}`}
+            style={styles.back}
+            onPress={() => navigation.goBack()}
+            hitSlop={8}
+          >
             <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
         ) : null}

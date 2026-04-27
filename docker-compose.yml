@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cipherchat-postgres
+    environment:
+      POSTGRES_DB: cipherchat
+      POSTGRES_USER: cipherchat
+      POSTGRES_PASSWORD: cipherchat
+    ports:
+      - "5432:5432"
+    volumes:
+      - cipherchat-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cipherchat -d cipherchat"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    container_name: cipherchat-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - cipherchat-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  cipherchat-postgres-data:
+  cipherchat-redis-data:

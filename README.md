@@ -11,6 +11,8 @@ Design direction: dark cyber-security aesthetic, neon purple brand glow, green s
 - React Navigation native stack + bottom tabs
 - AsyncStorage for first-launch onboarding persistence
 - Expo Linear Gradient
+- Expo Crypto
+- Noble Ed25519 primitives for mobile device challenge signing
 - React Native SVG
 - Expo Vector Icons
 
@@ -43,7 +45,7 @@ Then open the project in Expo Go, an emulator, or a development build.
 
 ```text
 src/
-  assets/logo/          Brand SVG and PNG logo assets
+  assets/logo/          Official PNG logo assets
   components/common/    Buttons, cards, inputs, logo, QR, headers, badges
   components/chat/      Chat list item and message bubble components
   components/settings/  Settings rows
@@ -51,22 +53,26 @@ src/
   data/                 Mock chats, messages, files, contacts, calls, stats
   navigation/           Root stack and tab navigation
   screens/              Auth, onboarding, main, security, settings screens
+  config/               Future stack decision manifest
+  security/             Future crypto/security contracts and policy constants
+  services/api/         Typed mobile API client, mock client, and backend provider
+  services/ports/       Future backend/local service boundary interfaces
+  services/local/       SecureStore adapter foundation
   theme/                Colors, spacing, typography, radii, shadows, gradients
   types/                Shared TypeScript models
+apps/
+  api/                  Fastify API workspace, Prisma schema, repositories, tests
+docker-compose.yml      Local PostgreSQL development service
 ```
 
 ## Branding Assets
 
-Logo assets are in `src/assets/logo/`:
+The official logo source is the attached PNG copied directly into:
 
-- `master-logo.svg` / `master-logo.png`
-- `logo-mark.svg` / `logo-mark.png`
-- `horizontal-lockup.svg` / `horizontal-lockup.png`
-- `splash-lockup.svg` / `splash-lockup.png`
-- `app-icon-source.svg` / `app-icon-source.png`
-- `adaptive-icon-foreground.svg` / `adaptive-icon-foreground.png`
-- `monochrome-icon.svg` / `monochrome-icon.png`
-- `header-tab-icon.svg` / `header-tab-icon.png`
+- `src/assets/logo/cipherchat-official-logo.png`
+- `assets/cipherchat-official-logo.png`
+
+Legacy logo PNG aliases in `src/assets/logo/` are kept only for compatibility and should not be edited directly. The generated SVG logo files were removed so the app does not accidentally show a redrawn logo.
 
 Expo launcher assets are configured in `assets/` and referenced from `app.json`:
 
@@ -77,7 +83,25 @@ Expo launcher assets are configured in `assets/` and referenced from `app.json`:
 
 ## Onboarding Persistence
 
-The onboarding carousel writes `@cipherchat/onboarding-complete` to AsyncStorage when the user taps Skip, Start Now, or Get Started. The splash screen reads that key and routes first-time users to onboarding; returning users go to the welcome screen. Settings includes a prototype reset action that removes the key and reopens onboarding.
+The onboarding carousel writes `@cipherchat/onboarding-complete-v2` to AsyncStorage when the user taps Skip or the final Get Started button. The splash screen reads that key and routes first-time users to onboarding; returning users go to the welcome screen. Settings includes a prototype reset action that removes the key and reopens onboarding.
+
+## Prototype Hardening Status
+
+Phase 2 hardening is complete for the current UI prototype:
+
+- Android emulator startup and navigation flow verified.
+- Onboarding confirmed as four slides: slides 1-3 show Next, slide 4 shows Get Started.
+- Device Verification now has an explicit Continue Securely CTA.
+- Privacy Dashboard now has a visible back control.
+- Critical buttons, rows, filters, settings, and form actions include accessibility labels and stable test IDs.
+- Temporary QA screenshots, XML dumps, and Expo log files are excluded from the project.
+
+Validation commands:
+
+```bash
+npm run typecheck
+npx expo-doctor
+```
 
 ## Animated Splash
 
@@ -121,10 +145,220 @@ Recommended future architecture:
 - Add abuse prevention without breaking privacy through rate limits, report flows that require user-selected message disclosure, spam scoring on metadata only, and privacy-preserving account controls.
 - Keep server audit logs focused on operational events, not content, keys, contact graphs, or decrypted identifiers.
 
+## Phase 3 Architecture Package
+
+The project now includes a future-ready architecture package for the real secure messaging implementation:
+
+- `docs/architecture/phase-3-architecture.md`
+- `docs/architecture/security-model.md`
+- `docs/architecture/backend-boundaries.md`
+- `docs/architecture/phase-4-readiness-checklist.md`
+- `src/security/cryptoContracts.ts`
+- `src/security/securityPolicy.ts`
+- `src/services/ports/`
+
+These files define the future account, device, message, file, verification, secure storage, and backend boundaries. They do not implement backend behavior or encryption in the UI prototype.
+
+## Phase 4 Secure Foundation
+
+The project now includes secure foundation stack decisions and ADRs:
+
+- `docs/architecture/phase-4-secure-foundation.md`
+- `docs/architecture/adr/0001-mobile-runtime.md`
+- `docs/architecture/adr/0002-crypto-libraries.md`
+- `docs/architecture/adr/0003-local-secure-storage.md`
+- `docs/architecture/adr/0004-backend-stack.md`
+- `docs/architecture/adr/0005-push-and-metadata.md`
+- `src/config/foundationStack.ts`
+
+Selected direction:
+
+- Expo React Native TypeScript, moving to Expo development builds for native security modules.
+- `expo-secure-store` for early small-secret storage, with production review for stricter Keychain/Keystore wrappers.
+- SQLCipher-backed SQLite for encrypted local storage.
+- Signal `libsignal` for X3DH + Double Ratchet one-to-one messaging.
+- MLS/OpenMLS evaluation for group messaging.
+- TypeScript Fastify backend, PostgreSQL + Prisma, Redis + BullMQ, and S3-compatible encrypted blob storage.
+- Generic push notifications with no sensitive plaintext payloads.
+
+## Phase 5 Foundation
+
+The project now includes a first implementation foundation:
+
+- `apps/api/` Fastify TypeScript API workspace.
+- `apps/api/prisma/schema.prisma` server metadata schema.
+- `src/services/local/secureStoreAdapter.ts` mobile secure storage adapter using `expo-secure-store`.
+- Root npm workspaces for the app and API package.
+
+Phase 5 introduced the API shell and secure local-storage foundation. The initial API routes were schema-validated placeholders until database wiring was ready.
+
+## Phase 6 Persistence Foundation
+
+The API now has a real persistence layer for encrypted protocol metadata:
+
+- `docker-compose.yml` local PostgreSQL service.
+- `apps/api/prisma/migrations/20260426000100_phase_6_persistence/migration.sql` initial database migration.
+- `apps/api/src/repositories/` repository interfaces and Prisma implementations.
+- `apps/api/src/db/prisma.ts` Prisma client and database readiness check.
+- `apps/api/src/routes/apiRoutes.test.ts` route tests for readiness, disabled persistence, and injected persistence.
+
+When `DATABASE_URL` is unset, the API can still run for UI work and returns `503 database_unavailable` from persistence endpoints. When `DATABASE_URL` is set, the API persists device bundles and encrypted message envelopes.
+
+Local database commands:
+
+```bash
+docker compose up -d postgres
+npm run prisma:migrate:deploy
+npm run api:dev
+```
+
+Validation commands:
+
+```bash
+npm run typecheck
+npm run api:test
+npm run api:build
+npm run prisma:validate
+npm run prisma:generate
+npx expo-doctor
+```
+
+## Phase 7 Device Sessions And Delivery
+
+The API now has its first authenticated device flow:
+
+- `apps/api/prisma/migrations/20260426000200_phase_7_device_sessions/migration.sql` adds `DeviceSession`.
+- `apps/api/src/auth/` creates and verifies hashed bearer session tokens.
+- `POST /v1/auth/device-sessions` creates a device-scoped session after a bundle exists.
+- `POST /v1/messages/envelopes` now requires the authenticated sender device.
+- `GET /v1/messages/envelopes` fetches queued encrypted envelopes for the authenticated recipient device.
+- `POST /v1/messages/envelopes/:messageId/ack` acknowledges only that recipient device's envelope.
+- `apps/api/src/middleware/rateLimit.ts` adds lightweight in-memory rate limiting.
+- Metadata-only audit events are recorded for session creation, queueing, delivery, and acknowledgement.
+
+This is still not production account authentication or cryptographic device proof. The next phase should replace simple session issuance with signed device challenges, session revocation, persistent rate limits, and delivery pagination.
+
+## Phase 8 Auth And Delivery Hardening
+
+The API now has a challenge-based device-session flow and stable delivery pagination:
+
+- `apps/api/prisma/migrations/20260427000100_phase_8_auth_delivery_hardening/migration.sql` adds `DeviceSessionChallenge`.
+- `POST /v1/accounts` creates account metadata.
+- `GET /v1/accounts/me` returns the authenticated account profile.
+- `POST /v1/auth/device-challenges` issues short-lived device challenges.
+- `POST /v1/auth/device-sessions` requires `challengeId` and `signature`.
+- `DELETE /v1/auth/device-sessions/current` revokes the active session.
+- `GET /v1/messages/envelopes` now supports opaque `nextCursor` pagination.
+- `apps/api/src/auth/signatureVerifier.ts` keeps production signature verification behind an explicit interface.
+
+The safe default verifier rejects signatures. Local smoke tests can enable the intentionally insecure development verifier with `ALLOW_INSECURE_DEV_SIGNATURES=true`, where the accepted test signature is `dev:<challenge>`. Do not use that mode outside local development.
+
+## Phase 9 Queue, Fanout, And Expiry Jobs
+
+The backend now has Redis/BullMQ infrastructure:
+
+- `docker-compose.yml` includes Redis.
+- `apps/api/src/queue/jobQueue.ts` defines the job queue port and BullMQ implementation.
+- `apps/api/src/worker.ts` runs the background worker.
+- `apps/api/src/middleware/redisRateLimitStore.ts` enables Redis-backed rate limiting.
+- `POST /v1/messages/envelopes/fanout` stores per-recipient-device encrypted envelopes.
+- `POST /v1/internal/jobs/envelopes/expire` queues expiry cleanup with `x-internal-job-token`.
+
+Run locally:
+
+```bash
+docker compose up -d postgres redis
+npm run api:dev
+npm run api:worker
+```
+
+The queue jobs contain message IDs, recipient-device counts, and timestamps only. They do not carry plaintext message content.
+
+## Phase 10 Mobile API Client Integration
+
+The Expo app now has a mobile backend integration layer while keeping mock mode as the default UI-safe path:
+
+- `src/services/api/cipherChatApiClient.ts` provides typed methods for readiness, account/device sessions, device bundles, and encrypted envelopes.
+- `src/services/api/mockCipherChatApiClient.ts` keeps demos working without a running backend.
+- `src/services/api/apiSessionStore.ts` stores account/device IDs in AsyncStorage and the session token in SecureStore.
+- `src/services/api/BackendProvider.tsx` owns backend mode, readiness state, and prototype session bootstrap.
+- `src/security/deviceIdentityProvider.ts` owns reusable prototype device identity material and challenge signing.
+- `src/hooks/useBackend.ts` exposes backend state and actions to screens.
+- Device Verification now prepares a prototype session before routing into the main tab shell.
+- Settings now exposes Live API Mode, Backend Status, Prototype Session, and Device Identity controls.
+
+Live mode defaults to `http://10.0.2.2:4000` for Android emulator access to the host API. Run the API with `API_HOST=0.0.0.0` for emulator access. Local live session bootstrap still uses the explicit development signature format from Phase 8 and requires `ALLOW_INSECURE_DEV_SIGNATURES=true`; it is not production authentication.
+
+More detail: `docs/architecture/phase-10-mobile-api-client.md`.
+
+## Phase 11 Device Identity Boundary
+
+The mobile app now has a replaceable local device-identity provider:
+
+- `expo-crypto` supplies native secure random bytes and SHA-256 fingerprints.
+- `@noble/curves` supplies Ed25519 signing for device challenge authentication.
+- `src/security/deviceIdentityProvider.ts` creates and persists a stable local prototype account/device identity.
+- Public prototype identity metadata is stored in AsyncStorage.
+- The Ed25519 private signing key is stored in SecureStore.
+- Device Verification publishes the provider-generated device bundle.
+- Challenge signing is centralized behind `signDeviceChallenge`.
+- Settings shows the device fingerprint and can rotate the prototype identity.
+
+This is now a real Ed25519 challenge-signing path, but it is not complete production messaging cryptography. Signal/MLS protocol state, signed prekey semantics, encrypted local message storage, key-change warnings, and non-exportable OS-backed key storage are still future work.
+
+More detail: `docs/architecture/phase-11-device-identity-boundary.md`.
+
+## Phase 12 Production Signature Verifier
+
+The API now has a production-shaped Ed25519 device challenge verifier:
+
+- `apps/api/src/auth/signatureVerifier.ts` includes `Ed25519DeviceSignatureVerifier`.
+- The safe default remains reject-all.
+- `ALLOW_INSECURE_DEV_SIGNATURES=true` still enables the local-only `dev:<challenge>` bridge.
+- `DEVICE_SIGNATURE_VERIFIER=ed25519` enables verification of Ed25519 signatures over issued device challenges.
+- The expected public key format is `ed25519-spki:<base64 DER SPKI public key>`.
+- The expected signature format is `ed25519:<base64 signature>`.
+- `apps/api/src/auth/signatureVerifier.test.ts` covers valid signatures, wrong challenges, malformed input, safe defaults, and dev mode.
+
+This is the backend half of real device authentication. Phase 13 adds the matching mobile Ed25519 provider.
+
+More detail: `docs/architecture/phase-12-production-signature-verifier.md`.
+
+## Phase 13 Mobile Ed25519 Provider
+
+The mobile app now signs live device-auth challenges without the local `dev:<challenge>` bridge:
+
+- `src/security/deviceIdentityProvider.ts` now uses `ed25519-noble-v1`.
+- The app publishes `ed25519-spki:<base64 DER SPKI public key>`.
+- The app signs challenges as `ed25519:<base64 signature>`.
+- The Ed25519 private key is stored in SecureStore.
+- Legacy prototype identity data is migrated away automatically.
+- Stale stored sessions are cleared if they no longer match the active local identity.
+
+Run the API for live mobile testing with `DEVICE_SIGNATURE_VERIFIER=ed25519` and without `ALLOW_INSECURE_DEV_SIGNATURES`.
+
+More detail: `docs/architecture/phase-13-mobile-ed25519-provider.md`.
+
+## Phase 14 Safety Numbers And Identity Trust
+
+The mobile app now surfaces local identity trust state:
+
+- `src/security/safetyNumber.ts` derives displayable safety-number blocks from the active account/device identity.
+- `src/security/trustedIdentityStore.ts` stores trusted identity records locally.
+- Device Verification shows the real generated safety number instead of a static placeholder.
+- Device Verification labels the identity as new, trusted, or changed.
+- Settings shows the current trust state, device fingerprint, and safety number.
+- Rotating device identity preserves the account/device pair and changes the key, so the app can detect a changed identity.
+- Completing Device Verification marks the active identity trusted.
+
+More detail: `docs/architecture/phase-14-safety-numbers-trust.md`.
+
 ## Next Steps
 
-1. Pick audited crypto libraries and define the security model.
-2. Write a protocol specification before backend implementation.
-3. Add real auth, device identity, secure storage, and encrypted local database layers.
-4. Build an encrypted messaging service with prekey distribution and message queues.
-5. Add security tests, threat modeling, independent review, and abuse-prevention workflows.
+1. Complete a formal threat model before handling production data.
+2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
+3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
+4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
+5. Add remote contact key-change warnings inside chat and contact screens.
+6. Add CI integration tests against disposable Postgres and Redis services.
+7. Add real generic push notification provider integration.

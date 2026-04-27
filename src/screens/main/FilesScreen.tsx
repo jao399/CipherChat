@@ -25,19 +25,31 @@ export function FilesScreen() {
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
       <ScreenHeader title="Secure Files" subtitle="Encrypted transfers and vault items">
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('SecureFileTransfer')}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Open secure file transfer"
+          testID="files-open-transfer"
+          style={styles.iconButton}
+          onPress={() => navigation.navigate('SecureFileTransfer')}
+        >
           <Ionicons name="cloud-upload" size={20} color={colors.text} />
         </TouchableOpacity>
       </ScreenHeader>
 
       <View style={styles.search}>
         <Ionicons name="search" size={18} color={colors.muted} />
-        <TextInput placeholder="Search encrypted files" placeholderTextColor={colors.muted} style={styles.searchInput} />
+        <TextInput
+          accessibilityLabel="Search encrypted files"
+          testID="files-search"
+          placeholder="Search encrypted files"
+          placeholderTextColor={colors.muted}
+          style={styles.searchInput}
+        />
       </View>
 
       <View style={styles.filters}>
         {['All', 'Recent', 'PDF', 'Images'].map((item, index) => (
-          <FilterChip key={item} label={item} active={index === 0} />
+          <FilterChip key={item} label={item} active={index === 0} testID={`files-filter-${item.toLowerCase()}`} />
         ))}
       </View>
 
@@ -46,6 +58,9 @@ export function FilesScreen() {
         {secureFiles.map((file) => (
           <TouchableOpacity
             key={file.id}
+            accessibilityRole="button"
+            accessibilityLabel={`${file.name}. ${file.status}. ${file.size}.`}
+            testID={`file-row-${file.id}`}
             activeOpacity={0.78}
             style={styles.fileRow}
             onPress={() => navigation.navigate('SecureFileTransfer')}

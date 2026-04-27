@@ -14,7 +14,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 
-import { GlowButton, SecondaryButton } from '../../components/common/Buttons';
+import { GlowButton } from '../../components/common/Buttons';
 import { LogoMark } from '../../components/common/LogoMark';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { ONBOARDING_STORAGE_KEY } from '../../constants/storage';
@@ -41,7 +41,9 @@ export function OnboardingScreen({ navigation }: Props) {
       void finish();
       return;
     }
-    listRef.current?.scrollToIndex({ index: index + 1, animated: true });
+    const nextIndex = index + 1;
+    setIndex(nextIndex);
+    listRef.current?.scrollToIndex({ index: nextIndex, animated: true });
   };
 
   const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -52,10 +54,19 @@ export function OnboardingScreen({ navigation }: Props) {
   return (
     <ScreenContainer padded={false}>
       <View style={styles.header}>
-        <Text style={styles.logoText}>
-          Cipher<Text style={styles.logoPurple}>Chat</Text>
-        </Text>
-        <TouchableOpacity onPress={finish} hitSlop={8}>
+        <View style={styles.headerBrand}>
+          <LogoMark size={30} />
+          <Text style={styles.logoText}>
+            Cipher<Text style={styles.logoPurple}>Chat</Text>
+          </Text>
+        </View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Skip onboarding"
+          testID="onboarding-skip"
+          onPress={finish}
+          hitSlop={8}
+        >
           <Text style={styles.skip}>Skip</Text>
         </TouchableOpacity>
       </View>
@@ -67,6 +78,16 @@ export function OnboardingScreen({ navigation }: Props) {
         renderItem={({ item }) => <OnboardingSlideView slide={item} width={slideWidth} />}
         horizontal
         pagingEnabled
+        getItemLayout={(_, itemIndex) => ({
+          length: slideWidth,
+          offset: slideWidth * itemIndex,
+          index: itemIndex,
+        })}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            listRef.current?.scrollToIndex({ index: info.index, animated: true });
+          }, 80);
+        }}
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumScrollEnd}
       />
@@ -77,12 +98,14 @@ export function OnboardingScreen({ navigation }: Props) {
             <View key={slide.id} style={[styles.dot, dotIndex === index && styles.activeDot]} />
           ))}
         </View>
-        <GlowButton onPress={next} icon={index === onboardingSlides.length - 1 ? 'arrow-forward' : 'chevron-forward'}>
-          {index === onboardingSlides.length - 1 ? 'Get Started' : 'Next'}
+        <GlowButton
+          accessibilityLabel={index === onboardingSlides.length - 1 ? 'Finish onboarding' : 'Next onboarding slide'}
+          testID={index === onboardingSlides.length - 1 ? 'onboarding-get-started' : 'onboarding-next'}
+          onPress={next}
+          icon={index === onboardingSlides.length - 1 ? 'arrow-forward' : 'chevron-forward'}
+        >
+          {index === onboardingSlides.length - 1 ? 'GET STARTED' : 'NEXT'}
         </GlowButton>
-        {index < onboardingSlides.length - 1 ? (
-          <SecondaryButton onPress={finish}>Start Now</SecondaryButton>
-        ) : null}
       </View>
     </ScreenContainer>
   );
@@ -114,6 +137,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  headerBrand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   logoText: {
     ...typography.subtitle,

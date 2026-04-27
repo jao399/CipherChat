@@ -47,12 +47,19 @@ export function QRCard() {
   );
 }
 
-export function VerificationCodeCard() {
+type VerificationCodeCardProps = {
+  blocks?: string[];
+};
+
+export function VerificationCodeCard({ blocks = ['7XQ9', 'L2M8', 'P4K7', 'J6D3', 'N9Z1', 'H7F2'] }: VerificationCodeCardProps) {
+  const firstRow = blocks.slice(0, 3).join('  |  ');
+  const secondRow = blocks.slice(3, 6).join('  |  ');
+
   return (
     <View style={styles.codeCard}>
       <Text style={styles.codeLabel}>Safety Code</Text>
-      <Text style={styles.code}>7XQ9  |  L2M8  |  P4K7</Text>
-      <Text style={styles.code}>J6D3  |  N9Z1  |  H7F2</Text>
+      <Text style={styles.code}>{firstRow}</Text>
+      <Text style={styles.code}>{secondRow}</Text>
     </View>
   );
 }
@@ -63,35 +70,39 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.primaryBright,
-    padding: spacing.md,
-    backgroundColor: 'rgba(139,61,255,0.10)',
+    padding: spacing.lg,
+    backgroundColor: 'rgba(124,45,255,0.08)',
+    shadowColor: colors.primaryBright,
+    shadowOpacity: 0.34,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
   },
   qr: {
-    width: 236,
-    height: 236,
+    width: 226,
+    height: 226,
     borderRadius: radii.sm,
-    backgroundColor: colors.white,
+    backgroundColor: '#0F1015',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 10,
+    padding: 9,
     position: 'relative',
   },
   cell: {
-    width: 10.28,
-    height: 10.28,
-    backgroundColor: '#F2F2F7',
+    width: 9.9,
+    height: 9.9,
+    backgroundColor: '#161820',
   },
   cellOn: {
-    backgroundColor: '#111111',
+    backgroundColor: '#F2F3F7',
   },
   logo: {
     position: 'absolute',
-    left: 96,
-    top: 96,
+    left: 91,
+    top: 91,
     width: 44,
     height: 44,
     borderRadius: radii.md,
-    backgroundColor: colors.background,
+    backgroundColor: '#0F1015',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -99,7 +110,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(10,10,18,0.82)',
     padding: spacing.lg,
     alignItems: 'center',
     gap: spacing.xs,

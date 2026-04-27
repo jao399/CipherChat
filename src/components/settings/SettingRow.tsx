@@ -10,13 +10,23 @@ type SettingRowProps = {
   onPress?: () => void;
   value?: boolean;
   onValueChange?: (value: boolean) => void;
+  testID?: string;
 };
 
-export function SettingRow({ icon, title, subtitle, onPress, value, onValueChange }: SettingRowProps) {
+export function SettingRow({ icon, title, subtitle, onPress, value, onValueChange, testID }: SettingRowProps) {
   const hasSwitch = typeof value === 'boolean';
 
   return (
-    <TouchableOpacity activeOpacity={0.78} onPress={onPress} style={styles.row} disabled={!onPress && !hasSwitch}>
+    <TouchableOpacity
+      accessibilityRole={hasSwitch ? 'switch' : 'button'}
+      accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title}
+      accessibilityState={hasSwitch ? { checked: value } : undefined}
+      activeOpacity={0.78}
+      onPress={hasSwitch && onValueChange ? () => onValueChange(!value) : onPress}
+      style={styles.row}
+      testID={testID}
+      disabled={!onPress && !hasSwitch}
+    >
       <View style={styles.icon}>
         <Ionicons name={icon} size={21} color={colors.security} />
       </View>
@@ -28,6 +38,7 @@ export function SettingRow({ icon, title, subtitle, onPress, value, onValueChang
         <Switch
           value={value}
           onValueChange={onValueChange}
+          accessibilityLabel={title}
           trackColor={{ true: colors.primary, false: colors.border }}
           thumbColor={value ? colors.text : colors.muted}
         />

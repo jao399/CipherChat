@@ -18,7 +18,7 @@ export function SecureBadge({ label = 'Verified', tone = 'green' }: SecureBadgeP
         size={11}
         color={isGreen ? colors.security : colors.primaryBright}
       />
-      <Text style={[styles.label, isGreen ? styles.greenText : styles.purpleText]}>{label}</Text>
+      <Text style={[styles.label, isGreen ? styles.greenText : styles.purpleText]}>{label.toUpperCase()}</Text>
     </View>
   );
 }
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     gap: spacing.xxs,
     borderRadius: radii.pill,
     paddingHorizontal: spacing.xs,
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderWidth: 1,
   },
   green: {
@@ -45,7 +45,8 @@ const styles = StyleSheet.create({
   label: {
     ...typography.small,
     fontSize: 9,
-    lineHeight: 12,
+    lineHeight: 11,
+    letterSpacing: 0.2,
   },
   greenText: {
     color: colors.security,

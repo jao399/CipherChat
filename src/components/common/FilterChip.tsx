@@ -6,11 +6,16 @@ type FilterChipProps = {
   label: string;
   active?: boolean;
   onPress?: () => void;
+  testID?: string;
 };
 
-export function FilterChip({ label, active, onPress }: FilterChipProps) {
+export function FilterChip({ label, active, onPress, testID }: FilterChipProps) {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${label} filter`}
+      accessibilityState={{ selected: !!active }}
+      testID={testID}
       onPress={onPress}
       style={({ pressed }) => [styles.chip, active && styles.active, pressed && styles.pressed]}
     >

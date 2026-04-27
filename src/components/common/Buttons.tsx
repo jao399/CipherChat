@@ -10,12 +10,17 @@ type ButtonProps = PropsWithChildren<{
   icon?: keyof typeof Ionicons.glyphMap;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
+  accessibilityLabel?: string;
+  testID?: string;
 }>;
 
-export function GlowButton({ children, onPress, icon, style, disabled }: ButtonProps) {
+export function GlowButton({ children, onPress, icon, style, disabled, accessibilityLabel, testID }: ButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled: !!disabled }}
+      testID={testID}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [styles.pressable, pressed && styles.pressed, disabled && styles.disabled, style]}
@@ -28,10 +33,13 @@ export function GlowButton({ children, onPress, icon, style, disabled }: ButtonP
   );
 }
 
-export function SecureButton({ children, onPress, icon, style, disabled }: ButtonProps) {
+export function SecureButton({ children, onPress, icon, style, disabled, accessibilityLabel, testID }: ButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled: !!disabled }}
+      testID={testID}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [styles.pressable, pressed && styles.pressed, disabled && styles.disabled, style]}
@@ -44,10 +52,13 @@ export function SecureButton({ children, onPress, icon, style, disabled }: Butto
   );
 }
 
-export function SecondaryButton({ children, onPress, icon, style, disabled }: ButtonProps) {
+export function SecondaryButton({ children, onPress, icon, style, disabled, accessibilityLabel, testID }: ButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled: !!disabled }}
+      testID={testID}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [

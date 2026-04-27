@@ -65,7 +65,12 @@ export function PasswordField({ label = 'Password', ...props }: InputFieldProps)
             props.onFocus?.(event);
           }}
         />
-        <TouchableOpacity onPress={() => setVisible((value) => !value)} hitSlop={8}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={visible ? `Hide ${label}` : `Show ${label}`}
+          onPress={() => setVisible((value) => !value)}
+          hitSlop={8}
+        >
           <Ionicons name={visible ? 'eye-off' : 'eye'} size={19} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
