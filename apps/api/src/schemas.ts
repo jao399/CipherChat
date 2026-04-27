@@ -208,6 +208,36 @@ export const deviceBundleBodySchema = {
   },
 } as const;
 
+export const publicDeviceBundleResponseSchema = {
+  type: 'object',
+  required: [
+    'accountId',
+    'accountDisplayName',
+    'deviceId',
+    'deviceName',
+    'identityKey',
+    'signedPrekey',
+    'signedPrekeySignature',
+    'oneTimePrekeys',
+    'publishedAt',
+  ],
+  additionalProperties: false,
+  properties: {
+    accountId: { type: 'string' },
+    accountDisplayName: { type: 'string' },
+    deviceId: { type: 'string' },
+    deviceName: { type: 'string' },
+    identityKey: { type: 'string' },
+    signedPrekey: { type: 'string' },
+    signedPrekeySignature: { type: 'string' },
+    oneTimePrekeys: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    publishedAt: { type: 'string' },
+  },
+} as const;
+
 export const encryptedEnvelopeBodySchema = {
   type: 'object',
   required: [

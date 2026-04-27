@@ -15,6 +15,18 @@ export type PublishedDeviceBundle = {
   bundleId: string;
 };
 
+export type PublicDeviceBundle = {
+  accountId: string;
+  accountDisplayName: string;
+  deviceId: string;
+  deviceName: string;
+  identityKey: string;
+  signedPrekey: string;
+  signedPrekeySignature: string;
+  oneTimePrekeys: string[];
+  publishedAt: string;
+};
+
 export type CreateAccountInput = {
   id?: string;
   displayName: string;
@@ -148,6 +160,7 @@ export type AccountRepository = {
 
 export type DeviceRepository = {
   publishDeviceBundle(input: PublishDeviceBundleInput): Promise<PublishedDeviceBundle>;
+  getDeviceBundle(accountId: string, deviceId: string): Promise<PublicDeviceBundle | null>;
 };
 
 export type MessageRepository = {

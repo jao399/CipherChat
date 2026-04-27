@@ -365,12 +365,25 @@ The app now surfaces remote contact identity trust:
 
 More detail: `docs/architecture/phase-15-remote-contact-trust.md`.
 
+## Phase 16 Public Device Bundle Lookup
+
+The API and mobile client now support authenticated public device bundle lookup:
+
+- `GET /v1/devices/bundles/:accountId/:deviceId`
+- Requires a bearer device-session token.
+- Returns only public identity/prekey material.
+- Prisma repository now reads active public bundles.
+- Mobile `CipherChatApiClient` exposes `getPublicDeviceBundle`.
+- Mock API client supports bundle lookup for UI-only work.
+
+More detail: `docs/architecture/phase-16-public-device-bundles.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Fetch and persist real remote contact identity bundles from the backend.
+5. Replace mock remote contact trust records with fetched backend bundles and persisted local trust decisions.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.

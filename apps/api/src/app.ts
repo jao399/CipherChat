@@ -43,7 +43,7 @@ export async function buildApi(config: ApiConfig, dependencies: ApiDependencies 
   await registerHealthRoutes(app, dependencies.databaseHealthCheck, dependencies.queueHealthCheck);
   await registerAccountRoutes(app, dependencies.repositories?.accounts, dependencies.repositories?.sessions);
   await registerAuthRoutes(app, dependencies.repositories?.sessions);
-  await registerDeviceRoutes(app, dependencies.repositories?.devices);
+  await registerDeviceRoutes(app, dependencies.repositories?.devices, dependencies.repositories?.sessions);
   await registerMessageRoutes(
     app,
     dependencies.repositories?.messages,

@@ -146,6 +146,9 @@ describe('device bundle route', () => {
           bundleId: 'bundle_000000001',
         };
       },
+      async getDeviceBundle() {
+        return null;
+      },
     };
     const app = await buildTestApi({ repositories: { devices } });
 
@@ -160,6 +163,93 @@ describe('device bundle route', () => {
     assert.equal(response.json().bundleId, 'bundle_000000001');
     assert.equal(publishedBundles.length, 1);
     assert.equal(publishedBundles[0]?.identityKey, body.identityKey);
+  });
+
+  it('returns a public device bundle for authenticated devices', async () => {
+    const devices: DeviceRepository = {
+      async publishDeviceBundle() {
+        throw new Error('should not publish during lookup');
+      },
+      async getDeviceBundle(accountId, deviceId) {
+        return {
+          accountId,
+          accountDisplayName: 'Eleanor',
+          deviceId,
+          deviceName: 'Pixel Test Device',
+          identityKey: body.identityKey,
+          signedPrekey: body.signedPrekey,
+          signedPrekeySignature: body.signedPrekeySignature,
+          oneTimePrekeys: body.oneTimePrekeys,
+          publishedAt: new Date(0).toISOString(),
+        };
+      },
+    };
+    const app = await buildTestApi({
+      repositories: {
+        devices,
+        sessions: createSessionRepository(),
+      },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/v1/devices/bundles/${body.accountId}/${body.deviceId}`,
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().identityKey, body.identityKey);
+    assert.equal(response.json().oneTimePrekeys.length, 1);
+  });
+
+  it('requires a device session before returning public device bundles', async () => {
+    const devices: DeviceRepository = {
+      async publishDeviceBundle() {
+        throw new Error('should not publish during lookup');
+      },
+      async getDeviceBundle() {
+        throw new Error('should not look up without auth');
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/v1/devices/bundles/${body.accountId}/${body.deviceId}`,
+    });
+
+    assert.equal(response.statusCode, 401);
+    assert.equal(response.json().error, 'missing_session');
+  });
+
+  it('returns 404 when a public device bundle is not found', async () => {
+    const devices: DeviceRepository = {
+      async publishDeviceBundle() {
+        throw new Error('should not publish during lookup');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+    };
+    const app = await buildTestApi({
+      repositories: {
+        devices,
+        sessions: createSessionRepository(),
+      },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/v1/devices/bundles/${body.accountId}/${body.deviceId}`,
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 404);
+    assert.equal(response.json().error, 'device_bundle_not_found');
   });
 });
 

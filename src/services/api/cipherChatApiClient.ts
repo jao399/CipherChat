@@ -6,6 +6,7 @@ import type {
   EncryptedEnvelopeRequest,
   EncryptedEnvelopeResponse,
   PendingEnvelopePage,
+  PublicDeviceBundleResponse,
   PublishDeviceBundleRequest,
 } from './types';
 
@@ -47,6 +48,14 @@ export class CipherChatApiClient {
         method: 'POST',
         body: JSON.stringify(input),
       },
+    );
+  }
+
+  async getPublicDeviceBundle(input: { accountId: string; deviceId: string; token: string }) {
+    return this.request<PublicDeviceBundleResponse>(
+      `/v1/devices/bundles/${encodeURIComponent(input.accountId)}/${encodeURIComponent(input.deviceId)}`,
+      undefined,
+      { token: input.token },
     );
   }
 

@@ -29,6 +29,18 @@ export type PublishDeviceBundleRequest = {
   oneTimePrekeys?: string[];
 };
 
+export type PublicDeviceBundleResponse = {
+  accountId: string;
+  accountDisplayName: string;
+  deviceId: string;
+  deviceName: string;
+  identityKey: string;
+  signedPrekey: string;
+  signedPrekeySignature: string;
+  oneTimePrekeys: string[];
+  publishedAt: string;
+};
+
 export type DeviceChallengeResponse = {
   challengeId: string;
   accountId: string;

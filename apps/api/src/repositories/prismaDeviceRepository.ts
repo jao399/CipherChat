@@ -2,6 +2,10 @@ import type { PrismaClient } from '@prisma/client';
 
 import type { DeviceRepository, PublishDeviceBundleInput } from './types.js';
 
+function readOneTimePrekeys(value: unknown) {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
 export class PrismaDeviceRepository implements DeviceRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -59,5 +63,35 @@ export class PrismaDeviceRepository implements DeviceRepository {
         bundleId: bundle.id,
       };
     });
+  }
+
+  async getDeviceBundle(accountId: string, deviceId: string) {
+    const device = await this.prisma.device.findFirst({
+      where: {
+        id: deviceId,
+        accountId,
+        revokedAt: null,
+      },
+      include: {
+        account: true,
+        prekeyBundle: true,
+      },
+    });
+
+    if (!device?.prekeyBundle) {
+      return null;
+    }
+
+    return {
+      accountId: device.accountId,
+      accountDisplayName: device.account.displayName,
+      deviceId: device.id,
+      deviceName: device.displayName,
+      identityKey: device.identityKey,
+      signedPrekey: device.prekeyBundle.signedPrekey,
+      signedPrekeySignature: device.prekeyBundle.signedPrekeySignature,
+      oneTimePrekeys: readOneTimePrekeys(device.prekeyBundle.oneTimePrekeys),
+      publishedAt: device.prekeyBundle.publishedAt.toISOString(),
+    };
   }
 }
