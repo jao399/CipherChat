@@ -6,6 +6,7 @@ import type {
   Message,
   OnboardingSlide,
   PrivacyMetric,
+  RemoteIdentityTrustRecord,
   SecureFile,
 } from '../types';
 
@@ -211,6 +212,62 @@ export const contacts: Contact[] = [
   { id: 'liam', name: 'Liam', handle: '@liam.keys', verified: false, mutualKeys: 1, avatar: 'L' },
   { id: 'zoe', name: 'Zoe', handle: '@zoe.safe', verified: true, mutualKeys: 4, avatar: 'Z' },
   { id: 'olivia', name: 'Olivia', handle: '@olivia.lock', verified: false, mutualKeys: 0, avatar: 'O' },
+];
+
+export const remoteIdentityTrust: RemoteIdentityTrustRecord[] = [
+  {
+    id: 'eleanor',
+    displayName: 'Eleanor',
+    handle: '@eleanor.sec',
+    trustState: 'changed',
+    identityFingerprint: 'A7C1 9E4B 02D5 8F10 B33A 7C91',
+    safetyNumberBlocks: ['A7C1', '9E4B', '02D5', '8F10', 'B33A', '7C91'],
+    lastVerifiedAt: 'Yesterday',
+    changedAt: '9:32 AM',
+  },
+  {
+    id: 'maya',
+    displayName: 'Maya',
+    handle: '@maya.sec',
+    trustState: 'trusted',
+    identityFingerprint: '13B8 9A42 C0D4 A771 55E2 109F',
+    safetyNumberBlocks: ['13B8', '9A42', 'C0D4', 'A771', '55E2', '109F'],
+    lastVerifiedAt: '2 days ago',
+  },
+  {
+    id: 'noah',
+    displayName: 'Noah',
+    handle: '@noah.private',
+    trustState: 'trusted',
+    identityFingerprint: '812C 04F8 C11B 4D20 A98E 3C7A',
+    safetyNumberBlocks: ['812C', '04F8', 'C11B', '4D20', 'A98E', '3C7A'],
+    lastVerifiedAt: 'Last week',
+  },
+  {
+    id: 'liam',
+    displayName: 'Liam',
+    handle: '@liam.keys',
+    trustState: 'new',
+    identityFingerprint: '445D 020A F9B1 774E 013F C28B',
+    safetyNumberBlocks: ['445D', '020A', 'F9B1', '774E', '013F', 'C28B'],
+  },
+  {
+    id: 'zoe',
+    displayName: 'Zoe',
+    handle: '@zoe.safe',
+    trustState: 'trusted',
+    identityFingerprint: '5AA0 F11E 34D8 E42C 9091 BB70',
+    safetyNumberBlocks: ['5AA0', 'F11E', '34D8', 'E42C', '9091', 'BB70'],
+    lastVerifiedAt: 'Mon',
+  },
+  {
+    id: 'olivia',
+    displayName: 'Olivia',
+    handle: '@olivia.lock',
+    trustState: 'new',
+    identityFingerprint: '901B CC78 7FA2 1034 EED9 775A',
+    safetyNumberBlocks: ['901B', 'CC78', '7FA2', '1034', 'EED9', '775A'],
+  },
 ];
 
 export const callHistory: CallRecord[] = [

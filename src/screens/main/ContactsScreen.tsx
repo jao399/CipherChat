@@ -10,7 +10,8 @@ import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { SecureBadge } from '../../components/common/SecureBadge';
-import { contacts } from '../../data/mockData';
+import { contacts, remoteIdentityTrust } from '../../data/mockData';
+import { describeRemoteTrustState, findRemoteTrustRecord } from '../../security';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -38,23 +39,44 @@ export function ContactsScreen() {
 
       <SectionHeader title="Suggested Contacts" action="Verified first" />
       <View style={styles.list}>
-        {contacts.map((contact) => (
-          <View key={contact.id} style={styles.contactRow}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{contact.avatar}</Text>
-            </View>
-            <View style={styles.contactBody}>
-              <View style={styles.contactNameRow}>
-                <Text style={styles.contactName}>{contact.name}</Text>
-                {contact.verified ? <SecureBadge /> : null}
+        {contacts.map((contact) => {
+          const trust = findRemoteTrustRecord(remoteIdentityTrust, contact.id, contact.name);
+          const trustCopy = trust ? describeRemoteTrustState(trust.trustState) : null;
+          const needsReview = trust?.trustState === 'changed' || trust?.trustState === 'new';
+
+          return (
+            <View key={contact.id} style={styles.contactRow}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{contact.avatar}</Text>
               </View>
-              <Text style={styles.handle}>{contact.handle} | {contact.mutualKeys} mutual keys</Text>
+              <View style={styles.contactBody}>
+                <View style={styles.contactNameRow}>
+                  <Text style={styles.contactName}>{contact.name}</Text>
+                  {contact.verified && trust?.trustState === 'trusted' ? <SecureBadge /> : null}
+                  {trustCopy && needsReview ? (
+                    <View style={[styles.trustBadge, trust.trustState === 'changed' && styles.changedBadge]}>
+                      <Ionicons
+                        name={trustCopy.icon}
+                        size={12}
+                        color={trust.trustState === 'changed' ? colors.warning : colors.primaryBright}
+                      />
+                      <Text style={[styles.trustBadgeText, trust.trustState === 'changed' && styles.changedBadgeText]}>
+                        {trustCopy.label}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={styles.handle}>{contact.handle} | {contact.mutualKeys} mutual keys</Text>
+                {trust ? (
+                  <Text style={styles.safetyNumber}>{trust.safetyNumberBlocks.join(' ')}</Text>
+                ) : null}
+              </View>
+              <TouchableOpacity style={[styles.add, needsReview && styles.review]}>
+                <Ionicons name={needsReview ? 'shield-outline' : 'person-add'} size={18} color={colors.text} />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.add}>
-              <Ionicons name="person-add" size={18} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-        ))}
+          );
+        })}
       </View>
     </ScreenContainer>
   );
@@ -102,7 +124,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   contactRow: {
-    minHeight: 76,
+    minHeight: 86,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
@@ -128,6 +150,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   contactName: {
     ...typography.body,
@@ -137,6 +160,35 @@ const styles = StyleSheet.create({
   handle: {
     ...typography.small,
   },
+  safetyNumber: {
+    ...typography.small,
+    color: colors.primaryBright,
+    fontSize: 11,
+  },
+  trustBadge: {
+    minHeight: 22,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.32)',
+    backgroundColor: 'rgba(124,45,255,0.1)',
+    paddingHorizontal: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  changedBadge: {
+    borderColor: 'rgba(244,183,64,0.42)',
+    backgroundColor: 'rgba(244,183,64,0.08)',
+  },
+  trustBadgeText: {
+    ...typography.small,
+    color: colors.primaryBright,
+    fontSize: 10,
+    textTransform: 'uppercase',
+  },
+  changedBadgeText: {
+    color: colors.warning,
+  },
   add: {
     width: 36,
     height: 36,
@@ -144,5 +196,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  review: {
+    backgroundColor: colors.primaryDeep,
+    borderWidth: 1,
+    borderColor: colors.primaryBright,
   },
 });

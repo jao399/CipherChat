@@ -38,6 +38,10 @@ export {
   markIdentityTrusted,
 } from './trustedIdentityStore';
 export {
+  describeRemoteTrustState,
+  findRemoteTrustRecord,
+} from './remoteContactTrust';
+export {
   APPROVED_PROTOCOLS,
   PUSH_PRIVACY_POLICY,
   SECURITY_INVARIANTS,

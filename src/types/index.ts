@@ -53,6 +53,19 @@ export type Contact = {
   avatar: string;
 };
 
+export type RemoteIdentityTrustState = 'trusted' | 'new' | 'changed';
+
+export type RemoteIdentityTrustRecord = {
+  id: string;
+  displayName: string;
+  handle?: string;
+  trustState: RemoteIdentityTrustState;
+  identityFingerprint: string;
+  safetyNumberBlocks: string[];
+  lastVerifiedAt?: string;
+  changedAt?: string;
+};
+
 export type CallRecord = {
   id: string;
   name: string;

@@ -14,7 +14,8 @@ import {
 
 import { MessageBubble } from '../../components/chat/MessageBubble';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
-import { chats, messages } from '../../data/mockData';
+import { chats, messages, remoteIdentityTrust } from '../../data/mockData';
+import { describeRemoteTrustState, findRemoteTrustRecord } from '../../security';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -25,6 +26,9 @@ const timers = ['10s', '30s', '1m', '5m', '10m'];
 export function ConversationScreen({ navigation, route }: Props) {
   const [timer, setTimer] = useState('30s');
   const chat = chats.find((item) => item.id === route.params.chatId) ?? chats[0];
+  const remoteTrust = findRemoteTrustRecord(remoteIdentityTrust, chat.id, chat.name);
+  const remoteTrustCopy = remoteTrust ? describeRemoteTrustState(remoteTrust.trustState) : null;
+  const shouldWarnTrust = remoteTrust?.trustState === 'changed' || remoteTrust?.trustState === 'new';
   const chatMessages = useMemo(
     () => messages.filter((message) => message.chatId === chat.id || message.chatId === 'eleanor').slice(0, 4),
     [chat.id],
@@ -62,6 +66,20 @@ export function ConversationScreen({ navigation, route }: Props) {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.messages}>
+          {remoteTrust && shouldWarnTrust && remoteTrustCopy ? (
+            <View style={[styles.trustWarning, remoteTrust.trustState === 'changed' && styles.changedWarning]}>
+              <View style={styles.trustWarningTitleRow}>
+                <Ionicons
+                  name={remoteTrustCopy.icon}
+                  size={18}
+                  color={remoteTrust.trustState === 'changed' ? colors.warning : colors.primaryBright}
+                />
+                <Text style={styles.trustWarningTitle}>{remoteTrustCopy.label}</Text>
+              </View>
+              <Text style={styles.trustWarningText}>{remoteTrustCopy.detail}</Text>
+              <Text style={styles.trustSafety}>{remoteTrust.safetyNumberBlocks.join(' ')}</Text>
+            </View>
+          ) : null}
           {chatMessages.map((message) => (
             <MessageBubble key={message.id} message={{ ...message, chatId: chat.id }} />
           ))}
@@ -170,6 +188,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
+  },
+  trustWarning: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.34)',
+    backgroundColor: 'rgba(124,45,255,0.08)',
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    gap: spacing.xs,
+  },
+  changedWarning: {
+    borderColor: 'rgba(244,183,64,0.44)',
+    backgroundColor: 'rgba(244,183,64,0.08)',
+  },
+  trustWarningTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  trustWarningTitle: {
+    ...typography.small,
+    color: colors.text,
+    textTransform: 'uppercase',
+    fontWeight: '900',
+  },
+  trustWarningText: {
+    ...typography.small,
+    color: colors.textSecondary,
+  },
+  trustSafety: {
+    ...typography.small,
+    color: colors.primaryBright,
+    fontSize: 11,
   },
   timerCard: {
     borderRadius: radii.md,

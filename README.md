@@ -353,12 +353,24 @@ The mobile app now surfaces local identity trust state:
 
 More detail: `docs/architecture/phase-14-safety-numbers-trust.md`.
 
+## Phase 15 Remote Contact Trust
+
+The app now surfaces remote contact identity trust:
+
+- `RemoteIdentityTrustState` and `RemoteIdentityTrustRecord` model trusted, new, and changed contact keys.
+- `src/data/mockData.ts` includes mock remote identity trust records.
+- `src/security/remoteContactTrust.ts` centralizes trust-state copy and lookup.
+- Contacts shows key-review badges and safety-number blocks.
+- Conversation shows a prominent warning when the remote contact key is new or changed.
+
+More detail: `docs/architecture/phase-15-remote-contact-trust.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Add remote contact key-change warnings inside chat and contact screens.
+5. Fetch and persist real remote contact identity bundles from the backend.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.
