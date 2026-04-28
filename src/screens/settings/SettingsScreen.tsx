@@ -13,7 +13,13 @@ import { SectionHeader } from '../../components/common/SectionHeader';
 import { SettingRow } from '../../components/settings/SettingRow';
 import { ONBOARDING_STORAGE_KEY } from '../../constants/storage';
 import { useBackend } from '../../hooks/useBackend';
-import { getEncryptedDatabaseReadiness, opSQLiteEncryptedLocalDatabase } from '../../services/local';
+import {
+  collectPrototypeStoreMigrationItems,
+  getEncryptedDatabaseReadiness,
+  migratePrototypeStoresToEncryptedDatabase,
+  opSQLiteEncryptedLocalDatabase,
+  type PrototypeStoreMigrationResult,
+} from '../../services/local';
 import type { EncryptedLocalDatabaseStatus } from '../../services/ports';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
@@ -28,6 +34,10 @@ export function SettingsScreen() {
   const [pollingInbox, setPollingInbox] = useState(false);
   const [checkingEncryptedDatabase, setCheckingEncryptedDatabase] = useState(false);
   const [encryptedDatabaseStatus, setEncryptedDatabaseStatus] = useState<EncryptedLocalDatabaseStatus | null>(null);
+  const [checkingMigrationReadiness, setCheckingMigrationReadiness] = useState(false);
+  const [runningMigration, setRunningMigration] = useState(false);
+  const [migrationPreview, setMigrationPreview] = useState<PrototypeStoreMigrationResult['migratedCounts'] | null>(null);
+  const [migrationResult, setMigrationResult] = useState<PrototypeStoreMigrationResult | null>(null);
   const encryptedDatabase = getEncryptedDatabaseReadiness();
   const encryptedDatabaseState = encryptedDatabaseStatus
     ? encryptedDatabaseStatus.available
@@ -90,6 +100,61 @@ export function SettingsScreen() {
     : inboundEnvelopeStatus.lastPolledAt
       ? `${inboundEnvelopeStatus.pendingCount} fetched now | ${inboundEnvelopeStatus.totalAcknowledged} total acknowledged${inboundEnvelopeStatus.nextCursor ? ' | more pages ready' : ''}`
       : 'Poll pending envelopes for this device';
+  const migrationSubtitle = migrationPreview
+    ? `${migrationPreview.remoteTrustRecords} trust | ${migrationPreview.outboundQueueItems} outbound | ${migrationPreview.inboundReceipts} receipts`
+    : 'Preview prototype stores before copying';
+  const migrationRunSubtitle = migrationResult
+    ? migrationResult.status === 'completed'
+      ? `${migrationResult.migratedCounts.remoteTrustRecords + migrationResult.migratedCounts.outboundQueueItems + migrationResult.migratedCounts.inboundReceipts} records copied`
+      : migrationResult.reason ?? 'Migration did not run'
+    : 'Copies only when encrypted DB is active';
+
+  const checkMigrationReadiness = async () => {
+    setCheckingMigrationReadiness(true);
+
+    try {
+      const items = await collectPrototypeStoreMigrationItems();
+      setMigrationPreview({
+        inboundReceipts: items.inboundReceipts.length,
+        outboundQueueItems: items.outboundQueueItems.length,
+        remoteTrustRecords: items.remoteTrustRecords.length,
+      });
+    } catch (error) {
+      Alert.alert(
+        'Migration preview unavailable',
+        error instanceof Error ? error.message : 'CipherChat could not inspect prototype stores.',
+      );
+    } finally {
+      setCheckingMigrationReadiness(false);
+    }
+  };
+
+  const runPrototypeMigration = async () => {
+    setRunningMigration(true);
+
+    try {
+      const result = await migratePrototypeStoresToEncryptedDatabase(opSQLiteEncryptedLocalDatabase, {
+        enabled: true,
+      });
+      setMigrationResult(result);
+      if (result.encryptedDatabaseStatus) {
+        setEncryptedDatabaseStatus(result.encryptedDatabaseStatus);
+      }
+      Alert.alert(
+        result.status === 'completed' ? 'Migration copied' : 'Migration blocked',
+        result.status === 'completed'
+          ? `${result.migratedCounts.remoteTrustRecords} trust records, ${result.migratedCounts.outboundQueueItems} outbound items, and ${result.migratedCounts.inboundReceipts} inbound receipts were copied. Source AsyncStorage data was not deleted.`
+          : result.reason ?? 'Encrypted local database is not ready.',
+      );
+    } catch (error) {
+      Alert.alert(
+        'Migration failed',
+        error instanceof Error ? error.message : 'CipherChat could not run the prototype migration.',
+      );
+    } finally {
+      setRunningMigration(false);
+    }
+  };
 
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
@@ -192,6 +257,28 @@ export function SettingsScreen() {
           onPress={checkEncryptedDatabase}
         />
       </View>
+
+      {__DEV__ ? (
+        <>
+          <SectionHeader title="Development Migration" />
+          <View style={styles.group}>
+            <SettingRow
+              icon={checkingMigrationReadiness ? 'sync' : 'analytics'}
+              title="Migration Readiness"
+              subtitle={checkingMigrationReadiness ? 'Inspecting prototype stores...' : migrationSubtitle}
+              testID="settings-migration-readiness"
+              onPress={checkMigrationReadiness}
+            />
+            <SettingRow
+              icon={runningMigration ? 'sync' : 'lock-closed'}
+              title="Copy to Encrypted Database"
+              subtitle={runningMigration ? 'Running guarded migration...' : migrationRunSubtitle}
+              testID="settings-run-encrypted-migration"
+              onPress={runPrototypeMigration}
+            />
+          </View>
+        </>
+      ) : null}
 
       <TouchableOpacity
         accessibilityRole="button"

@@ -529,6 +529,18 @@ CipherChat now has a disabled-by-default migration harness for prototype AsyncSt
 
 More detail: `docs/architecture/phase-27-prototype-store-migration-harness.md`.
 
+## Phase 28 Development Migration Control
+
+CipherChat now has a development-only Settings control for migration inspection:
+
+- `Migration Readiness` previews prototype records available to copy.
+- `Copy to Encrypted Database` runs the guarded migration manually.
+- The control is visible only in `__DEV__` builds.
+- Migration remains blocked unless encrypted storage is active.
+- Source AsyncStorage data is still preserved.
+
+More detail: `docs/architecture/phase-28-development-migration-control.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
@@ -537,4 +549,4 @@ More detail: `docs/architecture/phase-27-prototype-store-migration-harness.md`.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
 5. Install Android platform tools and run the SQLCipher adapter in a real development client.
 6. Add CI integration tests against disposable Postgres and Redis services.
-7. Add a development-only Settings control to manually run and inspect encrypted database migration.
+7. Add release hardening CI gates and a production-readiness checklist.

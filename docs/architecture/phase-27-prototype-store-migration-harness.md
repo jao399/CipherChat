@@ -43,7 +43,7 @@ The migration is intentionally conservative:
 
 ## Next phase
 
-Phase 28 should add the explicit app-side migration control surface:
+Phase 28 adds the explicit app-side migration control surface:
 
 - Settings status row for migration readiness
 - manual migration action hidden behind development-only controls
