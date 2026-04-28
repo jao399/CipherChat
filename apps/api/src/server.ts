@@ -1,5 +1,5 @@
 import { buildApi } from './app.js';
-import { readApiConfig } from './config.js';
+import { readApiConfig, validateApiConfigForRuntime } from './config.js';
 import { checkPrismaReady, createPrismaClient } from './db/prisma.js';
 import { createDeviceSignatureVerifier } from './auth/signatureVerifier.js';
 import { RedisRateLimitStore } from './middleware/redisRateLimitStore.js';
@@ -12,6 +12,7 @@ import { PrismaMetadataRetentionRepository } from './repositories/prismaMetadata
 import { PrismaSessionRepository } from './repositories/prismaSessionRepository.js';
 
 const config = readApiConfig();
+validateApiConfigForRuntime(config);
 const prisma = config.databaseUrl ? createPrismaClient() : undefined;
 const redis = config.redisUrl ? createRedisClient(config.redisUrl) : undefined;
 const signatureVerifier = createDeviceSignatureVerifier();

@@ -52,6 +52,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Metadata retention limits must exist for delivery events, expired envelopes, audit records, and queue jobs.
 - Metadata cleanup must not delete active sessions, active challenges, or valid queued envelopes.
 - Queue cleanup must not delete waiting, active, delayed, or paused delivery jobs.
+- Production API startup must fail when required persistence, queue, signature-verifier, CORS, or internal-token configuration is unsafe.
 - Push notifications must use generic payloads with no message content or sensitive contact names.
 - Abuse reports must disclose only user-selected message content or metadata.
 - Audit events must avoid plaintext content, file names, private contact graph details, and private keys.
@@ -64,6 +65,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Account/session abuse-control gate output: `npm run verify:abuse-controls`
 - Metadata retention gate output: `npm run verify:metadata-retention`
 - Queue operations gate output: `npm run verify:queue-operations`
+- Production config gate output: `npm run verify:production-config`
 - Passing CI output for `npm run validate:ci`
 - Android development-client SQLCipher verification result
 - iOS development-client SQLCipher verification result
@@ -71,5 +73,6 @@ These criteria are production blockers. CipherChat must not process production u
 - Account/session abuse-control test evidence
 - Metadata retention cleanup test evidence
 - Queue operations and Redis stats test evidence
+- Production secret and environment validation test evidence
 - Key-change warning UX test evidence
 - Production secret storage and rotation plan

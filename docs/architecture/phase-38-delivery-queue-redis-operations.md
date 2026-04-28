@@ -75,11 +75,6 @@ Production deployment should restrict these internal routes at the network layer
 
 `npm run validate:ci` now includes this verification gate.
 
-## Next phase
+## Follow-up
 
-Phase 39 should add production secret and environment validation:
-
-- required production env vars
-- secret strength checks for internal job token
-- startup failure in production when required persistence or queue dependencies are missing
-- release documentation for secret rotation and environment separation
+Phase 39 added production secret and environment validation in `docs/architecture/phase-39-production-secret-environment-validation.md`.

@@ -669,9 +669,23 @@ CipherChat now has explicit Redis/BullMQ operational controls:
 
 More detail: `docs/architecture/phase-38-delivery-queue-redis-operations.md`.
 
+## Phase 39 Production Secret and Environment Validation
+
+CipherChat now fails fast on unsafe production API configuration:
+
+- `apps/api/src/config.ts` validates production-only requirements.
+- Production API startup requires PostgreSQL, Redis, a strong internal job token, Ed25519 device signature verification, and a non-local CORS origin.
+- `ALLOW_INSECURE_DEV_SIGNATURES=true` is blocked in production.
+- Development and test mode remain flexible for local UI/API work.
+- API config tests cover local flexibility, invalid numeric limits, rejected production config, and accepted production config.
+- `scripts/verify-production-config.mjs` adds a release gate.
+- `npm run validate:ci` includes `npm run verify:production-config`.
+
+More detail: `docs/architecture/phase-39-production-secret-environment-validation.md`.
+
 ## Next Steps
 
-1. Add production secret and environment validation.
+1. Add production dependency startup health hardening.
 2. Build and install an Expo development client before adding native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.

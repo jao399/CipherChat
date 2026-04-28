@@ -58,6 +58,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 ## Operations
 
 - Production secrets are stored outside source control.
+- Production API config validation passes with strong secrets and managed dependency URLs.
 - Database migrations have rollback plans.
 - Redis and queue monitoring are configured.
 - Internal cleanup jobs are scheduled and alerting thresholds are documented.
