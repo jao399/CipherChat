@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -19,6 +20,7 @@ import { useBackend } from '../../hooks/useBackend';
 import { describeRemoteTrustState, findRemoteTrustRecord } from '../../security';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
+import type { Message } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Conversation'>;
 
@@ -26,7 +28,11 @@ const timers = ['10s', '30s', '1m', '5m', '10m'];
 
 export function ConversationScreen({ navigation, route }: Props) {
   const [timer, setTimer] = useState('30s');
-  const { remoteTrustRecords } = useBackend();
+  const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
+  const [queuedCopy, setQueuedCopy] = useState<string | null>(null);
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const { remoteTrustRecords, sendSecureMessage } = useBackend();
   const chat = chats.find((item) => item.id === route.params.chatId) ?? chats[0];
   const remoteTrust = findRemoteTrustRecord(remoteTrustRecords, chat.id, chat.name);
   const remoteTrustCopy = remoteTrust ? describeRemoteTrustState(remoteTrust.trustState) : null;
@@ -35,6 +41,53 @@ export function ConversationScreen({ navigation, route }: Props) {
     () => messages.filter((message) => message.chatId === chat.id || message.chatId === 'eleanor').slice(0, 4),
     [chat.id],
   );
+  const visibleMessages = useMemo(() => [...chatMessages, ...localMessages], [chatMessages, localMessages]);
+
+  const sendDraft = async () => {
+    const plaintext = draft.trim();
+
+    if (!plaintext) {
+      return;
+    }
+
+    if (!remoteTrust) {
+      Alert.alert('No trusted device key', 'Discover and verify this contact before sending encrypted messages.');
+      return;
+    }
+
+    setSending(true);
+    setQueuedCopy(null);
+
+    try {
+      const response = await sendSecureMessage({
+        conversationId: chat.id,
+        recipientRecordId: remoteTrust.id,
+        plaintext,
+        disappearingTimer: timer,
+      });
+      const now = new Date();
+      const sentMessage: Message = {
+        id: `local_${now.getTime()}`,
+        chatId: chat.id,
+        sender: 'me',
+        kind: 'text',
+        text: plaintext,
+        time: now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        status: 'sent',
+      };
+
+      setLocalMessages((current) => [...current, sentMessage]);
+      setQueuedCopy(`${response.envelopeCount} encrypted envelope${response.envelopeCount === 1 ? '' : 's'} queued`);
+      setDraft('');
+    } catch (error) {
+      Alert.alert(
+        'Secure send blocked',
+        error instanceof Error ? error.message : 'CipherChat could not prepare the encrypted outbound envelope.',
+      );
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <ScreenContainer padded={false}>
@@ -82,9 +135,15 @@ export function ConversationScreen({ navigation, route }: Props) {
               <Text style={styles.trustSafety}>{remoteTrust.safetyNumberBlocks.join(' ')}</Text>
             </View>
           ) : null}
-          {chatMessages.map((message) => (
+          {visibleMessages.map((message) => (
             <MessageBubble key={message.id} message={{ ...message, chatId: chat.id }} />
           ))}
+          {queuedCopy ? (
+            <View style={styles.outboundStatus}>
+              <Ionicons name="lock-closed" size={14} color={colors.primaryBright} />
+              <Text style={styles.outboundStatusText}>{queuedCopy}</Text>
+            </View>
+          ) : null}
           <View style={styles.timerCard}>
             <Text style={styles.timerLabel}>This message will self-destruct</Text>
             <View style={styles.timerRow}>
@@ -109,6 +168,10 @@ export function ConversationScreen({ navigation, route }: Props) {
           <TextInput
             accessibilityLabel="Message composer"
             testID="conversation-composer"
+            value={draft}
+            onChangeText={setDraft}
+            onSubmitEditing={() => void sendDraft()}
+            returnKeyType="send"
             placeholder="Type a message..."
             placeholderTextColor={colors.muted}
             style={styles.input}
@@ -116,8 +179,15 @@ export function ConversationScreen({ navigation, route }: Props) {
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open emoji picker" testID="conversation-emoji" style={styles.composerIcon}>
             <Ionicons name="happy" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Record voice message" testID="conversation-mic" style={styles.mic}>
-            <Ionicons name="mic" size={20} color={colors.text} />
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={draft.trim() ? 'Send encrypted message' : 'Record voice message'}
+            testID={draft.trim() ? 'conversation-send' : 'conversation-mic'}
+            disabled={sending}
+            style={[styles.mic, sending && styles.micDisabled]}
+            onPress={draft.trim() ? () => void sendDraft() : undefined}
+          >
+            <Ionicons name={sending ? 'sync' : draft.trim() ? 'send' : 'mic'} size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -233,6 +303,24 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     gap: spacing.md,
   },
+  outboundStatus: {
+    alignSelf: 'center',
+    minHeight: 30,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.3)',
+    backgroundColor: 'rgba(124,45,255,0.1)',
+    paddingHorizontal: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+  },
+  outboundStatusText: {
+    ...typography.small,
+    color: colors.primaryBright,
+    textTransform: 'uppercase',
+  },
   timerLabel: {
     ...typography.small,
     textAlign: 'center',
@@ -296,5 +384,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  micDisabled: {
+    opacity: 0.72,
   },
 });

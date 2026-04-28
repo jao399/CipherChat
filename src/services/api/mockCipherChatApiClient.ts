@@ -4,6 +4,8 @@ import type {
   ApiReadiness,
   DeviceChallengeResponse,
   DeviceSessionResponse,
+  EncryptedEnvelopeFanoutRequest,
+  EncryptedEnvelopeFanoutResponse,
   EncryptedEnvelopeRequest,
   EncryptedEnvelopeResponse,
   PendingEnvelopePage,
@@ -141,6 +143,14 @@ export const mockCipherChatApiClient = {
       envelopeId: 'mock_envelope_0001',
       messageId: input.messageId,
       deliveryState: 'QUEUED',
+    };
+  },
+
+  async sendEnvelopeFanout(input: EncryptedEnvelopeFanoutRequest): Promise<EncryptedEnvelopeFanoutResponse> {
+    return {
+      accepted: true,
+      envelopeCount: input.envelopes.length,
+      messageIds: input.envelopes.map((envelope) => envelope.messageId),
     };
   },
 

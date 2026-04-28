@@ -4,6 +4,8 @@ import type {
   ApiReadiness,
   DeviceChallengeResponse,
   DeviceSessionResponse,
+  EncryptedEnvelopeFanoutRequest,
+  EncryptedEnvelopeFanoutResponse,
   EncryptedEnvelopeRequest,
   EncryptedEnvelopeResponse,
   PendingEnvelopePage,
@@ -96,6 +98,17 @@ export class CipherChatApiClient {
   async sendEnvelope(input: EncryptedEnvelopeRequest, token: string) {
     return this.request<EncryptedEnvelopeResponse>(
       '/v1/messages/envelopes',
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+      { token },
+    );
+  }
+
+  async sendEnvelopeFanout(input: EncryptedEnvelopeFanoutRequest, token: string) {
+    return this.request<EncryptedEnvelopeFanoutResponse>(
+      '/v1/messages/envelopes/fanout',
       {
         method: 'POST',
         body: JSON.stringify(input),

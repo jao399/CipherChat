@@ -406,12 +406,28 @@ CipherChat now has authenticated contact discovery plumbing:
 
 More detail: `docs/architecture/phase-18-contact-discovery.md`.
 
+## Phase 19 Outbound Envelope Preparation
+
+The mobile conversation composer now connects to the encrypted envelope fanout boundary:
+
+- `CipherChatApiClient` exposes `sendEnvelopeFanout`.
+- Mock API mode accepts fanout so the prototype remains usable offline.
+- `src/services/messages/outboundEnvelopeService.ts` prepares prototype per-recipient envelopes.
+- BackendProvider exposes `sendSecureMessage`.
+- Conversation sends through the provider and shows queued envelope status.
+- Sending is blocked until a recipient identity key is trusted.
+- Plaintext is kept local to the UI path; the API receives only prototype envelope payloads.
+
+This is not production encryption. The prototype service is intentionally named and documented so it can be replaced by Signal-style X3DH + Double Ratchet later.
+
+More detail: `docs/architecture/phase-19-outbound-envelope-preparation.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Build encrypted outbound envelope preparation from discovered/trusted device bundles.
+5. Add a local outbound queue with durable sending, queued, failed, and retry states.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.

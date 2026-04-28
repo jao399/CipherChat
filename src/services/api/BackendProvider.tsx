@@ -23,7 +23,13 @@ import { remoteIdentityTrust } from '../../data/mockData';
 import { CipherChatApiClient } from './cipherChatApiClient';
 import { getStoredApiSession, setStoredApiSession, clearStoredApiSession, type StoredApiSession } from './apiSessionStore';
 import { mockCipherChatApiClient } from './mockCipherChatApiClient';
-import type { AccountDiscoveryResult, BackendStatus, PublicDeviceBundleResponse } from './types';
+import type {
+  AccountDiscoveryResult,
+  BackendStatus,
+  EncryptedEnvelopeFanoutResponse,
+  PublicDeviceBundleResponse,
+} from './types';
+import { preparePrototypeOutboundFanout } from '../messages/outboundEnvelopeService';
 import type { RemoteIdentityTrustRecord } from '../../types';
 
 type BackendContextValue = {
@@ -40,6 +46,12 @@ type BackendContextValue = {
   contactDiscoveryResults: AccountDiscoveryResult[];
   discoverContacts(query: string): Promise<AccountDiscoveryResult[]>;
   addDiscoveredContact(accountId: string, deviceId: string): Promise<void>;
+  sendSecureMessage(input: {
+    conversationId: string;
+    recipientRecordId: string;
+    plaintext: string;
+    disappearingTimer: string;
+  }): Promise<EncryptedEnvelopeFanoutResponse>;
   syncRemoteIdentity(recordId: string): Promise<void>;
   trustRemoteIdentity(recordId: string): Promise<void>;
   clearSession(): Promise<void>;
@@ -324,6 +336,57 @@ export function BackendProvider({ children }: PropsWithChildren) {
     [contactDiscoveryResults, remoteTrustRecords],
   );
 
+  const sendSecureMessage = useCallback(
+    async (input: { conversationId: string; recipientRecordId: string; plaintext: string; disappearingTimer: string }) => {
+      const plaintext = input.plaintext.trim();
+
+      if (!plaintext) {
+        throw new Error('Type a message before sending.');
+      }
+
+      if (mode === 'live' && !session?.token) {
+        throw new Error('Live encrypted sending requires a verified device session.');
+      }
+
+      const activeSession = session ?? (mode === 'mock' ? await bootstrapPrototypeSession() : null);
+
+      if (!activeSession) {
+        throw new Error('Start a verified device session before sending.');
+      }
+
+      const recipient = remoteTrustRecords.find((record) => record.id === input.recipientRecordId);
+
+      if (!recipient) {
+        throw new Error('No recipient identity key is available for this conversation.');
+      }
+
+      if (recipient.trustState !== 'trusted') {
+        throw new Error('Verify this contact safety number before sending encrypted messages.');
+      }
+
+      const fanout = await preparePrototypeOutboundFanout({
+        conversationId: input.conversationId,
+        senderAccountId: activeSession.accountId,
+        senderDeviceId: activeSession.deviceId,
+        plaintext,
+        disappearingTimer: input.disappearingTimer,
+        recipients: [recipient],
+      });
+      const response =
+        mode === 'mock'
+          ? await mockCipherChatApiClient.sendEnvelopeFanout(fanout)
+          : await liveClient.sendEnvelopeFanout(fanout, activeSession.token);
+
+      setSummary(
+        response.accepted
+          ? `Queued ${response.envelopeCount} encrypted envelope${response.envelopeCount === 1 ? '' : 's'}.`
+          : 'Encrypted message fanout was not accepted.',
+      );
+      return response;
+    },
+    [bootstrapPrototypeSession, liveClient, mode, remoteTrustRecords, session],
+  );
+
   const trustRemoteIdentity = useCallback(
     async (recordId: string) => {
       const nextRecords = await markRemoteTrustRecordTrusted(remoteTrustRecords, recordId);
@@ -373,11 +436,12 @@ export function BackendProvider({ children }: PropsWithChildren) {
       rotateDeviceIdentity,
       discoverContacts,
       addDiscoveredContact,
+      sendSecureMessage,
       syncRemoteIdentity,
       trustRemoteIdentity,
       clearSession,
     }),
-    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, initializing, mode, persistBaseUrl, persistMode, ready, refreshStatus, remoteTrustRecords, rotateDeviceIdentity, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, initializing, mode, persistBaseUrl, persistMode, ready, refreshStatus, remoteTrustRecords, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

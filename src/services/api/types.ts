@@ -96,6 +96,25 @@ export type EncryptedEnvelopeResponse = {
   deliveryState: string;
 };
 
+export type EncryptedEnvelopeFanoutRequest = {
+  conversationId: string;
+  senderAccountId: string;
+  senderDeviceId: string;
+  envelopes: Array<{
+    messageId: string;
+    recipientAccountId: string;
+    recipientDeviceId: string;
+    ciphertext: string;
+    header: string;
+  }>;
+};
+
+export type EncryptedEnvelopeFanoutResponse = {
+  accepted: boolean;
+  envelopeCount: number;
+  messageIds: string[];
+};
+
 export type PendingEnvelope = {
   envelopeId: string;
   messageId: string;
