@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { EncryptedEnvelopeFanoutRequest } from '../api/types';
+import { assertNoPlaintextFieldsInOutboundQueue } from './outboundQueuePrivacy';
 
 export type OutboundQueueState = 'queued' | 'sending' | 'sent' | 'failed';
 
@@ -27,6 +28,7 @@ export async function readOutboundQueue() {
 }
 
 export async function writeOutboundQueue(items: OutboundQueueItem[]) {
+  assertNoPlaintextFieldsInOutboundQueue(items);
   await AsyncStorage.setItem(OUTBOUND_QUEUE_STORAGE_KEY, JSON.stringify(items));
 }
 

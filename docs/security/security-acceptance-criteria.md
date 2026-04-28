@@ -30,6 +30,7 @@ These criteria are production blockers. CipherChat must not process production u
 - SQLCipher or equivalent encrypted local database must report `encrypted=true` in installed Android and iOS development clients.
 - Prototype AsyncStorage metadata migration must preserve source data until verified rollback exists.
 - Production builds must block plaintext message persistence unless encrypted storage is active.
+- Durable outbound queue records must reject plaintext-shaped fields before persistence.
 - Non-exportable Android Keystore and iOS Keychain options must be evaluated for device identity keys.
 
 ## API and infrastructure gates
@@ -54,6 +55,7 @@ These criteria are production blockers. CipherChat must not process production u
 
 - Current threat model: `CipherChat-threat-model.md`
 - Production crypto provider gate test output: `npm run app:test`
+- Outbound plaintext lifecycle gate output: `npm run verify:plaintext-lifecycle`
 - Passing CI output for `npm run validate:ci`
 - Android development-client SQLCipher verification result
 - iOS development-client SQLCipher verification result

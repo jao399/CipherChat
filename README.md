@@ -614,9 +614,23 @@ CipherChat now has an explicit message encryption provider boundary:
 
 More detail: `docs/architecture/phase-34-message-encryption-provider.md`.
 
+## Phase 35 Outbound Plaintext Lifecycle Controls
+
+CipherChat now guards the durable outbound queue against plaintext-shaped fields:
+
+- `src/services/messages/outboundQueuePrivacy.ts` scans queue records before persistence.
+- `src/services/messages/outboundQueueStore.ts` calls the scanner before writing to AsyncStorage.
+- `src/services/messages/outboundQueuePrivacy.test.ts` covers direct and nested plaintext-shaped fields.
+- `scripts/verify-plaintext-lifecycle.mjs` adds a lightweight release gate.
+- `npm run validate:ci` includes `npm run verify:plaintext-lifecycle`.
+
+Plaintext remains limited to transient UI state and the provider call boundary.
+
+More detail: `docs/architecture/phase-35-outbound-plaintext-lifecycle.md`.
+
 ## Next Steps
 
-1. Add outbound plaintext lifecycle controls so plaintext cannot be written to durable queues or local stores.
+1. Add account/session abuse controls: per-route rate limits, account creation throttles, fanout caps, and payload-size limits.
 2. Build and install an Expo development client before adding native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.

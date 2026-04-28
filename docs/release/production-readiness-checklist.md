@@ -31,6 +31,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Prototype AsyncStorage stores are migrated only after encrypted database verification.
 - Source AsyncStorage deletion has rollback and backup policy.
 - Plaintext message cache is blocked unless encrypted database is active.
+- Outbound queue persistence rejects plaintext-shaped fields.
 - Device identity private keys move toward non-exportable Keychain/Keystore usage where possible.
 
 ## Server Security

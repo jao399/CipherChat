@@ -52,9 +52,6 @@ Live mode remains blocked because the selected provider is not production-ready.
 
 ## Next phase
 
-Phase 35 should add outbound plaintext lifecycle controls:
+Phase 35 adds outbound plaintext lifecycle controls.
 
-- prevent plaintext from being written to durable stores
-- make message composer plaintext live only in component memory
-- add tests for outbound queue records containing no plaintext
-- add a release gate that scans queued envelope records for plaintext-shaped fields
+More detail: `docs/architecture/phase-35-outbound-plaintext-lifecycle.md`.
