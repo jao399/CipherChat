@@ -477,12 +477,25 @@ CipherChat now has an explicit encrypted local database boundary:
 
 More detail: `docs/architecture/phase-23-encrypted-local-database-boundary.md`.
 
+## Phase 24 Development Build and Local Schema v1
+
+CipherChat is now prepared for native development builds and local encrypted database implementation:
+
+- `expo-dev-client` is installed for development-client builds.
+- `eas.json` defines development, preview, and production build profiles.
+- `app.json` now has stable iOS/Android identifiers and the `cipherchat` URL scheme.
+- `src/services/local/encryptedDatabaseSchema.ts` defines encrypted local database schema v1.
+- Settings reports `Schema v1 planned` for the encrypted local database boundary.
+- The app still does not persist plaintext messages until a real encrypted adapter reports `encrypted=true`.
+
+More detail: `docs/architecture/phase-24-development-build-and-local-schema.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
-2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
+2. Build and install an Expo development client before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Prepare the Expo development build and local database schema v1 decision.
+5. Add the native encrypted database adapter spike behind `EncryptedLocalDatabasePort`.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.

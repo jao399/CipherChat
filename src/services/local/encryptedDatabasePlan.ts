@@ -1,4 +1,5 @@
 import type { EncryptedLocalRecordKind } from '../ports';
+import { ENCRYPTED_LOCAL_DATABASE_SCHEMA_VERSION, getEncryptedLocalSchemaSummary } from './encryptedDatabaseSchema';
 
 export type LocalDataSensitivity = 'public-metadata' | 'delivery-metadata' | 'sensitive' | 'secret';
 
@@ -22,7 +23,7 @@ export type LocalDatabaseMigrationStep = {
 export const ENCRYPTED_DATABASE_ADAPTER_CANDIDATE = {
   name: 'SQLCipher-backed SQLite via OP-SQLite candidate',
   requiresDevelopmentBuild: true,
-  schemaVersion: 1,
+  schemaVersion: ENCRYPTED_LOCAL_DATABASE_SCHEMA_VERSION,
   databaseKeySecretName: 'localDatabaseKey',
 } as const;
 
@@ -139,6 +140,7 @@ export function getEncryptedDatabaseReadiness() {
     encrypted: false,
     adapterName: ENCRYPTED_DATABASE_ADAPTER_CANDIDATE.name,
     schemaVersion: ENCRYPTED_DATABASE_ADAPTER_CANDIDATE.schemaVersion,
+    schema: getEncryptedLocalSchemaSummary(),
     requiresDevelopmentBuild: ENCRYPTED_DATABASE_ADAPTER_CANDIDATE.requiresDevelopmentBuild,
     migrationItemCount: migrationItems.length,
     migrationItems: migrationItems.map((item) => item.name),

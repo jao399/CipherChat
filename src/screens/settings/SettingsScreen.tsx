@@ -26,6 +26,9 @@ export function SettingsScreen() {
   const [disappearing, setDisappearing] = useState(true);
   const [pollingInbox, setPollingInbox] = useState(false);
   const encryptedDatabase = getEncryptedDatabaseReadiness();
+  const encryptedDatabaseState = encryptedDatabase.available
+    ? 'Available'
+    : `Schema v${encryptedDatabase.schemaVersion} planned`;
 
   const resetOnboarding = async () => {
     await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
@@ -164,7 +167,7 @@ export function SettingsScreen() {
         <SettingRow
           icon="server"
           title="Encrypted Local Database"
-          subtitle={`${encryptedDatabase.available ? 'Available' : 'Planned'} - ${encryptedDatabase.migrationItemCount} prototype stores to migrate`}
+          subtitle={`${encryptedDatabaseState} - ${encryptedDatabase.migrationItemCount} prototype stores to migrate`}
           testID="settings-encrypted-local-database"
         />
       </View>

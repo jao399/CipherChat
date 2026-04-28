@@ -3,8 +3,12 @@
     "name": "CipherChat",
     "slug": "cipherchat",
     "version": "1.0.0",
+    "scheme": "cipherchat",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/cipherchat-official-logo.png",
@@ -12,9 +16,11 @@
       "backgroundColor": "#050509"
     },
     "ios": {
+      "bundleIdentifier": "com.amgadalzomi.cipherchat",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.amgadalzomi.cipherchat",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#050509"

@@ -65,9 +65,10 @@ The code now makes the future local data boundary explicit:
 
 ## Next phase
 
-Phase 24 should add development-build preparation and dependency decision work:
+Phase 24 adds development-build preparation and dependency decision work:
 
-- create EAS/development-build notes
-- decide OP-SQLite/SQLCipher integration details
-- add native dependency checklist
+- create EAS/development-build profiles
+- add stable native identifiers
+- document OP-SQLite/SQLCipher integration details
+- add a native dependency checklist
 - define local database schema v1 before installing native modules
