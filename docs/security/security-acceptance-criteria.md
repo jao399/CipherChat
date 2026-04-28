@@ -1,0 +1,59 @@
+# CipherChat Security Acceptance Criteria
+
+These criteria are production blockers. CipherChat must not process production user message content until each applicable gate is satisfied and evidence is attached to the release record.
+
+## Production blockers
+
+- No production plaintext message body or file content may be sent to the API.
+- Prototype crypto paths must be disabled or blocked in production mode.
+- Native encrypted local storage must be verified on Android and iOS development clients.
+- Device-session auth must support revocation, expiry, token hashing at rest, and abuse monitoring.
+- Key-change warnings must block send until users review changed safety numbers.
+- CI must pass `npm run validate:ci` on the release commit.
+
+## Cryptography gates
+
+- One-to-one messaging must use a reviewed Signal-style X3DH plus Double Ratchet implementation.
+- Group messaging must use MLS or a reviewed MLS implementation strategy before production group E2EE.
+- Device identity keys, signed prekeys, one-time prekeys, and session state must have documented lifecycle rules.
+- The server must only receive public key material, ciphertext, opaque headers, delivery metadata, and selected user-disclosed abuse report content.
+- No custom cryptographic primitive may be introduced without a formal design review.
+- Test vectors and interoperability tests must cover key agreement, message ratcheting, replay handling, and key rotation.
+
+## Mobile security gates
+
+- Session tokens must remain in OS secure storage, not AsyncStorage.
+- Device private key material must remain out of AsyncStorage and logs.
+- SQLCipher or equivalent encrypted local database must report `encrypted=true` in installed Android and iOS development clients.
+- Prototype AsyncStorage metadata migration must preserve source data until verified rollback exists.
+- Production builds must block plaintext message persistence unless encrypted storage is active.
+- Non-exportable Android Keystore and iOS Keychain options must be evaluated for device identity keys.
+
+## API and infrastructure gates
+
+- All protected endpoints must require verified device sessions.
+- Sender device identity must match the authenticated session for outbound envelopes.
+- Recipient account and device filters must be enforced for inbox reads and acknowledgements.
+- Account creation, discovery, bundle lookup, envelope fanout, and session creation must have durable rate limits.
+- Envelope size, fanout recipient count, and queue depth must have explicit per-environment limits.
+- Internal routes must use managed secrets, rotation policy, and network restrictions where available.
+- PostgreSQL and Redis credentials must live outside source control and CI logs.
+
+## Privacy and abuse gates
+
+- Contact discovery must have scraping resistance and a privacy review.
+- Metadata retention limits must exist for delivery events, expired envelopes, audit records, and queue jobs.
+- Push notifications must use generic payloads with no message content or sensitive contact names.
+- Abuse reports must disclose only user-selected message content or metadata.
+- Audit events must avoid plaintext content, file names, private contact graph details, and private keys.
+
+## Evidence required before release
+
+- Current threat model: `CipherChat-threat-model.md`
+- Passing CI output for `npm run validate:ci`
+- Android development-client SQLCipher verification result
+- iOS development-client SQLCipher verification result
+- Cryptography design review and implementation evidence
+- Account/session abuse-control test evidence
+- Key-change warning UX test evidence
+- Production secret storage and rotation plan

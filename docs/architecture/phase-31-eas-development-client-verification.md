@@ -47,10 +47,6 @@ iOS simulator verification also requires macOS/Xcode or an EAS simulator artifac
 
 ## Next phase
 
-Phase 32 should add the formal threat model and security acceptance criteria:
+Phase 32 adds the formal threat model and security acceptance criteria.
 
-- assets and trust boundaries
-- attacker capabilities
-- cryptographic protocol acceptance gates
-- metadata and abuse-prevention boundaries
-- release blockers for production user data
+More detail: `docs/architecture/phase-32-threat-model-security-criteria.md`.

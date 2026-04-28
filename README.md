@@ -577,12 +577,24 @@ Local tool availability is treated separately from project configuration. Missin
 
 More detail: `docs/architecture/phase-31-eas-development-client-verification.md`.
 
+## Phase 32 Threat Model and Security Acceptance Criteria
+
+CipherChat now has a formal production security gate:
+
+- `CipherChat-threat-model.md` documents assets, trust boundaries, entry points, abuse paths, prioritized threats, and manual review focus paths.
+- `docs/security/security-acceptance-criteria.md` defines production blockers before real user message content can be handled.
+- `scripts/verify-security-docs.mjs` checks that the threat model and acceptance criteria stay present.
+- `npm run verify:security-docs` runs the security documentation gate.
+- `npm run validate:ci` includes the security documentation gate.
+
+More detail: `docs/architecture/phase-32-threat-model-security-criteria.md`.
+
 ## Next Steps
 
-1. Complete a formal threat model before handling production data.
-2. Build and install an Expo development client before adding SQLCipher or native Signal/MLS modules.
+1. Add production-mode crypto provider gates so prototype envelope preparation cannot be used for live production sends.
+2. Build and install an Expo development client before adding native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
 5. Install Android platform tools and run the SQLCipher adapter in a real development client.
 6. Run the Android and iOS development-client verification checklist on installed native builds.
-7. Add the formal threat model and security acceptance criteria.
+7. Add key transparency or auditable key-history design before production contact trust.
