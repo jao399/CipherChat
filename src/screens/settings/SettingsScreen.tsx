@@ -13,6 +13,7 @@ import { SectionHeader } from '../../components/common/SectionHeader';
 import { SettingRow } from '../../components/settings/SettingRow';
 import { ONBOARDING_STORAGE_KEY } from '../../constants/storage';
 import { useBackend } from '../../hooks/useBackend';
+import { getEncryptedDatabaseReadiness } from '../../services/local';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -24,6 +25,7 @@ export function SettingsScreen() {
   const [appLock, setAppLock] = useState(true);
   const [disappearing, setDisappearing] = useState(true);
   const [pollingInbox, setPollingInbox] = useState(false);
+  const encryptedDatabase = getEncryptedDatabaseReadiness();
 
   const resetOnboarding = async () => {
     await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
@@ -158,6 +160,12 @@ export function SettingsScreen() {
           subtitle={inboundEnvelopeStatus.polling || pollingInbox ? 'Polling encrypted envelopes...' : inboxSubtitle}
           testID="settings-encrypted-inbox"
           onPress={pollEncryptedInbox}
+        />
+        <SettingRow
+          icon="server"
+          title="Encrypted Local Database"
+          subtitle={`${encryptedDatabase.available ? 'Available' : 'Planned'} - ${encryptedDatabase.migrationItemCount} prototype stores to migrate`}
+          testID="settings-encrypted-local-database"
         />
       </View>
 

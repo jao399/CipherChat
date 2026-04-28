@@ -20,3 +20,10 @@ export type {
   VerificationServicePort,
 } from './verificationService';
 export type { LocalSecureStorePort } from './localSecureStore';
+export type {
+  EncryptedLocalDatabasePort,
+  EncryptedLocalDatabaseStatus,
+  EncryptedLocalDatabaseTransaction,
+  EncryptedLocalRecord,
+  EncryptedLocalRecordKind,
+} from './encryptedLocalDatabase';

@@ -5,6 +5,7 @@ export const SECURITY_INVARIANTS = [
   'Do not include message content, sender names, group names, or filenames in push notifications.',
   'Do not silently add a trusted device.',
   'Do not log plaintext messages, private keys, safety numbers, or recovery secrets.',
+  'Do not persist plaintext messages until the encrypted local database reports encrypted=true.',
 ] as const;
 
 export const APPROVED_PROTOCOLS = {

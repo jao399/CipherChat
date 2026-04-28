@@ -464,12 +464,25 @@ CipherChat now persists inbound encrypted-envelope sync metadata:
 
 More detail: `docs/architecture/phase-22-inbound-sync-state.md`.
 
+## Phase 23 Encrypted Local Database Boundary
+
+CipherChat now has an explicit encrypted local database boundary:
+
+- `src/services/ports/encryptedLocalDatabase.ts` defines the future database port.
+- `src/services/local/encryptedDatabasePlan.ts` classifies local stores by sensitivity.
+- The migration plan identifies AsyncStorage prototype records that must move before production.
+- Settings shows encrypted local database readiness as planned, not falsely available.
+- Security policy now blocks plaintext message persistence until encrypted storage reports `encrypted=true`.
+- The target remains SQLCipher-backed SQLite in an Expo development build.
+
+More detail: `docs/architecture/phase-23-encrypted-local-database-boundary.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Add the encrypted local database boundary and migration plan.
+5. Prepare the Expo development build and local database schema v1 decision.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.
