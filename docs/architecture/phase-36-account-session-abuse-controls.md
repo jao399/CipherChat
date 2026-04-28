@@ -53,10 +53,6 @@ These are ciphertext and metadata limits only. They do not inspect or decrypt me
 - abuse-control route tests are still present
 - this phase documentation remains present
 
-## Next phase
+## Follow-up
 
-Phase 37 should add metadata retention and cleanup policy:
-
-- retention constants for audit events, expired envelopes, challenges, and sessions
-- cleanup job contracts for stale challenges and expired sessions
-- tests proving cleanup never touches active sessions or undelivered valid envelopes
+Phase 37 added metadata retention and cleanup policy in `docs/architecture/phase-37-metadata-retention-cleanup.md`.

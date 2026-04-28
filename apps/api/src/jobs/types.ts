@@ -9,6 +9,10 @@ export type ExpireEnvelopesJobData = {
   requestedAt: string;
 };
 
+export type MetadataRetentionCleanupJobData = {
+  requestedAt: string;
+};
+
 export type CipherChatJob =
   | {
       name: 'delivery.fanout';
@@ -17,4 +21,8 @@ export type CipherChatJob =
   | {
       name: 'envelopes.expire';
       data: ExpireEnvelopesJobData;
+    }
+  | {
+      name: 'metadata.cleanup';
+      data: MetadataRetentionCleanupJobData;
     };

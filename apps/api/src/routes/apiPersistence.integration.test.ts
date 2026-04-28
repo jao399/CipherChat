@@ -15,7 +15,9 @@ import { createRedisClient } from '../redis/client.js';
 import { PrismaAccountRepository } from '../repositories/prismaAccountRepository.js';
 import { PrismaDeviceRepository } from '../repositories/prismaDeviceRepository.js';
 import { PrismaMessageRepository } from '../repositories/prismaMessageRepository.js';
+import { PrismaMetadataRetentionRepository } from '../repositories/prismaMetadataRetentionRepository.js';
 import { PrismaSessionRepository } from '../repositories/prismaSessionRepository.js';
+import { metadataRetentionPolicy } from '../security/metadataRetentionPolicy.js';
 
 const runIntegrationTests = process.env.RUN_API_INTEGRATION_TESTS === 'true';
 
@@ -59,6 +61,7 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
         accounts: new PrismaAccountRepository(prisma),
         devices: new PrismaDeviceRepository(prisma),
         messages: new PrismaMessageRepository(prisma),
+        metadataRetention: new PrismaMetadataRetentionRepository(prisma),
         sessions: new PrismaSessionRepository(prisma, signatureVerifier),
       },
       jobQueue: new BullMqJobQueue(redis),
@@ -235,5 +238,167 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
     assert.equal(storedEnvelope?.deliveryState, 'ACKNOWLEDGED');
     assert.equal(storedEnvelope?.bodyCiphertext, 'encrypted-body-only');
     assert.ok(auditEvents.length >= 4);
+  });
+
+  it('cleans expired metadata without touching active sessions or valid queued envelopes', async () => {
+    await cleanDatabase();
+
+    const now = new Date('2026-04-28T12:00:00.000Z');
+    const oldChallengeDate = new Date(now.getTime() - metadataRetentionPolicy.challengeRetentionMs - 1);
+    const oldSessionDate = new Date(now.getTime() - metadataRetentionPolicy.sessionRetentionMs - 1);
+    const oldAcknowledgedEnvelopeDate = new Date(
+      now.getTime() - metadataRetentionPolicy.acknowledgedEnvelopeRetentionMs - 1,
+    );
+    const oldExpiredEnvelopeDate = new Date(now.getTime() - metadataRetentionPolicy.expiredEnvelopeRetentionMs - 1);
+    const oldFileDate = new Date(now.getTime() - metadataRetentionPolicy.deletedFileRetentionMs - 1);
+    const oldAuditDate = new Date(now.getTime() - metadataRetentionPolicy.auditEventRetentionMs - 1);
+
+    await prisma.account.create({
+      data: {
+        id: 'account_retention_0001',
+        displayName: 'Retention Test',
+        devices: {
+          create: {
+            id: 'device_retention_0001',
+            displayName: 'Retention Device',
+            identityKey: 'identity-key-retention-0001',
+          },
+        },
+      },
+    });
+
+    await prisma.deviceSessionChallenge.createMany({
+      data: [
+        {
+          id: 'challenge_old_expired',
+          accountId: 'account_retention_0001',
+          deviceId: 'device_retention_0001',
+          challenge: 'challenge-old-expired',
+          expiresAt: oldChallengeDate,
+        },
+        {
+          id: 'challenge_active',
+          accountId: 'account_retention_0001',
+          deviceId: 'device_retention_0001',
+          challenge: 'challenge-active',
+          expiresAt: new Date(now.getTime() + 60_000),
+        },
+      ],
+    });
+
+    await prisma.deviceSession.createMany({
+      data: [
+        {
+          id: 'session_old_expired',
+          accountId: 'account_retention_0001',
+          deviceId: 'device_retention_0001',
+          tokenHash: 'token-hash-old-expired',
+          expiresAt: oldSessionDate,
+        },
+        {
+          id: 'session_active',
+          accountId: 'account_retention_0001',
+          deviceId: 'device_retention_0001',
+          tokenHash: 'token-hash-active',
+          expiresAt: new Date(now.getTime() + 60_000),
+        },
+      ],
+    });
+
+    await prisma.encryptedMessageEnvelope.createMany({
+      data: [
+        {
+          messageId: 'message_old_acknowledged',
+          conversationId: 'conversation_retention',
+          senderAccountId: 'sender_retention',
+          senderDeviceId: 'sender_device_retention',
+          recipientAccountId: 'account_retention_0001',
+          recipientDeviceId: 'device_retention_0001',
+          headerCiphertext: 'header-old-acknowledged',
+          bodyCiphertext: 'body-old-acknowledged',
+          deliveryState: 'ACKNOWLEDGED',
+          queuedAt: oldAcknowledgedEnvelopeDate,
+          deliveredAt: oldAcknowledgedEnvelopeDate,
+          acknowledgedAt: oldAcknowledgedEnvelopeDate,
+        },
+        {
+          messageId: 'message_old_expired',
+          conversationId: 'conversation_retention',
+          senderAccountId: 'sender_retention',
+          senderDeviceId: 'sender_device_retention',
+          recipientAccountId: 'account_retention_0001',
+          recipientDeviceId: 'device_retention_0001',
+          headerCiphertext: 'header-old-expired',
+          bodyCiphertext: 'body-old-expired',
+          deliveryState: 'EXPIRED',
+          queuedAt: oldExpiredEnvelopeDate,
+          expiresAt: oldExpiredEnvelopeDate,
+        },
+        {
+          messageId: 'message_valid_queued',
+          conversationId: 'conversation_retention',
+          senderAccountId: 'sender_retention',
+          senderDeviceId: 'sender_device_retention',
+          recipientAccountId: 'account_retention_0001',
+          recipientDeviceId: 'device_retention_0001',
+          headerCiphertext: 'header-valid-queued',
+          bodyCiphertext: 'body-valid-queued',
+          deliveryState: 'QUEUED',
+          queuedAt: now,
+          expiresAt: new Date(now.getTime() + 60_000),
+        },
+      ],
+    });
+
+    await prisma.encryptedFileObject.createMany({
+      data: [
+        {
+          id: 'file_old_deleted',
+          ownerAccountId: 'account_retention_0001',
+          objectRef: 'object-ref-old-deleted',
+          sizeBytes: 12n,
+          contentDigest: 'digest-old-deleted',
+          deletedAt: oldFileDate,
+        },
+        {
+          id: 'file_active',
+          ownerAccountId: 'account_retention_0001',
+          objectRef: 'object-ref-active',
+          sizeBytes: 12n,
+          contentDigest: 'digest-active',
+          expiresAt: new Date(now.getTime() + 60_000),
+        },
+      ],
+    });
+
+    await prisma.auditEvent.createMany({
+      data: [
+        {
+          eventType: 'retention.old',
+          createdAt: oldAuditDate,
+        },
+        {
+          eventType: 'retention.active',
+          createdAt: now,
+        },
+      ],
+    });
+
+    const result = await new PrismaMetadataRetentionRepository(prisma).cleanupExpiredMetadata(now);
+
+    assert.deepEqual(result, {
+      deletedChallenges: 1,
+      deletedSessions: 1,
+      deletedAcknowledgedEnvelopes: 1,
+      deletedExpiredEnvelopes: 1,
+      deletedFileObjects: 1,
+      deletedAuditEvents: 1,
+    });
+
+    assert.equal(await prisma.deviceSessionChallenge.count({ where: { id: 'challenge_active' } }), 1);
+    assert.equal(await prisma.deviceSession.count({ where: { id: 'session_active' } }), 1);
+    assert.equal(await prisma.encryptedMessageEnvelope.count({ where: { messageId: 'message_valid_queued' } }), 1);
+    assert.equal(await prisma.encryptedFileObject.count({ where: { id: 'file_active' } }), 1);
+    assert.equal(await prisma.auditEvent.count({ where: { eventType: 'retention.active' } }), 1);
   });
 });

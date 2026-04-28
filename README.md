@@ -641,9 +641,23 @@ CipherChat now has explicit API abuse-control policy:
 
 More detail: `docs/architecture/phase-36-account-session-abuse-controls.md`.
 
+## Phase 37 Metadata Retention and Cleanup
+
+CipherChat now has an enforceable server metadata cleanup boundary:
+
+- `apps/api/src/security/metadataRetentionPolicy.ts` defines explicit retention windows.
+- `apps/api/src/repositories/prismaMetadataRetentionRepository.ts` deletes stale challenges, sessions, acknowledged/expired envelopes, deleted file metadata, and old audit events.
+- `POST /v1/internal/jobs/metadata/cleanup` enqueues the cleanup job behind the internal job token.
+- The BullMQ worker handles `metadata.cleanup` jobs.
+- Integration tests prove cleanup does not remove active sessions or valid queued envelopes.
+- `scripts/verify-metadata-retention.mjs` adds a release gate.
+- `npm run validate:ci` includes `npm run verify:metadata-retention`.
+
+More detail: `docs/architecture/phase-37-metadata-retention-cleanup.md`.
+
 ## Next Steps
 
-1. Add metadata retention and cleanup policy for audit events, expired envelopes, challenges, and sessions.
+1. Add delivery queue retention and Redis operational cleanup monitoring.
 2. Build and install an Expo development client before adding native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.

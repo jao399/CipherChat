@@ -31,6 +31,7 @@ const apps: FastifyInstance[] = [];
 class CapturingJobQueue implements JobQueuePort {
   deliveryFanoutJobs: Array<{ messageIds: string[]; recipientDeviceCount: number }> = [];
   expirySweepCount = 0;
+  metadataCleanupCount = 0;
 
   async enqueueDeliveryFanout(input: { messageIds: string[]; recipientDeviceCount: number }) {
     this.deliveryFanoutJobs.push(input);
@@ -38,6 +39,10 @@ class CapturingJobQueue implements JobQueuePort {
 
   async enqueueEnvelopeExpirySweep() {
     this.expirySweepCount += 1;
+  }
+
+  async enqueueMetadataRetentionCleanup() {
+    this.metadataCleanupCount += 1;
   }
 }
 
@@ -939,6 +944,34 @@ describe('maintenance route', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/v1/internal/jobs/envelopes/expire',
+    });
+
+    assert.equal(response.statusCode, 403);
+  });
+
+  it('enqueues a metadata retention cleanup job with the internal token', async () => {
+    const jobQueue = new CapturingJobQueue();
+    const app = await buildTestApi({ jobQueue });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/internal/jobs/metadata/cleanup',
+      headers: {
+        'x-internal-job-token': 'test-internal-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 202);
+    assert.equal(response.json().queued, true);
+    assert.equal(jobQueue.metadataCleanupCount, 1);
+  });
+
+  it('rejects metadata cleanup enqueue without the internal token', async () => {
+    const app = await buildTestApi({ jobQueue: new CapturingJobQueue() });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/internal/jobs/metadata/cleanup',
     });
 
     assert.equal(response.statusCode, 403);

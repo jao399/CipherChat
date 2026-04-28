@@ -6,6 +6,7 @@ import { createJobProcessor } from './jobs/processors.js';
 import { jobQueueName } from './jobs/types.js';
 import { createRedisClient } from './redis/client.js';
 import { PrismaMessageRepository } from './repositories/prismaMessageRepository.js';
+import { PrismaMetadataRetentionRepository } from './repositories/prismaMetadataRetentionRepository.js';
 
 const config = readApiConfig();
 
@@ -16,8 +17,9 @@ if (!config.databaseUrl || !config.redisUrl) {
 const prisma = createPrismaClient();
 const redis = createRedisClient(config.redisUrl);
 const messages = new PrismaMessageRepository(prisma);
+const metadataRetention = new PrismaMetadataRetentionRepository(prisma);
 
-const worker = new Worker(jobQueueName, createJobProcessor(messages), {
+const worker = new Worker(jobQueueName, createJobProcessor(messages, metadataRetention), {
   connection: redis,
 });
 

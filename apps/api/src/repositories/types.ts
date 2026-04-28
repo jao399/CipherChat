@@ -170,6 +170,15 @@ export type RevokedDeviceSession = {
   revoked: boolean;
 };
 
+export type MetadataRetentionCleanup = {
+  deletedChallenges: number;
+  deletedSessions: number;
+  deletedAcknowledgedEnvelopes: number;
+  deletedExpiredEnvelopes: number;
+  deletedFileObjects: number;
+  deletedAuditEvents: number;
+};
+
 export type AccountRepository = {
   createAccount(input: CreateAccountInput): Promise<AccountProfile>;
   getAccount(accountId: string): Promise<AccountProfile | null>;
@@ -196,9 +205,14 @@ export type SessionRepository = {
   revokeDeviceSession(sessionId: string): Promise<RevokedDeviceSession | null>;
 };
 
+export type MetadataRetentionRepository = {
+  cleanupExpiredMetadata(now?: Date): Promise<MetadataRetentionCleanup>;
+};
+
 export type ApiRepositories = {
   accounts?: AccountRepository;
   devices?: DeviceRepository;
   messages?: MessageRepository;
   sessions?: SessionRepository;
+  metadataRetention?: MetadataRetentionRepository;
 };

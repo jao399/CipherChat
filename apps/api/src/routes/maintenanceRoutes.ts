@@ -38,4 +38,35 @@ export async function registerMaintenanceRoutes(
       return reply.code(202).send({ queued: true });
     },
   );
+
+  app.post(
+    '/v1/internal/jobs/metadata/cleanup',
+    {
+      schema: {
+        response: {
+          202: queuedJobResponseSchema,
+          403: errorResponseSchema,
+          503: errorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!internalJobToken || request.headers['x-internal-job-token'] !== internalJobToken) {
+        return reply.code(403).send({
+          error: 'forbidden',
+          message: 'A valid internal job token is required.',
+        });
+      }
+
+      if (!jobQueue) {
+        return reply.code(503).send({
+          error: 'queue_unavailable',
+          message: 'Job queue is not configured.',
+        });
+      }
+
+      await jobQueue.enqueueMetadataRetentionCleanup();
+      return reply.code(202).send({ queued: true });
+    },
+  );
 }

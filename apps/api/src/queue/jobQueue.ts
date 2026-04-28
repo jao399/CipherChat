@@ -6,12 +6,14 @@ import { jobQueueName } from '../jobs/types.js';
 export type JobQueuePort = {
   enqueueDeliveryFanout(input: { messageIds: string[]; recipientDeviceCount: number }): Promise<void>;
   enqueueEnvelopeExpirySweep(): Promise<void>;
+  enqueueMetadataRetentionCleanup(): Promise<void>;
   close?(): Promise<void>;
 };
 
 export class NoopJobQueue implements JobQueuePort {
   async enqueueDeliveryFanout() {}
   async enqueueEnvelopeExpirySweep() {}
+  async enqueueMetadataRetentionCleanup() {}
 }
 
 export class BullMqJobQueue implements JobQueuePort {
@@ -45,6 +47,20 @@ export class BullMqJobQueue implements JobQueuePort {
   async enqueueEnvelopeExpirySweep() {
     await this.queue.add(
       'envelopes.expire',
+      {
+        requestedAt: new Date().toISOString(),
+      },
+      {
+        attempts: 3,
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+      },
+    );
+  }
+
+  async enqueueMetadataRetentionCleanup() {
+    await this.queue.add(
+      'metadata.cleanup',
       {
         requestedAt: new Date().toISOString(),
       },

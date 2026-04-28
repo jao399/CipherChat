@@ -42,11 +42,13 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Abuse prevention is designed without breaking message privacy.
 - Rate limits and queue limits are configured per environment.
 - Account creation, session creation, discovery, and fanout abuse controls are test-covered.
+- Metadata retention cleanup is configured, tested, and scheduled.
 
 ## Privacy
 
 - Push notifications contain opaque event IDs only.
 - Metadata minimization review is complete.
+- Data retention policy is implemented for server metadata cleanup.
 - Contact discovery scraping-resistance review is complete.
 - Secure backup design is complete.
 - Account recovery design is complete.
