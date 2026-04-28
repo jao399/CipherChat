@@ -43,8 +43,6 @@ The check is intentionally lightweight. It prevents accidental removal of the co
 
 ## Next phase
 
-Phase 33 should add production-mode crypto provider gating:
+Phase 33 adds production-mode crypto provider gating.
 
-- block live sends when the active crypto provider is prototype-only
-- expose crypto readiness in Settings
-- add tests that production mode cannot use prototype envelope preparation
+More detail: `docs/architecture/phase-33-production-crypto-gating.md`.

@@ -589,9 +589,21 @@ CipherChat now has a formal production security gate:
 
 More detail: `docs/architecture/phase-32-threat-model-security-criteria.md`.
 
+## Phase 33 Production Crypto Provider Gating
+
+CipherChat now blocks live message sends while the app is still using the prototype message crypto provider:
+
+- `src/security/messageCryptoPolicy.ts` defines message crypto readiness.
+- `src/security/messageCryptoPolicy.test.ts` proves prototype crypto is mock-only.
+- `BackendProvider` blocks live sends and live retries before preparing prototype fanout data.
+- Settings shows the active Message Crypto provider and readiness.
+- The threat model and security acceptance criteria now reference the live-send blocker.
+
+More detail: `docs/architecture/phase-33-production-crypto-gating.md`.
+
 ## Next Steps
 
-1. Add production-mode crypto provider gates so prototype envelope preparation cannot be used for live production sends.
+1. Add a production crypto provider interface and move prototype fanout behind an explicit mock provider.
 2. Build and install an Expo development client before adding native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.

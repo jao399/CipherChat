@@ -6,6 +6,7 @@ These criteria are production blockers. CipherChat must not process production u
 
 - No production plaintext message body or file content may be sent to the API.
 - Prototype crypto paths must be disabled or blocked in production mode.
+- Live sends must be blocked while the active message crypto provider is prototype-only.
 - Native encrypted local storage must be verified on Android and iOS development clients.
 - Device-session auth must support revocation, expiry, token hashing at rest, and abuse monitoring.
 - Key-change warnings must block send until users review changed safety numbers.
@@ -18,6 +19,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Device identity keys, signed prekeys, one-time prekeys, and session state must have documented lifecycle rules.
 - The server must only receive public key material, ciphertext, opaque headers, delivery metadata, and selected user-disclosed abuse report content.
 - No custom cryptographic primitive may be introduced without a formal design review.
+- A reviewed production provider must replace `prototype-sha256-envelope-v1` before live sends are enabled.
 - Test vectors and interoperability tests must cover key agreement, message ratcheting, replay handling, and key rotation.
 
 ## Mobile security gates
@@ -50,6 +52,7 @@ These criteria are production blockers. CipherChat must not process production u
 ## Evidence required before release
 
 - Current threat model: `CipherChat-threat-model.md`
+- Production crypto provider gate test output: `npm run app:test`
 - Passing CI output for `npm run validate:ci`
 - Android development-client SQLCipher verification result
 - iOS development-client SQLCipher verification result

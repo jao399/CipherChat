@@ -52,3 +52,11 @@ export {
   PUSH_PRIVACY_POLICY,
   SECURITY_INVARIANTS,
 } from './securityPolicy';
+export {
+  assertCanPrepareOutboundFanout,
+  canSendWithMessageCrypto,
+  getMessageCryptoReadiness,
+  prototypeMessageCryptoReadiness,
+  type MessageCryptoProviderId,
+  type MessageCryptoReadiness,
+} from './messageCryptoPolicy';

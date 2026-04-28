@@ -158,5 +158,8 @@ export type BackendStatus = {
   identitySafetyNumber?: string[];
   identityTrustState?: IdentityTrustState;
   cryptoProvider?: string;
+  messageCryptoProvider?: string;
+  messageCryptoReady: boolean;
+  messageCryptoSummary: string;
   remoteTrustSyncing?: boolean;
 };

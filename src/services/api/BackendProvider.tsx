@@ -15,6 +15,9 @@ import {
   markIdentityTrusted,
   prototypeDeviceIdentityProvider,
   readRemoteTrustRecords,
+  assertCanPrepareOutboundFanout,
+  canSendWithMessageCrypto,
+  getMessageCryptoReadiness,
   upsertRemoteTrustRecordFromBundle,
   type IdentityTrustStatus,
   type LocalDeviceIdentity,
@@ -121,6 +124,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [initializing, setInitializing] = useState(true);
 
   const liveClient = useMemo(() => new CipherChatApiClient(baseUrl), [baseUrl]);
+  const messageCryptoReadiness = useMemo(() => getMessageCryptoReadiness(mode), [mode]);
 
   const refreshStatus = useCallback(async () => {
     if (mode === 'mock') {
@@ -397,6 +401,8 @@ export function BackendProvider({ children }: PropsWithChildren) {
         throw new Error('Type a message before sending.');
       }
 
+      assertCanPrepareOutboundFanout(mode, messageCryptoReadiness);
+
       if (mode === 'live' && !session?.token) {
         throw new Error('Live encrypted sending requires a verified device session.');
       }
@@ -485,7 +491,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
         return failedItem;
       }
     },
-    [bootstrapPrototypeSession, liveClient, mode, outboundQueue, remoteTrustRecords, session],
+    [bootstrapPrototypeSession, liveClient, messageCryptoReadiness, mode, outboundQueue, remoteTrustRecords, session],
   );
 
   const retryOutboundMessage = useCallback(
@@ -495,6 +501,8 @@ export function BackendProvider({ children }: PropsWithChildren) {
       if (!item) {
         throw new Error('Outbound queue item was not found.');
       }
+
+      assertCanPrepareOutboundFanout(mode, messageCryptoReadiness);
 
       if (mode === 'live' && !session?.token) {
         throw new Error('Live retry requires a verified device session.');
@@ -546,7 +554,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       );
       return updated;
     },
-    [bootstrapPrototypeSession, liveClient, mode, outboundQueue, session],
+    [bootstrapPrototypeSession, liveClient, messageCryptoReadiness, mode, outboundQueue, session],
   );
 
   const pollInboundEnvelopes = useCallback(async () => {
@@ -684,6 +692,9 @@ export function BackendProvider({ children }: PropsWithChildren) {
         identitySafetyNumber: trustStatus?.record.safetyNumberBlocks,
         identityTrustState: trustStatus?.state,
         cryptoProvider: identity?.provider,
+        messageCryptoProvider: messageCryptoReadiness.provider,
+        messageCryptoReady: canSendWithMessageCrypto(mode, messageCryptoReadiness),
+        messageCryptoSummary: `${messageCryptoReadiness.label} - ${messageCryptoReadiness.detail}`,
         remoteTrustSyncing: syncingRemoteTrust,
       },
       session,
@@ -707,7 +718,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       trustRemoteIdentity,
       clearSession,
     }),
-    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshStatus, remoteTrustRecords, retryOutboundMessage, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, messageCryptoReadiness, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshStatus, remoteTrustRecords, retryOutboundMessage, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

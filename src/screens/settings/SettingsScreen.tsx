@@ -256,6 +256,12 @@ export function SettingsScreen() {
           testID="settings-encrypted-local-database"
           onPress={checkEncryptedDatabase}
         />
+        <SettingRow
+          icon={status.messageCryptoReady ? 'shield-checkmark' : 'warning'}
+          title="Message Crypto"
+          subtitle={status.messageCryptoSummary}
+          testID="settings-message-crypto"
+        />
       </View>
 
       {__DEV__ ? (
