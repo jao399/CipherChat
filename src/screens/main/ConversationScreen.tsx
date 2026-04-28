@@ -30,9 +30,10 @@ export function ConversationScreen({ navigation, route }: Props) {
   const [timer, setTimer] = useState('30s');
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const [queuedCopy, setQueuedCopy] = useState<string | null>(null);
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
-  const { remoteTrustRecords, sendSecureMessage } = useBackend();
+  const { remoteTrustRecords, sendSecureMessage, outboundQueue, retryOutboundMessage } = useBackend();
   const chat = chats.find((item) => item.id === route.params.chatId) ?? chats[0];
   const remoteTrust = findRemoteTrustRecord(remoteTrustRecords, chat.id, chat.name);
   const remoteTrustCopy = remoteTrust ? describeRemoteTrustState(remoteTrust.trustState) : null;
@@ -41,7 +42,33 @@ export function ConversationScreen({ navigation, route }: Props) {
     () => messages.filter((message) => message.chatId === chat.id || message.chatId === 'eleanor').slice(0, 4),
     [chat.id],
   );
-  const visibleMessages = useMemo(() => [...chatMessages, ...localMessages], [chatMessages, localMessages]);
+  const conversationQueue = useMemo(
+    () => outboundQueue.filter((item) => item.conversationId === chat.id),
+    [chat.id, outboundQueue],
+  );
+  const visibleMessages = useMemo(() => {
+    const localWithQueueState = localMessages.map((message) => {
+      const queueItem = conversationQueue.find((item) => item.id === message.id);
+      return queueItem ? { ...message, status: queueItem.state } : message;
+    });
+    const persistedQueueMessages = conversationQueue
+      .filter((item) => !localMessages.some((message) => message.id === item.id))
+      .map<Message>((item) => ({
+        id: item.id,
+        chatId: chat.id,
+        sender: 'me',
+        kind: 'text',
+        text:
+          item.state === 'sent'
+            ? 'Encrypted message queued for delivery.'
+            : 'Encrypted message is queued locally for retry.',
+        time: new Date(item.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        status: item.state,
+      }));
+
+    return [...chatMessages, ...localWithQueueState, ...persistedQueueMessages];
+  }, [chat.id, chatMessages, conversationQueue, localMessages]);
+  const retryableQueue = conversationQueue.filter((item) => item.state === 'failed' || item.state === 'queued');
 
   const sendDraft = async () => {
     const plaintext = draft.trim();
@@ -59,7 +86,7 @@ export function ConversationScreen({ navigation, route }: Props) {
     setQueuedCopy(null);
 
     try {
-      const response = await sendSecureMessage({
+      const queuedItem = await sendSecureMessage({
         conversationId: chat.id,
         recipientRecordId: remoteTrust.id,
         plaintext,
@@ -67,17 +94,19 @@ export function ConversationScreen({ navigation, route }: Props) {
       });
       const now = new Date();
       const sentMessage: Message = {
-        id: `local_${now.getTime()}`,
+        id: queuedItem.id,
         chatId: chat.id,
         sender: 'me',
         kind: 'text',
         text: plaintext,
         time: now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-        status: 'sent',
+        status: queuedItem.state,
       };
 
       setLocalMessages((current) => [...current, sentMessage]);
-      setQueuedCopy(`${response.envelopeCount} encrypted envelope${response.envelopeCount === 1 ? '' : 's'} queued`);
+      setQueuedCopy(
+        `${queuedItem.envelopeCount} encrypted envelope${queuedItem.envelopeCount === 1 ? '' : 's'} ${queuedItem.state}`,
+      );
       setDraft('');
     } catch (error) {
       Alert.alert(
@@ -86,6 +115,24 @@ export function ConversationScreen({ navigation, route }: Props) {
       );
     } finally {
       setSending(false);
+    }
+  };
+
+  const retryQueuedMessage = async (itemId: string) => {
+    setRetryingId(itemId);
+
+    try {
+      const item = await retryOutboundMessage(itemId);
+      setQueuedCopy(
+        `${item.envelopeCount} encrypted envelope${item.envelopeCount === 1 ? '' : 's'} ${item.state}`,
+      );
+    } catch (error) {
+      Alert.alert(
+        'Retry unavailable',
+        error instanceof Error ? error.message : 'CipherChat could not retry this outbound envelope.',
+      );
+    } finally {
+      setRetryingId(null);
     }
   };
 
@@ -142,6 +189,35 @@ export function ConversationScreen({ navigation, route }: Props) {
             <View style={styles.outboundStatus}>
               <Ionicons name="lock-closed" size={14} color={colors.primaryBright} />
               <Text style={styles.outboundStatusText}>{queuedCopy}</Text>
+            </View>
+          ) : null}
+          {retryableQueue.length > 0 ? (
+            <View style={styles.queueCard}>
+              <View style={styles.queueHeader}>
+                <Ionicons name="cloud-upload" size={16} color={colors.primaryBright} />
+                <Text style={styles.queueTitle}>Outbound queue</Text>
+              </View>
+              {retryableQueue.map((item) => (
+                <View key={item.id} style={styles.queueRow}>
+                  <View style={styles.queueBody}>
+                    <Text style={styles.queueState}>{item.state}</Text>
+                    <Text style={styles.queueMeta}>
+                      {item.envelopeCount} envelope{item.envelopeCount === 1 ? '' : 's'} | attempt {item.attemptCount}
+                    </Text>
+                    {item.lastError ? <Text style={styles.queueError}>{item.lastError}</Text> : null}
+                  </View>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Retry encrypted outbound message"
+                    testID={`conversation-retry-${item.id}`}
+                    disabled={retryingId === item.id}
+                    style={styles.retryButton}
+                    onPress={() => void retryQueuedMessage(item.id)}
+                  >
+                    <Text style={styles.retryButtonText}>{retryingId === item.id ? 'Retrying' : 'Retry'}</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
             </View>
           ) : null}
           <View style={styles.timerCard}>
@@ -319,6 +395,62 @@ const styles = StyleSheet.create({
   outboundStatusText: {
     ...typography.small,
     color: colors.primaryBright,
+    textTransform: 'uppercase',
+  },
+  queueCard: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.28)',
+    backgroundColor: 'rgba(17,17,26,0.82)',
+    padding: spacing.md,
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  queueHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  queueTitle: {
+    ...typography.small,
+    color: colors.text,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  queueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  queueBody: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  queueState: {
+    ...typography.small,
+    color: colors.primaryBright,
+    textTransform: 'uppercase',
+  },
+  queueMeta: {
+    ...typography.small,
+    color: colors.textSecondary,
+  },
+  queueError: {
+    ...typography.small,
+    color: colors.danger,
+  },
+  retryButton: {
+    minHeight: 34,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  retryButtonText: {
+    ...typography.small,
+    color: colors.text,
+    fontWeight: '900',
     textTransform: 'uppercase',
   },
   timerLabel: {

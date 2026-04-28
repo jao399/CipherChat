@@ -26,10 +26,15 @@ import { mockCipherChatApiClient } from './mockCipherChatApiClient';
 import type {
   AccountDiscoveryResult,
   BackendStatus,
-  EncryptedEnvelopeFanoutResponse,
   PublicDeviceBundleResponse,
 } from './types';
 import { preparePrototypeOutboundFanout } from '../messages/outboundEnvelopeService';
+import {
+  readOutboundQueue,
+  replaceOutboundQueueItem,
+  updateOutboundQueueItem,
+  type OutboundQueueItem,
+} from '../messages/outboundQueueStore';
 import type { RemoteIdentityTrustRecord } from '../../types';
 
 type BackendContextValue = {
@@ -51,7 +56,9 @@ type BackendContextValue = {
     recipientRecordId: string;
     plaintext: string;
     disappearingTimer: string;
-  }): Promise<EncryptedEnvelopeFanoutResponse>;
+  }): Promise<OutboundQueueItem>;
+  outboundQueue: OutboundQueueItem[];
+  retryOutboundMessage(itemId: string): Promise<OutboundQueueItem>;
   syncRemoteIdentity(recordId: string): Promise<void>;
   trustRemoteIdentity(recordId: string): Promise<void>;
   clearSession(): Promise<void>;
@@ -77,6 +84,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [trustStatus, setTrustStatus] = useState<IdentityTrustStatus | null>(null);
   const [remoteTrustRecords, setRemoteTrustRecords] = useState<RemoteIdentityTrustRecord[]>(remoteIdentityTrust);
   const [contactDiscoveryResults, setContactDiscoveryResults] = useState<AccountDiscoveryResult[]>([]);
+  const [outboundQueue, setOutboundQueue] = useState<OutboundQueueItem[]>([]);
   const [syncingRemoteTrust, setSyncingRemoteTrust] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
@@ -104,13 +112,15 @@ export function BackendProvider({ children }: PropsWithChildren) {
     let active = true;
 
     async function load() {
-      const [storedMode, storedBaseUrl, storedSession, storedIdentity, storedRemoteTrust] = await Promise.all([
-        AsyncStorage.getItem(API_MODE_STORAGE_KEY),
-        AsyncStorage.getItem(API_BASE_URL_STORAGE_KEY),
-        getStoredApiSession(),
-        prototypeDeviceIdentityProvider.getOrCreateIdentity(),
-        readRemoteTrustRecords(remoteIdentityTrust),
-      ]);
+      const [storedMode, storedBaseUrl, storedSession, storedIdentity, storedRemoteTrust, storedOutboundQueue] =
+        await Promise.all([
+          AsyncStorage.getItem(API_MODE_STORAGE_KEY),
+          AsyncStorage.getItem(API_BASE_URL_STORAGE_KEY),
+          getStoredApiSession(),
+          prototypeDeviceIdentityProvider.getOrCreateIdentity(),
+          readRemoteTrustRecords(remoteIdentityTrust),
+          readOutboundQueue(),
+        ]);
       const storedTrustStatus = await getIdentityTrustStatus(storedIdentity);
 
       if (!active) {
@@ -140,6 +150,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       setIdentity(storedIdentity);
       setTrustStatus(storedTrustStatus);
       setRemoteTrustRecords(storedRemoteTrust);
+      setOutboundQueue(storedOutboundQueue);
       setInitializing(false);
     }
 
@@ -372,19 +383,128 @@ export function BackendProvider({ children }: PropsWithChildren) {
         disappearingTimer: input.disappearingTimer,
         recipients: [recipient],
       });
-      const response =
-        mode === 'mock'
-          ? await mockCipherChatApiClient.sendEnvelopeFanout(fanout)
-          : await liveClient.sendEnvelopeFanout(fanout, activeSession.token);
+      const now = new Date().toISOString();
+      const queuedItem: OutboundQueueItem = {
+        id: `outbound_${fanout.envelopes[0]?.messageId ?? Date.now()}`,
+        conversationId: input.conversationId,
+        recipientRecordId: recipient.id,
+        recipientDisplayName: recipient.displayName,
+        state: 'queued',
+        attemptCount: 0,
+        envelopeCount: fanout.envelopes.length,
+        fanout,
+        createdAt: now,
+        updatedAt: now,
+      };
+      let nextQueue = await replaceOutboundQueueItem(outboundQueue, queuedItem);
+      setOutboundQueue(nextQueue);
 
-      setSummary(
-        response.accepted
-          ? `Queued ${response.envelopeCount} encrypted envelope${response.envelopeCount === 1 ? '' : 's'}.`
-          : 'Encrypted message fanout was not accepted.',
-      );
-      return response;
+      const sendingItem: OutboundQueueItem = {
+        ...queuedItem,
+        state: 'sending',
+        attemptCount: queuedItem.attemptCount + 1,
+        updatedAt: new Date().toISOString(),
+        lastError: undefined,
+      };
+      nextQueue = await replaceOutboundQueueItem(nextQueue, sendingItem);
+      setOutboundQueue(nextQueue);
+
+      try {
+        const response =
+          mode === 'mock'
+            ? await mockCipherChatApiClient.sendEnvelopeFanout(fanout)
+            : await liveClient.sendEnvelopeFanout(fanout, activeSession.token);
+        const sentItem: OutboundQueueItem = {
+          ...sendingItem,
+          state: response.accepted ? 'sent' : 'failed',
+          envelopeCount: response.envelopeCount,
+          sentAt: response.accepted ? new Date().toISOString() : undefined,
+          updatedAt: new Date().toISOString(),
+          lastError: response.accepted ? undefined : 'Encrypted message fanout was not accepted.',
+        };
+        nextQueue = await replaceOutboundQueueItem(nextQueue, sentItem);
+        setOutboundQueue(nextQueue);
+        setSummary(
+          response.accepted
+            ? `Queued ${response.envelopeCount} encrypted envelope${response.envelopeCount === 1 ? '' : 's'}.`
+            : 'Encrypted message fanout was not accepted.',
+        );
+        return sentItem;
+      } catch (error) {
+        const failedItem: OutboundQueueItem = {
+          ...sendingItem,
+          state: 'failed',
+          updatedAt: new Date().toISOString(),
+          lastError: error instanceof Error ? error.message : 'Encrypted message fanout failed.',
+        };
+        nextQueue = await replaceOutboundQueueItem(nextQueue, failedItem);
+        setOutboundQueue(nextQueue);
+        setSummary(`Encrypted message queued locally. Retry when the API is available.`);
+        return failedItem;
+      }
     },
-    [bootstrapPrototypeSession, liveClient, mode, remoteTrustRecords, session],
+    [bootstrapPrototypeSession, liveClient, mode, outboundQueue, remoteTrustRecords, session],
+  );
+
+  const retryOutboundMessage = useCallback(
+    async (itemId: string) => {
+      const item = outboundQueue.find((queued) => queued.id === itemId);
+
+      if (!item) {
+        throw new Error('Outbound queue item was not found.');
+      }
+
+      if (mode === 'live' && !session?.token) {
+        throw new Error('Live retry requires a verified device session.');
+      }
+
+      const activeSession = session ?? (mode === 'mock' ? await bootstrapPrototypeSession() : null);
+
+      if (!activeSession) {
+        throw new Error('Start a verified device session before retrying.');
+      }
+
+      let nextQueue = await updateOutboundQueueItem(outboundQueue, item.id, (current) => ({
+        ...current,
+        state: 'sending',
+        attemptCount: current.attemptCount + 1,
+        updatedAt: new Date().toISOString(),
+        lastError: undefined,
+      }));
+      setOutboundQueue(nextQueue);
+
+      try {
+        const response =
+          mode === 'mock'
+            ? await mockCipherChatApiClient.sendEnvelopeFanout(item.fanout)
+            : await liveClient.sendEnvelopeFanout(item.fanout, activeSession.token);
+        nextQueue = await updateOutboundQueueItem(nextQueue, item.id, (current) => ({
+          ...current,
+          state: response.accepted ? 'sent' : 'failed',
+          envelopeCount: response.envelopeCount,
+          sentAt: response.accepted ? new Date().toISOString() : undefined,
+          updatedAt: new Date().toISOString(),
+          lastError: response.accepted ? undefined : 'Encrypted message fanout was not accepted.',
+        }));
+      } catch (error) {
+        nextQueue = await updateOutboundQueueItem(nextQueue, item.id, (current) => ({
+          ...current,
+          state: 'failed',
+          updatedAt: new Date().toISOString(),
+          lastError: error instanceof Error ? error.message : 'Encrypted message retry failed.',
+        }));
+      }
+
+      setOutboundQueue(nextQueue);
+      const updated = nextQueue.find((queued) => queued.id === item.id) ?? item;
+      setSummary(
+        updated.state === 'sent'
+          ? `Retried and queued ${updated.envelopeCount} encrypted envelope${updated.envelopeCount === 1 ? '' : 's'}.`
+          : 'Encrypted message remains queued locally.',
+      );
+      return updated;
+    },
+    [bootstrapPrototypeSession, liveClient, mode, outboundQueue, session],
   );
 
   const trustRemoteIdentity = useCallback(
@@ -428,6 +548,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       initializing,
       remoteTrustRecords,
       contactDiscoveryResults,
+      outboundQueue,
       setMode: persistMode,
       setBaseUrl: persistBaseUrl,
       refreshStatus,
@@ -437,11 +558,12 @@ export function BackendProvider({ children }: PropsWithChildren) {
       discoverContacts,
       addDiscoveredContact,
       sendSecureMessage,
+      retryOutboundMessage,
       syncRemoteIdentity,
       trustRemoteIdentity,
       clearSession,
     }),
-    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, initializing, mode, persistBaseUrl, persistMode, ready, refreshStatus, remoteTrustRecords, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, initializing, mode, outboundQueue, persistBaseUrl, persistMode, ready, refreshStatus, remoteTrustRecords, retryOutboundMessage, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

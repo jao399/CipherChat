@@ -28,7 +28,7 @@ export type Message = {
   kind: MessageKind;
   text: string;
   time: string;
-  status?: 'sent' | 'delivered' | 'read';
+  status?: 'queued' | 'sending' | 'failed' | 'sent' | 'delivered' | 'read';
   fileName?: string;
   fileSize?: string;
   duration?: string;

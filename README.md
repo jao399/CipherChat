@@ -422,12 +422,26 @@ This is not production encryption. The prototype service is intentionally named 
 
 More detail: `docs/architecture/phase-19-outbound-envelope-preparation.md`.
 
+## Phase 20 Local Outbound Queue
+
+CipherChat now has durable outbound send-state plumbing on mobile:
+
+- `src/services/messages/outboundQueueStore.ts` persists prepared outbound fanout attempts.
+- BackendProvider loads the queue at startup.
+- `sendSecureMessage` persists a queued item before attempting API fanout.
+- Queue items move through `queued`, `sending`, `sent`, and `failed`.
+- Conversation displays durable send states from the queue.
+- Failed or queued outbound items can be retried from the conversation.
+- The queue stores prepared fanout metadata, not plaintext message bodies.
+
+More detail: `docs/architecture/phase-20-outbound-queue.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Add a local outbound queue with durable sending, queued, failed, and retry states.
+5. Add inbound encrypted envelope polling and acknowledgement on mobile.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.

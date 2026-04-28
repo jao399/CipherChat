@@ -21,6 +21,18 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
   const mine = message.sender === 'me';
   const bubbleStyle = [styles.bubble, mine ? styles.mine : styles.theirs];
+  const statusIcon =
+    message.status === 'failed'
+      ? 'alert-circle'
+      : message.status === 'queued' || message.status === 'sending'
+        ? 'time'
+        : 'checkmark-done';
+  const statusColor =
+    message.status === 'failed'
+      ? colors.danger
+      : message.status === 'queued' || message.status === 'sending'
+        ? colors.primaryBright
+        : colors.primaryBright;
 
   if (message.kind === 'file') {
     return (
@@ -75,7 +87,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         <Text style={[styles.text, mine && styles.mineText]}>{message.text}</Text>
         <View style={styles.metaRow}>
           <Text style={[styles.time, mine && styles.mineTime]}>{message.time}</Text>
-          {mine ? <Ionicons name="checkmark-done" size={14} color={colors.security} /> : null}
+          {mine ? <Ionicons name={statusIcon} size={14} color={statusColor} /> : null}
         </View>
       </View>
     </View>
