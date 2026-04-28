@@ -50,9 +50,6 @@ Fast tests still skip the integration suite unless `RUN_API_INTEGRATION_TESTS=tr
 
 ## Next phase
 
-Phase 31 should add EAS development-client build verification:
+Phase 31 adds EAS development-client build verification readiness.
 
-- Android development-client build checklist
-- iOS development-client build checklist
-- SQLCipher Settings probe verification
-- migration control verification on a real development build
+More detail: `docs/architecture/phase-31-eas-development-client-verification.md`.

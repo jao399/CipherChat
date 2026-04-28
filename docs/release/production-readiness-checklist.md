@@ -6,6 +6,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 
 - `npm run validate:ci` passes.
 - GitHub Actions CI passes on `master`.
+- `npm run verify:dev-build-config` passes.
 - Android development client validates SQLCipher adapter status.
 - iOS development client validates SQLCipher adapter status.
 - Release builds are generated and smoke-tested.

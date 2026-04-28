@@ -564,6 +564,19 @@ CipherChat now has API integration tests against real disposable services:
 
 More detail: `docs/architecture/phase-30-api-integration-tests.md`.
 
+## Phase 31 EAS Development-Client Verification
+
+CipherChat now has a repeatable development-client readiness gate:
+
+- `scripts/verify-development-build-config.mjs` checks EAS, Expo, SecureStore, OP-SQLite, SQLCipher, Android, and iOS configuration.
+- `npm run verify:dev-build-config` runs the native-readiness configuration check.
+- `npm run validate:ci` includes the development-client configuration check.
+- `docs/release/development-client-verification.md` documents Android and iOS installation smoke tests.
+
+Local tool availability is treated separately from project configuration. Missing `eas`, missing `adb`, and absent `android/` or `ios/` folders are reported as environment warnings so CI can still validate the managed Expo configuration.
+
+More detail: `docs/architecture/phase-31-eas-development-client-verification.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
@@ -571,5 +584,5 @@ More detail: `docs/architecture/phase-30-api-integration-tests.md`.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
 5. Install Android platform tools and run the SQLCipher adapter in a real development client.
-6. Add EAS development-client build verification for Android and iOS.
+6. Run the Android and iOS development-client verification checklist on installed native builds.
 7. Add the formal threat model and security acceptance criteria.
