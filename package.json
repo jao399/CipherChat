@@ -12,7 +12,7 @@
     "web": "expo start --web",
     "app:test": "tsx --test \"src/**/*.test.ts\"",
     "test": "npm run app:test && npm run api:test",
-    "validate:ci": "npm run typecheck && npm test && npm run api:build && npm run prisma:validate && npx expo-doctor && npm audit --omit=dev --audit-level=high",
+    "validate:ci": "npm run typecheck && npm test && npm run api:build && npm run prisma:validate && npm run api:test:integration && npx expo-doctor && npm audit --omit=dev --audit-level=high",
     "typecheck": "npm run typecheck:app && npm run typecheck:api",
     "typecheck:app": "tsc --noEmit",
     "typecheck:api": "npm run typecheck --workspace @cipherchat/api",
@@ -20,6 +20,7 @@
     "api:worker": "npm run worker --workspace @cipherchat/api",
     "api:build": "npm run build --workspace @cipherchat/api",
     "api:test": "npm run test --workspace @cipherchat/api",
+    "api:test:integration": "npm run test:integration --workspace @cipherchat/api",
     "prisma:generate": "npm run prisma:generate --workspace @cipherchat/api",
     "prisma:validate": "npm run prisma:validate --workspace @cipherchat/api",
     "prisma:migrate:deploy": "npm run prisma:migrate:deploy --workspace @cipherchat/api"

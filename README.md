@@ -552,6 +552,18 @@ CipherChat now has a first CI/release hardening layer:
 
 More detail: `docs/architecture/phase-29-release-hardening-ci.md`.
 
+## Phase 30 API Integration Tests
+
+CipherChat now has API integration tests against real disposable services:
+
+- `npm run api:test:integration` applies Prisma migrations and runs integration tests.
+- The test uses real PostgreSQL persistence through Prisma.
+- The test uses real Redis/BullMQ delivery job enqueueing.
+- It covers device bundle publication, device sessions, encrypted envelope fanout, inbox delivery, acknowledgement, and audit events.
+- `npm run validate:ci` now includes the integration test.
+
+More detail: `docs/architecture/phase-30-api-integration-tests.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
@@ -559,5 +571,5 @@ More detail: `docs/architecture/phase-29-release-hardening-ci.md`.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
 5. Install Android platform tools and run the SQLCipher adapter in a real development client.
-6. Add API integration tests against disposable Postgres and Redis services.
-7. Add EAS development-client build verification for Android and iOS.
+6. Add EAS development-client build verification for Android and iOS.
+7. Add the formal threat model and security acceptance criteria.

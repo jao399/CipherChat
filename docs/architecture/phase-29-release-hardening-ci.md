@@ -44,7 +44,7 @@ CipherChat must not handle production user data until these gates are complete:
 
 ## Next phase
 
-Phase 30 should add API integration tests against disposable Postgres and Redis:
+Phase 30 adds API integration tests against disposable Postgres and Redis:
 
 - run Prisma migrations in the test database
 - exercise device session persistence

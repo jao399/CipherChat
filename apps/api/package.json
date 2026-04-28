@@ -10,6 +10,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\"",
+    "test:integration": "node scripts/run-integration-tests.mjs",
     "prisma:generate": "node scripts/with-prisma-env.mjs generate",
     "prisma:validate": "node scripts/with-prisma-env.mjs validate",
     "prisma:migrate:deploy": "node scripts/with-prisma-env.mjs migrate deploy"
