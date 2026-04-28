@@ -436,12 +436,26 @@ CipherChat now has durable outbound send-state plumbing on mobile:
 
 More detail: `docs/architecture/phase-20-outbound-queue.md`.
 
+## Phase 21 Inbound Envelope Polling
+
+CipherChat now has mobile inbound encrypted-envelope polling:
+
+- BackendProvider exposes `pollInboundEnvelopes`.
+- The app fetches pending encrypted envelopes for the active device.
+- Each fetched envelope is acknowledged through the delivery API.
+- Mock mode supports acknowledgement calls.
+- Settings includes an `Encrypted Inbox` row for manual polling.
+- The UI shows fetched and acknowledged envelope counts.
+- No decrypted plaintext is stored or rendered in this phase.
+
+More detail: `docs/architecture/phase-21-inbound-envelope-polling.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Add inbound encrypted envelope polling and acknowledgement on mobile.
+5. Add paginated inbound polling, sync cursors, and delivery receipt state.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.

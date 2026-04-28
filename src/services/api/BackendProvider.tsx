@@ -26,6 +26,7 @@ import { mockCipherChatApiClient } from './mockCipherChatApiClient';
 import type {
   AccountDiscoveryResult,
   BackendStatus,
+  InboundEnvelopeSyncStatus,
   PublicDeviceBundleResponse,
 } from './types';
 import { preparePrototypeOutboundFanout } from '../messages/outboundEnvelopeService';
@@ -59,6 +60,8 @@ type BackendContextValue = {
   }): Promise<OutboundQueueItem>;
   outboundQueue: OutboundQueueItem[];
   retryOutboundMessage(itemId: string): Promise<OutboundQueueItem>;
+  inboundEnvelopeStatus: InboundEnvelopeSyncStatus;
+  pollInboundEnvelopes(): Promise<InboundEnvelopeSyncStatus>;
   syncRemoteIdentity(recordId: string): Promise<void>;
   trustRemoteIdentity(recordId: string): Promise<void>;
   clearSession(): Promise<void>;
@@ -85,6 +88,11 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [remoteTrustRecords, setRemoteTrustRecords] = useState<RemoteIdentityTrustRecord[]>(remoteIdentityTrust);
   const [contactDiscoveryResults, setContactDiscoveryResults] = useState<AccountDiscoveryResult[]>([]);
   const [outboundQueue, setOutboundQueue] = useState<OutboundQueueItem[]>([]);
+  const [inboundEnvelopeStatus, setInboundEnvelopeStatus] = useState<InboundEnvelopeSyncStatus>({
+    polling: false,
+    pendingCount: 0,
+    acknowledgedCount: 0,
+  });
   const [syncingRemoteTrust, setSyncingRemoteTrust] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
@@ -507,6 +515,82 @@ export function BackendProvider({ children }: PropsWithChildren) {
     [bootstrapPrototypeSession, liveClient, mode, outboundQueue, session],
   );
 
+  const pollInboundEnvelopes = useCallback(async () => {
+    if (mode === 'live' && !session?.token) {
+      const unavailableStatus: InboundEnvelopeSyncStatus = {
+        polling: false,
+        pendingCount: inboundEnvelopeStatus.pendingCount,
+        acknowledgedCount: inboundEnvelopeStatus.acknowledgedCount,
+        lastPolledAt: inboundEnvelopeStatus.lastPolledAt,
+        lastError: 'Live inbound polling requires a verified device session.',
+      };
+      setInboundEnvelopeStatus(unavailableStatus);
+      throw new Error(unavailableStatus.lastError);
+    }
+
+    const activeSession = session ?? (mode === 'mock' ? await bootstrapPrototypeSession() : null);
+
+    if (!activeSession) {
+      const unavailableStatus: InboundEnvelopeSyncStatus = {
+        polling: false,
+        pendingCount: inboundEnvelopeStatus.pendingCount,
+        acknowledgedCount: inboundEnvelopeStatus.acknowledgedCount,
+        lastPolledAt: inboundEnvelopeStatus.lastPolledAt,
+        lastError: 'Start a verified device session before polling encrypted envelopes.',
+      };
+      setInboundEnvelopeStatus(unavailableStatus);
+      throw new Error(unavailableStatus.lastError);
+    }
+
+    setInboundEnvelopeStatus((current) => ({
+      ...current,
+      polling: true,
+      lastError: undefined,
+    }));
+
+    try {
+      const page =
+        mode === 'mock'
+          ? await mockCipherChatApiClient.getPendingEnvelopes()
+          : await liveClient.getPendingEnvelopes({
+              token: activeSession.token,
+              limit: 25,
+            });
+      const acknowledgements = await Promise.all(
+        page.envelopes.map((envelope) =>
+          mode === 'mock'
+            ? mockCipherChatApiClient.acknowledgeEnvelope(envelope.messageId)
+            : liveClient.acknowledgeEnvelope(envelope.messageId, activeSession.token),
+        ),
+      );
+      const nextStatus: InboundEnvelopeSyncStatus = {
+        polling: false,
+        pendingCount: page.envelopes.length,
+        acknowledgedCount: acknowledgements.length,
+        lastPolledAt: new Date().toISOString(),
+      };
+
+      setInboundEnvelopeStatus(nextStatus);
+      setSummary(
+        page.envelopes.length > 0
+          ? `Fetched and acknowledged ${acknowledgements.length} encrypted envelope${acknowledgements.length === 1 ? '' : 's'}.`
+          : 'No pending encrypted envelopes for this device.',
+      );
+      return nextStatus;
+    } catch (error) {
+      const failedStatus: InboundEnvelopeSyncStatus = {
+        polling: false,
+        pendingCount: inboundEnvelopeStatus.pendingCount,
+        acknowledgedCount: inboundEnvelopeStatus.acknowledgedCount,
+        lastPolledAt: inboundEnvelopeStatus.lastPolledAt,
+        lastError: error instanceof Error ? error.message : 'Encrypted envelope polling failed.',
+      };
+      setInboundEnvelopeStatus(failedStatus);
+      setSummary('Encrypted inbox polling failed.');
+      return failedStatus;
+    }
+  }, [bootstrapPrototypeSession, inboundEnvelopeStatus, liveClient, mode, session]);
+
   const trustRemoteIdentity = useCallback(
     async (recordId: string) => {
       const nextRecords = await markRemoteTrustRecordTrusted(remoteTrustRecords, recordId);
@@ -549,6 +633,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       remoteTrustRecords,
       contactDiscoveryResults,
       outboundQueue,
+      inboundEnvelopeStatus,
       setMode: persistMode,
       setBaseUrl: persistBaseUrl,
       refreshStatus,
@@ -559,11 +644,12 @@ export function BackendProvider({ children }: PropsWithChildren) {
       addDiscoveredContact,
       sendSecureMessage,
       retryOutboundMessage,
+      pollInboundEnvelopes,
       syncRemoteIdentity,
       trustRemoteIdentity,
       clearSession,
     }),
-    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, initializing, mode, outboundQueue, persistBaseUrl, persistMode, ready, refreshStatus, remoteTrustRecords, retryOutboundMessage, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshStatus, remoteTrustRecords, retryOutboundMessage, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

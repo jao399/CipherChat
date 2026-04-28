@@ -134,6 +134,14 @@ export type PendingEnvelopePage = {
   nextCursor?: string;
 };
 
+export type InboundEnvelopeSyncStatus = {
+  polling: boolean;
+  pendingCount: number;
+  acknowledgedCount: number;
+  lastPolledAt?: string;
+  lastError?: string;
+};
+
 export type BackendStatus = {
   mode: BackendMode;
   baseUrl: string;

@@ -157,4 +157,12 @@ export const mockCipherChatApiClient = {
   async getPendingEnvelopes(): Promise<PendingEnvelopePage> {
     return { envelopes: [] };
   },
+
+  async acknowledgeEnvelope(messageId: string) {
+    return {
+      messageId,
+      deliveryState: 'ACKNOWLEDGED',
+      acknowledgedAt: new Date().toISOString(),
+    };
+  },
 };

@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AppLogo } from '../../components/common/AppLogo';
 import { DarkCard } from '../../components/common/DarkCard';
@@ -18,10 +18,12 @@ import type { RootStackParamList } from '../../navigation/types';
 
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { status, setMode, refreshStatus, clearSession, rotateDeviceIdentity } = useBackend();
+  const { status, setMode, refreshStatus, clearSession, rotateDeviceIdentity, inboundEnvelopeStatus, pollInboundEnvelopes } =
+    useBackend();
   const [readReceipts, setReadReceipts] = useState(false);
   const [appLock, setAppLock] = useState(true);
   const [disappearing, setDisappearing] = useState(true);
+  const [pollingInbox, setPollingInbox] = useState(false);
 
   const resetOnboarding = async () => {
     await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
@@ -42,11 +44,31 @@ export function SettingsScreen() {
     await refreshStatus();
   };
 
+  const pollEncryptedInbox = async () => {
+    setPollingInbox(true);
+
+    try {
+      await pollInboundEnvelopes();
+    } catch (error) {
+      Alert.alert(
+        'Encrypted inbox unavailable',
+        error instanceof Error ? error.message : 'CipherChat could not poll encrypted envelopes.',
+      );
+    } finally {
+      setPollingInbox(false);
+    }
+  };
+
   const trustLabel = {
     changed: 'Changed - review safety number',
     new: 'New - not trusted yet',
     trusted: 'Trusted',
   }[status.identityTrustState ?? 'new'];
+  const inboxSubtitle = inboundEnvelopeStatus.lastError
+    ? inboundEnvelopeStatus.lastError
+    : inboundEnvelopeStatus.lastPolledAt
+      ? `${inboundEnvelopeStatus.pendingCount} fetched | ${inboundEnvelopeStatus.acknowledgedCount} acknowledged`
+      : 'Poll pending envelopes for this device';
 
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
@@ -129,6 +151,13 @@ export function SettingsScreen() {
           subtitle={status.identitySafetyNumber?.join(' ') ?? 'Preparing safety number'}
           testID="settings-device-safety-number"
           onPress={() => navigation.navigate('DeviceVerification')}
+        />
+        <SettingRow
+          icon={inboundEnvelopeStatus.polling || pollingInbox ? 'sync' : 'mail-unread'}
+          title="Encrypted Inbox"
+          subtitle={inboundEnvelopeStatus.polling || pollingInbox ? 'Polling encrypted envelopes...' : inboxSubtitle}
+          testID="settings-encrypted-inbox"
+          onPress={pollEncryptedInbox}
         />
       </View>
 
