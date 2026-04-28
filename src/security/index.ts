@@ -38,8 +38,13 @@ export {
   markIdentityTrusted,
 } from './trustedIdentityStore';
 export {
+  applyRemoteBundleToTrustRecord,
   describeRemoteTrustState,
   findRemoteTrustRecord,
+  markRemoteTrustRecordTrusted,
+  readRemoteTrustRecords,
+  updateRemoteTrustRecord,
+  writeRemoteTrustRecords,
 } from './remoteContactTrust';
 export {
   APPROVED_PROTOCOLS,

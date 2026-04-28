@@ -9,16 +9,21 @@ import {
   type BackendMode,
 } from '../../config/api';
 import {
+  applyRemoteBundleToTrustRecord,
   getIdentityTrustStatus,
+  markRemoteTrustRecordTrusted,
   markIdentityTrusted,
   prototypeDeviceIdentityProvider,
+  readRemoteTrustRecords,
   type IdentityTrustStatus,
   type LocalDeviceIdentity,
 } from '../../security';
+import { remoteIdentityTrust } from '../../data/mockData';
 import { CipherChatApiClient } from './cipherChatApiClient';
 import { getStoredApiSession, setStoredApiSession, clearStoredApiSession, type StoredApiSession } from './apiSessionStore';
 import { mockCipherChatApiClient } from './mockCipherChatApiClient';
 import type { BackendStatus } from './types';
+import type { RemoteIdentityTrustRecord } from '../../types';
 
 type BackendContextValue = {
   status: BackendStatus;
@@ -30,6 +35,9 @@ type BackendContextValue = {
   bootstrapPrototypeSession(): Promise<StoredApiSession>;
   trustCurrentDeviceIdentity(): Promise<void>;
   rotateDeviceIdentity(): Promise<void>;
+  remoteTrustRecords: RemoteIdentityTrustRecord[];
+  syncRemoteIdentity(recordId: string): Promise<void>;
+  trustRemoteIdentity(recordId: string): Promise<void>;
   clearSession(): Promise<void>;
 };
 
@@ -51,6 +59,8 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<StoredApiSession | null>(null);
   const [identity, setIdentity] = useState<LocalDeviceIdentity | null>(null);
   const [trustStatus, setTrustStatus] = useState<IdentityTrustStatus | null>(null);
+  const [remoteTrustRecords, setRemoteTrustRecords] = useState<RemoteIdentityTrustRecord[]>(remoteIdentityTrust);
+  const [syncingRemoteTrust, setSyncingRemoteTrust] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
   const liveClient = useMemo(() => new CipherChatApiClient(baseUrl), [baseUrl]);
@@ -77,11 +87,12 @@ export function BackendProvider({ children }: PropsWithChildren) {
     let active = true;
 
     async function load() {
-      const [storedMode, storedBaseUrl, storedSession, storedIdentity] = await Promise.all([
+      const [storedMode, storedBaseUrl, storedSession, storedIdentity, storedRemoteTrust] = await Promise.all([
         AsyncStorage.getItem(API_MODE_STORAGE_KEY),
         AsyncStorage.getItem(API_BASE_URL_STORAGE_KEY),
         getStoredApiSession(),
         prototypeDeviceIdentityProvider.getOrCreateIdentity(),
+        readRemoteTrustRecords(remoteIdentityTrust),
       ]);
       const storedTrustStatus = await getIdentityTrustStatus(storedIdentity);
 
@@ -111,6 +122,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       setSession(compatibleSession);
       setIdentity(storedIdentity);
       setTrustStatus(storedTrustStatus);
+      setRemoteTrustRecords(storedRemoteTrust);
       setInitializing(false);
     }
 
@@ -207,6 +219,52 @@ export function BackendProvider({ children }: PropsWithChildren) {
     setSummary('Device identity rotated. Review the changed safety number and verify again.');
   }, []);
 
+  const syncRemoteIdentity = useCallback(
+    async (recordId: string) => {
+      const record = remoteTrustRecords.find((item) => item.id === recordId);
+
+      if (!record) {
+        throw new Error('Remote identity record was not found.');
+      }
+
+      if (mode === 'live' && !session?.token) {
+        throw new Error('Live remote identity sync requires a verified device session.');
+      }
+
+      setSyncingRemoteTrust(true);
+
+      try {
+        const bundle =
+          mode === 'mock'
+            ? await mockCipherChatApiClient.getPublicDeviceBundle({
+                accountId: record.accountId,
+                deviceId: record.deviceId,
+              })
+            : await liveClient.getPublicDeviceBundle({
+                accountId: record.accountId,
+                deviceId: record.deviceId,
+                token: session?.token ?? '',
+              });
+        const nextRecords = await applyRemoteBundleToTrustRecord(remoteTrustRecords, record.id, bundle);
+        setRemoteTrustRecords(nextRecords);
+        setSummary(`Synced public bundle for ${record.displayName}.`);
+      } finally {
+        setSyncingRemoteTrust(false);
+      }
+    },
+    [liveClient, mode, remoteTrustRecords, session?.token],
+  );
+
+  const trustRemoteIdentity = useCallback(
+    async (recordId: string) => {
+      const nextRecords = await markRemoteTrustRecordTrusted(remoteTrustRecords, recordId);
+      const record = nextRecords.find((item) => item.id === recordId);
+      setRemoteTrustRecords(nextRecords);
+      setSummary(record ? `${record.displayName} safety number trusted.` : 'Remote identity trusted.');
+    },
+    [remoteTrustRecords],
+  );
+
   const clearSession = useCallback(async () => {
     if (mode === 'live' && session?.token) {
       try {
@@ -232,18 +290,22 @@ export function BackendProvider({ children }: PropsWithChildren) {
         identitySafetyNumber: trustStatus?.record.safetyNumberBlocks,
         identityTrustState: trustStatus?.state,
         cryptoProvider: identity?.provider,
+        remoteTrustSyncing: syncingRemoteTrust,
       },
       session,
       initializing,
+      remoteTrustRecords,
       setMode: persistMode,
       setBaseUrl: persistBaseUrl,
       refreshStatus,
       bootstrapPrototypeSession,
       trustCurrentDeviceIdentity,
       rotateDeviceIdentity,
+      syncRemoteIdentity,
+      trustRemoteIdentity,
       clearSession,
     }),
-    [baseUrl, bootstrapPrototypeSession, clearSession, identity?.fingerprint, identity?.provider, initializing, mode, persistBaseUrl, persistMode, ready, refreshStatus, rotateDeviceIdentity, session, summary, trustCurrentDeviceIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [baseUrl, bootstrapPrototypeSession, clearSession, identity?.fingerprint, identity?.provider, initializing, mode, persistBaseUrl, persistMode, ready, refreshStatus, remoteTrustRecords, rotateDeviceIdentity, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

@@ -59,11 +59,16 @@ export type RemoteIdentityTrustRecord = {
   id: string;
   displayName: string;
   handle?: string;
+  accountId: string;
+  deviceId: string;
+  identityKey: string;
   trustState: RemoteIdentityTrustState;
   identityFingerprint: string;
   safetyNumberBlocks: string[];
   lastVerifiedAt?: string;
   changedAt?: string;
+  syncedAt?: string;
+  source?: 'mock' | 'api';
 };
 
 export type CallRecord = {

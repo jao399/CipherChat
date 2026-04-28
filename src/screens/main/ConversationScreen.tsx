@@ -14,7 +14,8 @@ import {
 
 import { MessageBubble } from '../../components/chat/MessageBubble';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
-import { chats, messages, remoteIdentityTrust } from '../../data/mockData';
+import { chats, messages } from '../../data/mockData';
+import { useBackend } from '../../hooks/useBackend';
 import { describeRemoteTrustState, findRemoteTrustRecord } from '../../security';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
@@ -25,8 +26,9 @@ const timers = ['10s', '30s', '1m', '5m', '10m'];
 
 export function ConversationScreen({ navigation, route }: Props) {
   const [timer, setTimer] = useState('30s');
+  const { remoteTrustRecords } = useBackend();
   const chat = chats.find((item) => item.id === route.params.chatId) ?? chats[0];
-  const remoteTrust = findRemoteTrustRecord(remoteIdentityTrust, chat.id, chat.name);
+  const remoteTrust = findRemoteTrustRecord(remoteTrustRecords, chat.id, chat.name);
   const remoteTrustCopy = remoteTrust ? describeRemoteTrustState(remoteTrust.trustState) : null;
   const shouldWarnTrust = remoteTrust?.trustState === 'changed' || remoteTrust?.trustState === 'new';
   const chatMessages = useMemo(

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { GlowButton, SecondaryButton } from '../../components/common/Buttons';
 import { DarkCard } from '../../components/common/DarkCard';
@@ -10,13 +11,48 @@ import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { SecureBadge } from '../../components/common/SecureBadge';
-import { contacts, remoteIdentityTrust } from '../../data/mockData';
+import { contacts } from '../../data/mockData';
+import { useBackend } from '../../hooks/useBackend';
 import { describeRemoteTrustState, findRemoteTrustRecord } from '../../security';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
 export function ContactsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { remoteTrustRecords, syncRemoteIdentity, trustRemoteIdentity, status } = useBackend();
+  const [syncing, setSyncing] = useState(false);
+
+  const syncPublicKeys = async () => {
+    setSyncing(true);
+
+    try {
+      for (const contact of contacts) {
+        const trust = findRemoteTrustRecord(remoteTrustRecords, contact.id, contact.name);
+
+        if (trust) {
+          await syncRemoteIdentity(trust.id);
+        }
+      }
+    } catch (error) {
+      Alert.alert(
+        'Public key sync unavailable',
+        error instanceof Error ? error.message : 'CipherChat could not sync public identity bundles.',
+      );
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const trustContact = async (recordId: string) => {
+    try {
+      await trustRemoteIdentity(recordId);
+    } catch (error) {
+      Alert.alert(
+        'Trust update failed',
+        error instanceof Error ? error.message : 'CipherChat could not update this trust record.',
+      );
+    }
+  };
 
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
@@ -37,10 +73,20 @@ export function ContactsScreen() {
         </View>
       </DarkCard>
 
-      <SectionHeader title="Suggested Contacts" action="Verified first" />
+      <SectionHeader title="Suggested Contacts" action={status.remoteTrustSyncing || syncing ? 'Syncing...' : 'Verified first'} />
+      <SecondaryButton
+        accessibilityLabel="Sync public contact keys"
+        testID="contacts-sync-public-keys"
+        icon="sync"
+        style={styles.syncButton}
+        disabled={syncing || status.remoteTrustSyncing}
+        onPress={syncPublicKeys}
+      >
+        Sync Public Keys
+      </SecondaryButton>
       <View style={styles.list}>
         {contacts.map((contact) => {
-          const trust = findRemoteTrustRecord(remoteIdentityTrust, contact.id, contact.name);
+          const trust = findRemoteTrustRecord(remoteTrustRecords, contact.id, contact.name);
           const trustCopy = trust ? describeRemoteTrustState(trust.trustState) : null;
           const needsReview = trust?.trustState === 'changed' || trust?.trustState === 'new';
 
@@ -71,7 +117,13 @@ export function ContactsScreen() {
                   <Text style={styles.safetyNumber}>{trust.safetyNumberBlocks.join(' ')}</Text>
                 ) : null}
               </View>
-              <TouchableOpacity style={[styles.add, needsReview && styles.review]}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={needsReview && trust ? `Trust ${contact.name} safety number` : `Add ${contact.name}`}
+                testID={`contact-trust-${contact.id}`}
+                style={[styles.add, needsReview && styles.review]}
+                onPress={needsReview && trust ? () => void trustContact(trust.id) : undefined}
+              >
                 <Ionicons name={needsReview ? 'shield-outline' : 'person-add'} size={18} color={colors.text} />
               </TouchableOpacity>
             </View>
@@ -122,6 +174,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: 'rgba(17,17,26,0.78)',
     paddingHorizontal: spacing.lg,
+  },
+  syncButton: {
+    marginBottom: spacing.lg,
   },
   contactRow: {
     minHeight: 86,

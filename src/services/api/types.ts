@@ -104,4 +104,5 @@ export type BackendStatus = {
   identitySafetyNumber?: string[];
   identityTrustState?: IdentityTrustState;
   cryptoProvider?: string;
+  remoteTrustSyncing?: boolean;
 };

@@ -378,12 +378,26 @@ The API and mobile client now support authenticated public device bundle lookup:
 
 More detail: `docs/architecture/phase-16-public-device-bundles.md`.
 
+## Phase 17 Remote Trust Sync
+
+Remote contact trust is now provider-backed and can sync public bundles:
+
+- Remote trust records persist in AsyncStorage.
+- The backend provider loads remote contact trust at startup.
+- Contacts uses provider trust records instead of static-only mock data.
+- Contacts includes a "Sync Public Keys" action.
+- Mock mode syncs through the mock API client.
+- Live mode syncs through authenticated public device bundle lookup.
+- Conversation warnings reflect synced trust records.
+
+More detail: `docs/architecture/phase-17-remote-trust-sync.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Replace mock remote contact trust records with fetched backend bundles and persisted local trust decisions.
+5. Replace mock contact discovery with real account/device discovery and search.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.
