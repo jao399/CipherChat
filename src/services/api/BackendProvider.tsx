@@ -32,7 +32,6 @@ import type {
   InboundEnvelopeSyncStatus,
   PublicDeviceBundleResponse,
 } from './types';
-import { preparePrototypeOutboundFanout } from '../messages/outboundEnvelopeService';
 import {
   readOutboundQueue,
   replaceOutboundQueueItem,
@@ -45,6 +44,7 @@ import {
   readInboundEnvelopeSyncState,
   type InboundEnvelopeSyncState,
 } from '../messages/inboundEnvelopeStore';
+import { selectMessageEncryptionProvider } from '../messages/messageEncryptionProvider';
 import type { RemoteIdentityTrustRecord } from '../../types';
 
 type BackendContextValue = {
@@ -124,7 +124,11 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [initializing, setInitializing] = useState(true);
 
   const liveClient = useMemo(() => new CipherChatApiClient(baseUrl), [baseUrl]);
-  const messageCryptoReadiness = useMemo(() => getMessageCryptoReadiness(mode), [mode]);
+  const messageEncryptionProvider = useMemo(() => selectMessageEncryptionProvider(mode), [mode]);
+  const messageCryptoReadiness = useMemo(
+    () => getMessageCryptoReadiness(mode, messageEncryptionProvider),
+    [messageEncryptionProvider, mode],
+  );
 
   const refreshStatus = useCallback(async () => {
     if (mode === 'mock') {
@@ -423,7 +427,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
         throw new Error('Verify this contact safety number before sending encrypted messages.');
       }
 
-      const fanout = await preparePrototypeOutboundFanout({
+      const fanout = await messageEncryptionProvider.prepareOutboundFanout({
         conversationId: input.conversationId,
         senderAccountId: activeSession.accountId,
         senderDeviceId: activeSession.deviceId,
@@ -491,7 +495,16 @@ export function BackendProvider({ children }: PropsWithChildren) {
         return failedItem;
       }
     },
-    [bootstrapPrototypeSession, liveClient, messageCryptoReadiness, mode, outboundQueue, remoteTrustRecords, session],
+    [
+      bootstrapPrototypeSession,
+      liveClient,
+      messageCryptoReadiness,
+      messageEncryptionProvider,
+      mode,
+      outboundQueue,
+      remoteTrustRecords,
+      session,
+    ],
   );
 
   const retryOutboundMessage = useCallback(

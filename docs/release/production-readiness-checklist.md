@@ -17,6 +17,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Security acceptance criteria are complete.
 - Production-mode prototype crypto blockers are implemented.
 - Settings reports production message crypto readiness.
+- Message encryption provider selection is explicit and test-covered.
 - No custom message cryptography is introduced.
 - One-to-one messaging uses a reviewed Signal/X3DH + Double Ratchet implementation.
 - Group messaging uses MLS or a reviewed MLS implementation strategy.

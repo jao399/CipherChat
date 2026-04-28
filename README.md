@@ -601,9 +601,22 @@ CipherChat now blocks live message sends while the app is still using the protot
 
 More detail: `docs/architecture/phase-33-production-crypto-gating.md`.
 
+## Phase 34 Message Encryption Provider Interface
+
+CipherChat now has an explicit message encryption provider boundary:
+
+- `src/services/messages/messageEncryptionProvider.ts` defines the provider contract.
+- `prototype-sha256-envelope-v1` is an explicit mock provider for UI/backend flow testing.
+- `signal-double-ratchet-pending` is the production provider contract placeholder.
+- `BackendProvider` uses the selected provider instead of importing prototype fanout directly.
+- `messageCryptoPolicy` derives readiness from the selected provider.
+- Provider selection is test-covered and can be controlled with `EXPO_PUBLIC_CIPHERCHAT_MESSAGE_CRYPTO_PROVIDER`.
+
+More detail: `docs/architecture/phase-34-message-encryption-provider.md`.
+
 ## Next Steps
 
-1. Add a production crypto provider interface and move prototype fanout behind an explicit mock provider.
+1. Add outbound plaintext lifecycle controls so plaintext cannot be written to durable queues or local stores.
 2. Build and install an Expo development client before adding native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.

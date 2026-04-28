@@ -43,9 +43,6 @@ This provider is only a UI/backend integration placeholder. It is not Signal, no
 
 ## Next phase
 
-Phase 34 should add a production crypto provider interface:
+Phase 34 adds a production crypto provider interface.
 
-- define a `MessageEncryptionProvider` port
-- move prototype fanout behind an explicit mock provider
-- add a placeholder Signal/X3DH + Double Ratchet provider contract
-- make the provider selected by environment and runtime policy
+More detail: `docs/architecture/phase-34-message-encryption-provider.md`.

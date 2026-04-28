@@ -20,6 +20,7 @@ These criteria are production blockers. CipherChat must not process production u
 - The server must only receive public key material, ciphertext, opaque headers, delivery metadata, and selected user-disclosed abuse report content.
 - No custom cryptographic primitive may be introduced without a formal design review.
 - A reviewed production provider must replace `prototype-sha256-envelope-v1` before live sends are enabled.
+- Message encryption provider selection must remain explicit and test-covered.
 - Test vectors and interoperability tests must cover key agreement, message ratcheting, replay handling, and key rotation.
 
 ## Mobile security gates

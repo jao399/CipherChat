@@ -56,7 +56,6 @@ export {
   assertCanPrepareOutboundFanout,
   canSendWithMessageCrypto,
   getMessageCryptoReadiness,
-  prototypeMessageCryptoReadiness,
   type MessageCryptoProviderId,
   type MessageCryptoReadiness,
 } from './messageCryptoPolicy';

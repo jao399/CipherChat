@@ -1,6 +1,11 @@
 import type { BackendMode } from '../config/api';
+import {
+  selectMessageEncryptionProvider,
+  type MessageCryptoProviderId,
+  type MessageEncryptionProvider,
+} from '../services/messages/messageEncryptionProvider';
 
-export type MessageCryptoProviderId = 'prototype-sha256-envelope-v1' | 'signal-double-ratchet-pending';
+export type { MessageCryptoProviderId } from '../services/messages/messageEncryptionProvider';
 
 export type MessageCryptoReadiness = {
   provider: MessageCryptoProviderId;
@@ -10,16 +15,18 @@ export type MessageCryptoReadiness = {
   mockReady: boolean;
 };
 
-export const prototypeMessageCryptoReadiness: MessageCryptoReadiness = {
-  provider: 'prototype-sha256-envelope-v1',
-  label: 'Prototype envelope hashing',
-  detail: 'Mock-only envelope preparation. Production sends require reviewed Signal/X3DH + Double Ratchet encryption.',
-  productionReady: false,
-  mockReady: true,
-};
+function readinessFromProvider(provider: MessageEncryptionProvider): MessageCryptoReadiness {
+  return {
+    provider: provider.id,
+    label: provider.label,
+    detail: provider.detail,
+    productionReady: provider.productionReady,
+    mockReady: provider.mockReady,
+  };
+}
 
-export function getMessageCryptoReadiness(_mode: BackendMode): MessageCryptoReadiness {
-  return prototypeMessageCryptoReadiness;
+export function getMessageCryptoReadiness(mode: BackendMode, provider = selectMessageEncryptionProvider(mode)): MessageCryptoReadiness {
+  return readinessFromProvider(provider);
 }
 
 export function canSendWithMessageCrypto(mode: BackendMode, readiness = getMessageCryptoReadiness(mode)) {
@@ -29,7 +36,7 @@ export function canSendWithMessageCrypto(mode: BackendMode, readiness = getMessa
 export function assertCanPrepareOutboundFanout(mode: BackendMode, readiness = getMessageCryptoReadiness(mode)) {
   if (!canSendWithMessageCrypto(mode, readiness)) {
     throw new Error(
-      'Live encrypted sending is blocked because CipherChat is still using the prototype message crypto provider. Integrate reviewed Signal/X3DH + Double Ratchet encryption before production sends.',
+      'Live encrypted sending is blocked because CipherChat does not have a production-ready message crypto provider. Integrate reviewed Signal/X3DH + Double Ratchet encryption before production sends.',
     );
   }
 }

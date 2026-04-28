@@ -9,22 +9,22 @@ import {
 } from './messageCryptoPolicy';
 
 describe('message crypto production gate', () => {
-  it('allows the prototype provider only in mock mode', () => {
+  it('allows the selected mock provider only in mock mode', () => {
     assert.equal(canSendWithMessageCrypto('mock'), true);
     assert.equal(canSendWithMessageCrypto('live'), false);
   });
 
-  it('blocks live sends while the active provider is prototype-only', () => {
+  it('blocks live sends while the active provider is not production ready', () => {
     assert.throws(
       () => assertCanPrepareOutboundFanout('live'),
-      /prototype message crypto provider/,
+      /production-ready message crypto provider/,
     );
   });
 
-  it('documents the currently active provider as not production ready', () => {
+  it('documents the live provider contract as not production ready', () => {
     const readiness = getMessageCryptoReadiness('live');
 
-    assert.equal(readiness.provider, 'prototype-sha256-envelope-v1');
+    assert.equal(readiness.provider, 'signal-double-ratchet-pending');
     assert.equal(readiness.productionReady, false);
     assert.match(readiness.detail, /Signal\/X3DH/);
   });
