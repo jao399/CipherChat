@@ -67,7 +67,7 @@ export function SettingsScreen() {
   const inboxSubtitle = inboundEnvelopeStatus.lastError
     ? inboundEnvelopeStatus.lastError
     : inboundEnvelopeStatus.lastPolledAt
-      ? `${inboundEnvelopeStatus.pendingCount} fetched | ${inboundEnvelopeStatus.acknowledgedCount} acknowledged`
+      ? `${inboundEnvelopeStatus.pendingCount} fetched now | ${inboundEnvelopeStatus.totalAcknowledged} total acknowledged${inboundEnvelopeStatus.nextCursor ? ' | more pages ready' : ''}`
       : 'Poll pending envelopes for this device';
 
   return (

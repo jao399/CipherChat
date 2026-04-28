@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { FilterChip } from '../../components/common/FilterChip';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { chats } from '../../data/mockData';
+import { useBackend } from '../../hooks/useBackend';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -18,6 +19,7 @@ const filters: Filter[] = ['All', 'Unread', 'Groups', 'Verified'];
 
 export function ChatsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { inboundEnvelopeStatus } = useBackend();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('All');
 
@@ -77,6 +79,26 @@ export function ChatsScreen() {
               onPress={() => setFilter(item)}
             />
           ))}
+        </View>
+
+        <View style={styles.inboxStatus}>
+          <View style={styles.inboxIcon}>
+            <Ionicons
+              name={inboundEnvelopeStatus.lastError ? 'warning' : inboundEnvelopeStatus.nextCursor ? 'mail-unread' : 'mail-open'}
+              size={17}
+              color={inboundEnvelopeStatus.lastError ? colors.warning : colors.primaryBright}
+            />
+          </View>
+          <View style={styles.inboxText}>
+            <Text style={styles.inboxTitle}>Encrypted inbox</Text>
+            <Text style={styles.inboxSubtitle}>
+              {inboundEnvelopeStatus.lastError
+                ? inboundEnvelopeStatus.lastError
+                : inboundEnvelopeStatus.lastPolledAt
+                  ? `${inboundEnvelopeStatus.totalAcknowledged} receipts acknowledged${inboundEnvelopeStatus.nextCursor ? ' | more pages ready' : ''}`
+                  : 'No inbound sync run yet'}
+            </Text>
+          </View>
         </View>
 
         <FlatList
@@ -182,6 +204,40 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingBottom: spacing.xxl,
+  },
+  inboxStatus: {
+    minHeight: 56,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.28)',
+    backgroundColor: 'rgba(124,45,255,0.08)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+  },
+  inboxIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(124,45,255,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inboxText: {
+    flex: 1,
+    gap: 2,
+  },
+  inboxTitle: {
+    ...typography.small,
+    color: colors.text,
+    textTransform: 'uppercase',
+    fontWeight: '900',
+  },
+  inboxSubtitle: {
+    ...typography.small,
+    color: colors.textSecondary,
   },
   archiveRow: {
     minHeight: 82,

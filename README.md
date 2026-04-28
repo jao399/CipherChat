@@ -450,12 +450,26 @@ CipherChat now has mobile inbound encrypted-envelope polling:
 
 More detail: `docs/architecture/phase-21-inbound-envelope-polling.md`.
 
+## Phase 22 Inbound Sync State
+
+CipherChat now persists inbound encrypted-envelope sync metadata:
+
+- `src/services/messages/inboundEnvelopeStore.ts` stores non-sensitive delivery receipt state.
+- BackendProvider can poll up to five inbound pages per manual sync.
+- Stored sync state tracks cursors, totals, receipt count, and timestamps.
+- Each fetched encrypted envelope is acknowledged before status is updated.
+- Settings shows total acknowledgement status and whether more pages remain.
+- Chats shows encrypted inbox health.
+- Plaintext and encrypted envelope bodies are not persisted in this phase.
+
+More detail: `docs/architecture/phase-22-inbound-sync-state.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Add paginated inbound polling, sync cursors, and delivery receipt state.
+5. Add the encrypted local database boundary and migration plan.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.

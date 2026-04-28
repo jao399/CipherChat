@@ -138,7 +138,13 @@ export type InboundEnvelopeSyncStatus = {
   polling: boolean;
   pendingCount: number;
   acknowledgedCount: number;
+  totalFetched: number;
+  totalAcknowledged: number;
+  receiptCount: number;
+  pageCount: number;
+  nextCursor?: string;
   lastPolledAt?: string;
+  lastAcknowledgedAt?: string;
   lastError?: string;
 };
 

@@ -36,6 +36,12 @@ import {
   updateOutboundQueueItem,
   type OutboundQueueItem,
 } from '../messages/outboundQueueStore';
+import {
+  emptyInboundEnvelopeSyncState,
+  mergeInboundDeliveryReceipts,
+  readInboundEnvelopeSyncState,
+  type InboundEnvelopeSyncState,
+} from '../messages/inboundEnvelopeStore';
 import type { RemoteIdentityTrustRecord } from '../../types';
 
 type BackendContextValue = {
@@ -77,6 +83,25 @@ function summarizeReadiness(mode: BackendMode, ready: boolean, checks?: BackendS
   return ready ? 'Live API connected.' : checks ?? 'Live API unavailable.';
 }
 
+function createInboundStatus(
+  state: InboundEnvelopeSyncState,
+  overrides: Partial<InboundEnvelopeSyncStatus> = {},
+): InboundEnvelopeSyncStatus {
+  return {
+    polling: false,
+    pendingCount: 0,
+    acknowledgedCount: 0,
+    totalFetched: state.totalFetched,
+    totalAcknowledged: state.totalAcknowledged,
+    receiptCount: state.receipts.length,
+    pageCount: 0,
+    nextCursor: state.nextCursor,
+    lastPolledAt: state.lastPolledAt,
+    lastAcknowledgedAt: state.lastAcknowledgedAt,
+    ...overrides,
+  };
+}
+
 export function BackendProvider({ children }: PropsWithChildren) {
   const [mode, setModeState] = useState<BackendMode>(DEFAULT_BACKEND_MODE);
   const [baseUrl, setBaseUrlState] = useState(DEFAULT_API_BASE_URL);
@@ -88,11 +113,10 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [remoteTrustRecords, setRemoteTrustRecords] = useState<RemoteIdentityTrustRecord[]>(remoteIdentityTrust);
   const [contactDiscoveryResults, setContactDiscoveryResults] = useState<AccountDiscoveryResult[]>([]);
   const [outboundQueue, setOutboundQueue] = useState<OutboundQueueItem[]>([]);
-  const [inboundEnvelopeStatus, setInboundEnvelopeStatus] = useState<InboundEnvelopeSyncStatus>({
-    polling: false,
-    pendingCount: 0,
-    acknowledgedCount: 0,
-  });
+  const [inboundSyncState, setInboundSyncState] = useState<InboundEnvelopeSyncState>(emptyInboundEnvelopeSyncState);
+  const [inboundEnvelopeStatus, setInboundEnvelopeStatus] = useState<InboundEnvelopeSyncStatus>(
+    createInboundStatus(emptyInboundEnvelopeSyncState),
+  );
   const [syncingRemoteTrust, setSyncingRemoteTrust] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
@@ -120,14 +144,22 @@ export function BackendProvider({ children }: PropsWithChildren) {
     let active = true;
 
     async function load() {
-      const [storedMode, storedBaseUrl, storedSession, storedIdentity, storedRemoteTrust, storedOutboundQueue] =
-        await Promise.all([
+      const [
+        storedMode,
+        storedBaseUrl,
+        storedSession,
+        storedIdentity,
+        storedRemoteTrust,
+        storedOutboundQueue,
+        storedInboundSync,
+      ] = await Promise.all([
           AsyncStorage.getItem(API_MODE_STORAGE_KEY),
           AsyncStorage.getItem(API_BASE_URL_STORAGE_KEY),
           getStoredApiSession(),
           prototypeDeviceIdentityProvider.getOrCreateIdentity(),
           readRemoteTrustRecords(remoteIdentityTrust),
           readOutboundQueue(),
+          readInboundEnvelopeSyncState(),
         ]);
       const storedTrustStatus = await getIdentityTrustStatus(storedIdentity);
 
@@ -159,6 +191,8 @@ export function BackendProvider({ children }: PropsWithChildren) {
       setTrustStatus(storedTrustStatus);
       setRemoteTrustRecords(storedRemoteTrust);
       setOutboundQueue(storedOutboundQueue);
+      setInboundSyncState(storedInboundSync);
+      setInboundEnvelopeStatus(createInboundStatus(storedInboundSync));
       setInitializing(false);
     }
 
@@ -517,13 +551,13 @@ export function BackendProvider({ children }: PropsWithChildren) {
 
   const pollInboundEnvelopes = useCallback(async () => {
     if (mode === 'live' && !session?.token) {
-      const unavailableStatus: InboundEnvelopeSyncStatus = {
-        polling: false,
+      const unavailableStatus = createInboundStatus(inboundSyncState, {
         pendingCount: inboundEnvelopeStatus.pendingCount,
         acknowledgedCount: inboundEnvelopeStatus.acknowledgedCount,
+        pageCount: inboundEnvelopeStatus.pageCount,
         lastPolledAt: inboundEnvelopeStatus.lastPolledAt,
         lastError: 'Live inbound polling requires a verified device session.',
-      };
+      });
       setInboundEnvelopeStatus(unavailableStatus);
       throw new Error(unavailableStatus.lastError);
     }
@@ -531,13 +565,13 @@ export function BackendProvider({ children }: PropsWithChildren) {
     const activeSession = session ?? (mode === 'mock' ? await bootstrapPrototypeSession() : null);
 
     if (!activeSession) {
-      const unavailableStatus: InboundEnvelopeSyncStatus = {
-        polling: false,
+      const unavailableStatus = createInboundStatus(inboundSyncState, {
         pendingCount: inboundEnvelopeStatus.pendingCount,
         acknowledgedCount: inboundEnvelopeStatus.acknowledgedCount,
+        pageCount: inboundEnvelopeStatus.pageCount,
         lastPolledAt: inboundEnvelopeStatus.lastPolledAt,
         lastError: 'Start a verified device session before polling encrypted envelopes.',
-      };
+      });
       setInboundEnvelopeStatus(unavailableStatus);
       throw new Error(unavailableStatus.lastError);
     }
@@ -549,47 +583,71 @@ export function BackendProvider({ children }: PropsWithChildren) {
     }));
 
     try {
-      const page =
-        mode === 'mock'
-          ? await mockCipherChatApiClient.getPendingEnvelopes()
-          : await liveClient.getPendingEnvelopes({
-              token: activeSession.token,
-              limit: 25,
-            });
-      const acknowledgements = await Promise.all(
-        page.envelopes.map((envelope) =>
+      let cursor = inboundSyncState.nextCursor;
+      let nextSyncState = inboundSyncState;
+      let pendingCount = 0;
+      let acknowledgedCount = 0;
+      let pageCount = 0;
+      const maxPages = 5;
+
+      do {
+        const page =
           mode === 'mock'
-            ? mockCipherChatApiClient.acknowledgeEnvelope(envelope.messageId)
-            : liveClient.acknowledgeEnvelope(envelope.messageId, activeSession.token),
-        ),
-      );
-      const nextStatus: InboundEnvelopeSyncStatus = {
-        polling: false,
-        pendingCount: page.envelopes.length,
-        acknowledgedCount: acknowledgements.length,
-        lastPolledAt: new Date().toISOString(),
-      };
+            ? await mockCipherChatApiClient.getPendingEnvelopes()
+            : await liveClient.getPendingEnvelopes({
+                token: activeSession.token,
+                limit: 25,
+                cursor,
+              });
+        const acknowledgements = await Promise.all(
+          page.envelopes.map((envelope) =>
+            mode === 'mock'
+              ? mockCipherChatApiClient.acknowledgeEnvelope(envelope.messageId)
+              : liveClient.acknowledgeEnvelope(envelope.messageId, activeSession.token),
+          ),
+        );
+        const polledAt = new Date().toISOString();
+        nextSyncState = await mergeInboundDeliveryReceipts(nextSyncState, {
+          cursor,
+          nextCursor: page.nextCursor,
+          fetched: page.envelopes,
+          acknowledgements,
+          polledAt,
+        });
+
+        pendingCount += page.envelopes.length;
+        acknowledgedCount += acknowledgements.length;
+        pageCount += 1;
+        cursor = page.nextCursor;
+      } while (cursor && pageCount < maxPages);
+
+      setInboundSyncState(nextSyncState);
+      const nextStatus = createInboundStatus(nextSyncState, {
+        pendingCount,
+        acknowledgedCount,
+        pageCount,
+      });
 
       setInboundEnvelopeStatus(nextStatus);
       setSummary(
-        page.envelopes.length > 0
-          ? `Fetched and acknowledged ${acknowledgements.length} encrypted envelope${acknowledgements.length === 1 ? '' : 's'}.`
+        pendingCount > 0
+          ? `Fetched and acknowledged ${acknowledgedCount} encrypted envelope${acknowledgedCount === 1 ? '' : 's'} across ${pageCount} page${pageCount === 1 ? '' : 's'}.`
           : 'No pending encrypted envelopes for this device.',
       );
       return nextStatus;
     } catch (error) {
-      const failedStatus: InboundEnvelopeSyncStatus = {
-        polling: false,
+      const failedStatus = createInboundStatus(inboundSyncState, {
         pendingCount: inboundEnvelopeStatus.pendingCount,
         acknowledgedCount: inboundEnvelopeStatus.acknowledgedCount,
+        pageCount: inboundEnvelopeStatus.pageCount,
         lastPolledAt: inboundEnvelopeStatus.lastPolledAt,
         lastError: error instanceof Error ? error.message : 'Encrypted envelope polling failed.',
-      };
+      });
       setInboundEnvelopeStatus(failedStatus);
       setSummary('Encrypted inbox polling failed.');
       return failedStatus;
     }
-  }, [bootstrapPrototypeSession, inboundEnvelopeStatus, liveClient, mode, session]);
+  }, [bootstrapPrototypeSession, inboundEnvelopeStatus, inboundSyncState, liveClient, mode, session]);
 
   const trustRemoteIdentity = useCallback(
     async (recordId: string) => {
