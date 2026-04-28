@@ -10,6 +10,10 @@ export {
   ENCRYPTED_LOCAL_DATABASE_SCHEMA_VERSION,
   getEncryptedLocalSchemaSummary,
 } from './encryptedDatabaseSchema';
+export {
+  createOpSQLiteEncryptedLocalDatabase,
+  opSQLiteEncryptedLocalDatabase,
+} from './opSQLiteEncryptedLocalDatabase';
 export type {
   EncryptedLocalColumnDefinition,
   EncryptedLocalColumnType,

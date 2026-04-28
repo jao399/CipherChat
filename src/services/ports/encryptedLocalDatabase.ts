@@ -21,6 +21,8 @@ export type EncryptedLocalDatabaseStatus = {
   adapterName: string;
   schemaVersion: number;
   requiresDevelopmentBuild: boolean;
+  driver?: string;
+  lastError?: string;
 };
 
 export type EncryptedLocalDatabaseTransaction = {

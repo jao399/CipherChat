@@ -65,7 +65,7 @@ Before installation:
 
 ## Next phase
 
-Phase 25 should add the native encrypted database adapter spike behind the existing port:
+Phase 25 adds the native encrypted database adapter spike behind the existing port:
 
 - install and configure the SQLCipher-capable SQLite dependency
 - open an encrypted database with a SecureStore-provisioned key

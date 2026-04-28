@@ -490,12 +490,26 @@ CipherChat is now prepared for native development builds and local encrypted dat
 
 More detail: `docs/architecture/phase-24-development-build-and-local-schema.md`.
 
+## Phase 25 Native Encrypted Database Adapter Spike
+
+CipherChat now has a first native encrypted local database adapter behind the existing port:
+
+- `@op-engineering/op-sqlite` is installed.
+- Root `package.json` enables OP-SQLite SQLCipher compilation.
+- `src/services/local/opSQLiteEncryptedLocalDatabase.ts` lazy-loads OP-SQLite so Expo Go does not crash.
+- The adapter provisions a 32-byte database key through SecureStore.
+- The adapter opens `cipherchat-secure.db` with SQLCipher encryption and applies schema v1.
+- Settings can probe the adapter and show whether the current runtime supports it.
+- Prototype AsyncStorage data is intentionally not migrated yet.
+
+More detail: `docs/architecture/phase-25-native-encrypted-database-adapter.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Build and install an Expo development client before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Add the native encrypted database adapter spike behind `EncryptedLocalDatabasePort`.
+5. Add native development-build verification for the encrypted local database adapter.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.

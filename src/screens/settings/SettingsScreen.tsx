@@ -13,7 +13,8 @@ import { SectionHeader } from '../../components/common/SectionHeader';
 import { SettingRow } from '../../components/settings/SettingRow';
 import { ONBOARDING_STORAGE_KEY } from '../../constants/storage';
 import { useBackend } from '../../hooks/useBackend';
-import { getEncryptedDatabaseReadiness } from '../../services/local';
+import { getEncryptedDatabaseReadiness, opSQLiteEncryptedLocalDatabase } from '../../services/local';
+import type { EncryptedLocalDatabaseStatus } from '../../services/ports';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -25,9 +26,13 @@ export function SettingsScreen() {
   const [appLock, setAppLock] = useState(true);
   const [disappearing, setDisappearing] = useState(true);
   const [pollingInbox, setPollingInbox] = useState(false);
+  const [checkingEncryptedDatabase, setCheckingEncryptedDatabase] = useState(false);
+  const [encryptedDatabaseStatus, setEncryptedDatabaseStatus] = useState<EncryptedLocalDatabaseStatus | null>(null);
   const encryptedDatabase = getEncryptedDatabaseReadiness();
-  const encryptedDatabaseState = encryptedDatabase.available
-    ? 'Available'
+  const encryptedDatabaseState = encryptedDatabaseStatus
+    ? encryptedDatabaseStatus.available
+      ? `Available - schema v${encryptedDatabaseStatus.schemaVersion}`
+      : encryptedDatabaseStatus.lastError ?? 'Unavailable until development build is installed'
     : `Schema v${encryptedDatabase.schemaVersion} planned`;
 
   const resetOnboarding = async () => {
@@ -61,6 +66,17 @@ export function SettingsScreen() {
       );
     } finally {
       setPollingInbox(false);
+    }
+  };
+
+  const checkEncryptedDatabase = async () => {
+    setCheckingEncryptedDatabase(true);
+
+    try {
+      const nextStatus = await opSQLiteEncryptedLocalDatabase.initialize();
+      setEncryptedDatabaseStatus(nextStatus);
+    } finally {
+      setCheckingEncryptedDatabase(false);
     }
   };
 
@@ -167,8 +183,13 @@ export function SettingsScreen() {
         <SettingRow
           icon="server"
           title="Encrypted Local Database"
-          subtitle={`${encryptedDatabaseState} - ${encryptedDatabase.migrationItemCount} prototype stores to migrate`}
+          subtitle={
+            checkingEncryptedDatabase
+              ? 'Checking SQLCipher adapter...'
+              : `${encryptedDatabaseState} - ${encryptedDatabase.migrationItemCount} prototype stores to migrate`
+          }
           testID="settings-encrypted-local-database"
+          onPress={checkEncryptedDatabase}
         />
       </View>
 

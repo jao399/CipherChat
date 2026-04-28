@@ -25,6 +25,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@noble/curves": "^2.2.0",
     "@noble/hashes": "^2.2.0",
+    "@op-engineering/op-sqlite": "^15.2.12",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.15.10",
     "@react-navigation/native": "^7.2.2",
@@ -47,6 +48,9 @@
   "devDependencies": {
     "@types/react": "~19.2.10",
     "typescript": "~5.9.2"
+  },
+  "op-sqlite": {
+    "sqlcipher": true
   },
   "private": true
 }
