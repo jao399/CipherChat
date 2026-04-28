@@ -52,7 +52,7 @@ Before migrating real prototype stores into the encrypted database:
 
 ## Next phase
 
-Phase 27 should add the idempotent migration harness from prototype AsyncStorage stores into the encrypted database:
+Phase 27 adds the disabled-by-default migration harness from prototype AsyncStorage stores into the encrypted database:
 
 - remote trust records
 - outbound envelope queue

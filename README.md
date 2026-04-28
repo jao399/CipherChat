@@ -516,6 +516,19 @@ CipherChat now has automated verification for the encrypted local database adapt
 
 More detail: `docs/architecture/phase-26-encrypted-database-verification.md`.
 
+## Phase 27 Prototype Store Migration Harness
+
+CipherChat now has a disabled-by-default migration harness for prototype AsyncStorage state:
+
+- `src/services/local/prototypeStoreMigration.ts` collects remote trust records, outbound queue items, and inbound receipt metadata.
+- Migration is skipped unless explicitly enabled.
+- Migration is blocked unless the encrypted database reports `available=true` and `encrypted=true`.
+- Records are copied through one encrypted database transaction.
+- Source AsyncStorage data is not deleted.
+- `npm run app:test` covers the skip, block, collect, and write paths.
+
+More detail: `docs/architecture/phase-27-prototype-store-migration-harness.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
@@ -524,4 +537,4 @@ More detail: `docs/architecture/phase-26-encrypted-database-verification.md`.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
 5. Install Android platform tools and run the SQLCipher adapter in a real development client.
 6. Add CI integration tests against disposable Postgres and Redis services.
-7. Add the disabled-by-default AsyncStorage to encrypted database migration harness.
+7. Add a development-only Settings control to manually run and inspect encrypted database migration.

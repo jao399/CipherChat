@@ -14,6 +14,10 @@ export {
   createOpSQLiteEncryptedLocalDatabase,
   opSQLiteEncryptedLocalDatabase,
 } from './opSQLiteEncryptedLocalDatabase';
+export {
+  collectPrototypeStoreMigrationItems,
+  migratePrototypeStoresToEncryptedDatabase,
+} from './prototypeStoreMigration';
 export type {
   EncryptedLocalColumnDefinition,
   EncryptedLocalColumnType,
@@ -26,4 +30,10 @@ export type {
   LocalDataSensitivity,
   LocalDatabaseMigrationStep,
 } from './encryptedDatabasePlan';
+export type {
+  PrototypeStoreMigrationItem,
+  PrototypeStoreMigrationOptions,
+  PrototypeStoreMigrationReaders,
+  PrototypeStoreMigrationResult,
+} from './prototypeStoreMigration';
 export { bytesToHex, hexToBytes } from './secureStoreEncoding';
