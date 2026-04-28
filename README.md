@@ -541,6 +541,17 @@ CipherChat now has a development-only Settings control for migration inspection:
 
 More detail: `docs/architecture/phase-28-development-migration-control.md`.
 
+## Phase 29 Release Hardening CI
+
+CipherChat now has a first CI/release hardening layer:
+
+- `.github/workflows/ci.yml` runs on pushes and pull requests to `master`.
+- CI provisions disposable PostgreSQL and Redis services.
+- `npm run validate:ci` runs typecheck, app/API tests, API build, Prisma validation, Expo Doctor, and high-threshold audit.
+- A production readiness checklist now lives in `docs/release/production-readiness-checklist.md`.
+
+More detail: `docs/architecture/phase-29-release-hardening-ci.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
@@ -548,5 +559,5 @@ More detail: `docs/architecture/phase-28-development-migration-control.md`.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
 5. Install Android platform tools and run the SQLCipher adapter in a real development client.
-6. Add CI integration tests against disposable Postgres and Redis services.
-7. Add release hardening CI gates and a production-readiness checklist.
+6. Add API integration tests against disposable Postgres and Redis services.
+7. Add EAS development-client build verification for Android and iOS.

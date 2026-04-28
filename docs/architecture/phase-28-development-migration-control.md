@@ -37,7 +37,7 @@ The migration still blocks unless the encrypted database reports:
 
 ## Next phase
 
-Phase 29 should add a release hardening and CI plan:
+Phase 29 adds a release hardening and CI plan:
 
 - CI commands for typecheck, app tests, API tests, API build, Expo Doctor, and audit
 - disposable Postgres/Redis integration test path

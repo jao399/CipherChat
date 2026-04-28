@@ -1,0 +1,66 @@
+name: CipherChat CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate app and API
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cipherchat
+          POSTGRES_PASSWORD: cipherchat
+          POSTGRES_USER: cipherchat
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cipherchat -d cipherchat"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      CI: true
+      DATABASE_URL: postgresql://cipherchat:cipherchat@localhost:5432/cipherchat
+      REDIS_URL: redis://localhost:6379
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      - name: Validate
+        run: npm run validate:ci
