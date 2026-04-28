@@ -10,6 +10,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "app:test": "tsx --test \"src/**/*.test.ts\"",
+    "test": "npm run app:test && npm run api:test",
     "typecheck": "npm run typecheck:app && npm run typecheck:api",
     "typecheck:app": "tsc --noEmit",
     "typecheck:api": "npm run typecheck --workspace @cipherchat/api",
@@ -47,6 +49,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.10",
+    "tsx": "^4.20.6",
     "typescript": "~5.9.2"
   },
   "op-sqlite": {

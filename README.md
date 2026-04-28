@@ -504,12 +504,24 @@ CipherChat now has a first native encrypted local database adapter behind the ex
 
 More detail: `docs/architecture/phase-25-native-encrypted-database-adapter.md`.
 
+## Phase 26 Encrypted Database Verification
+
+CipherChat now has automated verification for the encrypted local database adapter:
+
+- The OP-SQLite adapter is split into a testable core and an Expo runtime wrapper.
+- `npm run app:test` verifies schema v1 statements, SQLCipher gating, record round-trip behavior, and wrong-key style open failure handling.
+- `npm test` runs app tests and API tests together.
+- Native emulator verification is documented but blocked locally until Android platform tools are available in PATH.
+- Metro Android bundle verification still passes, so the lazy native adapter import does not break the prototype runtime.
+
+More detail: `docs/architecture/phase-26-encrypted-database-verification.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Build and install an Expo development client before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Add native development-build verification for the encrypted local database adapter.
+5. Install Android platform tools and run the SQLCipher adapter in a real development client.
 6. Add CI integration tests against disposable Postgres and Redis services.
-7. Add real generic push notification provider integration.
+7. Add the disabled-by-default AsyncStorage to encrypted database migration harness.

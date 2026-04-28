@@ -68,10 +68,10 @@ The local TypeScript and Metro checks can validate wiring, but SQLCipher behavio
 
 ## Next phase
 
-Phase 26 should add migration tests and adapter verification:
+Phase 26 adds adapter verification:
 
-- native development-build smoke script
+- Node-side adapter core tests
 - schema version assertion
 - wrong-key failure test
 - basic record round-trip test
-- idempotent migration harness from AsyncStorage to encrypted database
+- documented native development-build verification path
