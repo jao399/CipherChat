@@ -48,9 +48,6 @@ Allowed durable queue fields include encrypted envelope metadata such as `messag
 
 ## Next phase
 
-Phase 36 should add account/session abuse controls:
+Phase 36 adds account and session abuse controls.
 
-- per-route rate limit policy
-- account creation throttling
-- envelope fanout size limits
-- queue-depth and payload-size acceptance tests
+More detail: `docs/architecture/phase-36-account-session-abuse-controls.md`.

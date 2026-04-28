@@ -41,6 +41,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Server audit logs avoid message content, filenames, and private contact details.
 - Abuse prevention is designed without breaking message privacy.
 - Rate limits and queue limits are configured per environment.
+- Account creation, session creation, discovery, and fanout abuse controls are test-covered.
 
 ## Privacy
 

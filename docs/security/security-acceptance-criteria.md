@@ -40,6 +40,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Recipient account and device filters must be enforced for inbox reads and acknowledgements.
 - Account creation, discovery, bundle lookup, envelope fanout, and session creation must have durable rate limits.
 - Envelope size, fanout recipient count, and queue depth must have explicit per-environment limits.
+- Account/session abuse-control tests must pass before release.
 - Internal routes must use managed secrets, rotation policy, and network restrictions where available.
 - PostgreSQL and Redis credentials must live outside source control and CI logs.
 
@@ -56,6 +57,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Current threat model: `CipherChat-threat-model.md`
 - Production crypto provider gate test output: `npm run app:test`
 - Outbound plaintext lifecycle gate output: `npm run verify:plaintext-lifecycle`
+- Account/session abuse-control gate output: `npm run verify:abuse-controls`
 - Passing CI output for `npm run validate:ci`
 - Android development-client SQLCipher verification result
 - iOS development-client SQLCipher verification result

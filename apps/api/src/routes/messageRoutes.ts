@@ -1,8 +1,9 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
 
 import { requireDeviceSession } from '../auth/deviceAuth.js';
 import type { JobQueuePort } from '../queue/jobQueue.js';
 import type { MessageRepository, SessionRepository } from '../repositories/types.js';
+import { envelopeAbusePolicy } from '../security/abusePolicy.js';
 import {
   acceptedResponseSchema,
   encryptedEnvelopeBodySchema,
@@ -48,6 +49,21 @@ function readLimit(value: string | string[] | undefined) {
   return Math.min(Math.max(parsed, 1), 100);
 }
 
+function rejectOversizedEnvelope(reply: FastifyReply, envelope: { ciphertext: string; header: string }) {
+  if (
+    envelope.ciphertext.length > envelopeAbusePolicy.maxBodyCiphertextChars ||
+    envelope.header.length > envelopeAbusePolicy.maxHeaderCiphertextChars
+  ) {
+    void reply.code(413).send({
+      error: 'envelope_payload_too_large',
+      message: 'Encrypted envelope payload exceeds CipherChat delivery limits.',
+    });
+    return true;
+  }
+
+  return false;
+}
+
 export async function registerMessageRoutes(
   app: FastifyInstance,
   repository?: MessageRepository,
@@ -88,6 +104,10 @@ export async function registerMessageRoutes(
           error: 'sender_device_mismatch',
           message: 'Encrypted envelopes can only be sent by the authenticated device.',
         });
+      }
+
+      if (rejectOversizedEnvelope(reply, request.body)) {
+        return reply;
       }
 
       const stored = await repository.storeEncryptedEnvelope({
@@ -146,6 +166,17 @@ export async function registerMessageRoutes(
           error: 'sender_device_mismatch',
           message: 'Encrypted fanout can only be sent by the authenticated device.',
         });
+      }
+
+      if (request.body.envelopes.length > envelopeAbusePolicy.maxFanoutRecipients) {
+        return reply.code(413).send({
+          error: 'fanout_recipient_limit_exceeded',
+          message: 'Encrypted fanout exceeds the maximum recipient device count.',
+        });
+      }
+
+      if (request.body.envelopes.some((envelope) => rejectOversizedEnvelope(reply, envelope))) {
+        return reply;
       }
 
       const fanout = await repository.storeEncryptedEnvelopeFanout({

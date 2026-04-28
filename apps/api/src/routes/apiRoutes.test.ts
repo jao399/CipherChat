@@ -14,6 +14,7 @@ import type {
   SessionRepository,
   StoreEncryptedEnvelopeInput,
 } from '../repositories/types.js';
+import { envelopeAbusePolicy } from '../security/abusePolicy.js';
 
 const config = {
   host: '127.0.0.1',
@@ -412,6 +413,104 @@ describe('encrypted envelope route', () => {
     assert.deepEqual(jobQueue.deliveryFanoutJobs[0]?.messageIds, ['message_fanout_001', 'message_fanout_002']);
   });
 
+  it('rejects encrypted fanout requests above the recipient-device cap', async () => {
+    const messages: MessageRepository = {
+      async storeEncryptedEnvelope() {
+        throw new Error('should not store oversized fanout');
+      },
+      async storeEncryptedEnvelopeFanout() {
+        throw new Error('should not store oversized fanout');
+      },
+      async listQueuedEnvelopes() {
+        return { envelopes: [] };
+      },
+      async acknowledgeEnvelope() {
+        return null;
+      },
+      async expireStaleEnvelopes() {
+        return 0;
+      },
+    };
+    const sessions = createSessionRepository({
+      async verifyDeviceSession() {
+        return {
+          sessionId: 'session_00000001',
+          accountId: body.senderAccountId,
+          deviceId: body.senderDeviceId,
+        };
+      },
+    });
+    const app = await buildTestApi({ repositories: { messages, sessions } });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/messages/envelopes/fanout',
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+      payload: {
+        conversationId: body.conversationId,
+        senderAccountId: body.senderAccountId,
+        senderDeviceId: body.senderDeviceId,
+        envelopes: Array.from({ length: envelopeAbusePolicy.maxFanoutRecipients + 1 }, (_, index) => ({
+          messageId: `message_fanout_${String(index).padStart(3, '0')}`,
+          recipientAccountId: `recipient_acct${String(index).padStart(2, '0')}`,
+          recipientDeviceId: `recipient_dev${String(index).padStart(3, '0')}`,
+          ciphertext: 'recipient-ciphertext',
+          header: 'recipient-header',
+        })),
+      },
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.json().error, 'request_error');
+  });
+
+  it('rejects encrypted envelopes above the payload-size cap', async () => {
+    const messages: MessageRepository = {
+      async storeEncryptedEnvelope() {
+        throw new Error('should not store oversized payload');
+      },
+      async storeEncryptedEnvelopeFanout() {
+        throw new Error('should not store oversized payload');
+      },
+      async listQueuedEnvelopes() {
+        return { envelopes: [] };
+      },
+      async acknowledgeEnvelope() {
+        return null;
+      },
+      async expireStaleEnvelopes() {
+        return 0;
+      },
+    };
+    const sessions = createSessionRepository({
+      async verifyDeviceSession() {
+        return {
+          sessionId: 'session_00000001',
+          accountId: body.senderAccountId,
+          deviceId: body.senderDeviceId,
+        };
+      },
+    });
+    const app = await buildTestApi({ repositories: { messages, sessions } });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/messages/envelopes',
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+      payload: {
+        ...body,
+        ciphertext: 'x'.repeat(envelopeAbusePolicy.maxBodyCiphertextChars + 1),
+      },
+    });
+
+    assert.equal(response.statusCode, 400);
+    assert.equal(response.json().error, 'request_error');
+  });
+
   it('rejects encrypted envelope sends from a different authenticated device', async () => {
     const messages: MessageRepository = {
       async storeEncryptedEnvelope() {
@@ -667,6 +766,26 @@ describe('account route', () => {
 
     assert.equal(response.statusCode, 201);
     assert.equal(response.json().displayName, 'Eleanor');
+  });
+
+  it('throttles repeated account creation attempts per route policy', async () => {
+    const app = await buildTestApi();
+    let response;
+
+    for (let index = 0; index < 21; index += 1) {
+      response = await app.inject({
+        method: 'POST',
+        url: '/v1/accounts',
+        payload: {
+          id: `account_rate_${String(index).padStart(6, '0')}`,
+          displayName: 'Rate Limited',
+          username: `rate${index}`,
+        },
+      });
+    }
+
+    assert.equal(response?.statusCode, 429);
+    assert.equal(response?.json().error, 'rate_limited');
   });
 
   it('returns the authenticated account profile', async () => {

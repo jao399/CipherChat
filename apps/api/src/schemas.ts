@@ -1,3 +1,5 @@
+import { envelopeAbusePolicy } from './security/abusePolicy.js';
+
 export const errorResponseSchema = {
   type: 'object',
   required: ['error', 'message'],
@@ -317,8 +319,8 @@ export const encryptedEnvelopeBodySchema = {
     senderDeviceId: { type: 'string', minLength: 16 },
     recipientAccountId: { type: 'string', minLength: 16 },
     recipientDeviceId: { type: 'string', minLength: 16 },
-    ciphertext: { type: 'string', minLength: 1 },
-    header: { type: 'string', minLength: 1 },
+    ciphertext: { type: 'string', minLength: 1, maxLength: envelopeAbusePolicy.maxBodyCiphertextChars },
+    header: { type: 'string', minLength: 1, maxLength: envelopeAbusePolicy.maxHeaderCiphertextChars },
   },
 } as const;
 
@@ -333,7 +335,7 @@ export const encryptedEnvelopeFanoutBodySchema = {
     envelopes: {
       type: 'array',
       minItems: 1,
-      maxItems: 250,
+      maxItems: envelopeAbusePolicy.maxFanoutRecipients,
       items: {
         type: 'object',
         required: ['messageId', 'recipientAccountId', 'recipientDeviceId', 'ciphertext', 'header'],
@@ -342,8 +344,8 @@ export const encryptedEnvelopeFanoutBodySchema = {
           messageId: { type: 'string', minLength: 16 },
           recipientAccountId: { type: 'string', minLength: 16 },
           recipientDeviceId: { type: 'string', minLength: 16 },
-          ciphertext: { type: 'string', minLength: 1 },
-          header: { type: 'string', minLength: 1 },
+          ciphertext: { type: 'string', minLength: 1, maxLength: envelopeAbusePolicy.maxBodyCiphertextChars },
+          header: { type: 'string', minLength: 1, maxLength: envelopeAbusePolicy.maxHeaderCiphertextChars },
         },
       },
     },

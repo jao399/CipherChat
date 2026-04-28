@@ -628,9 +628,22 @@ Plaintext remains limited to transient UI state and the provider call boundary.
 
 More detail: `docs/architecture/phase-35-outbound-plaintext-lifecycle.md`.
 
+## Phase 36 Account and Session Abuse Controls
+
+CipherChat now has explicit API abuse-control policy:
+
+- `apps/api/src/security/abusePolicy.ts` defines route rate-limit and envelope cap constants.
+- `apps/api/src/middleware/rateLimit.ts` applies route-aware rate limits.
+- Encrypted envelope schemas cap fanout recipients, header size, and ciphertext size.
+- API tests cover account creation throttling, fanout recipient caps, and payload-size caps.
+- `scripts/verify-abuse-controls.mjs` adds a release gate.
+- `npm run validate:ci` includes `npm run verify:abuse-controls`.
+
+More detail: `docs/architecture/phase-36-account-session-abuse-controls.md`.
+
 ## Next Steps
 
-1. Add account/session abuse controls: per-route rate limits, account creation throttles, fanout caps, and payload-size limits.
+1. Add metadata retention and cleanup policy for audit events, expired envelopes, challenges, and sessions.
 2. Build and install an Expo development client before adding native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
