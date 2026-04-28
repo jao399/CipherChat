@@ -44,6 +44,7 @@ export {
   markRemoteTrustRecordTrusted,
   readRemoteTrustRecords,
   updateRemoteTrustRecord,
+  upsertRemoteTrustRecordFromBundle,
   writeRemoteTrustRecords,
 } from './remoteContactTrust';
 export {

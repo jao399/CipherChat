@@ -15,6 +15,7 @@ import {
   markIdentityTrusted,
   prototypeDeviceIdentityProvider,
   readRemoteTrustRecords,
+  upsertRemoteTrustRecordFromBundle,
   type IdentityTrustStatus,
   type LocalDeviceIdentity,
 } from '../../security';
@@ -22,7 +23,7 @@ import { remoteIdentityTrust } from '../../data/mockData';
 import { CipherChatApiClient } from './cipherChatApiClient';
 import { getStoredApiSession, setStoredApiSession, clearStoredApiSession, type StoredApiSession } from './apiSessionStore';
 import { mockCipherChatApiClient } from './mockCipherChatApiClient';
-import type { BackendStatus } from './types';
+import type { AccountDiscoveryResult, BackendStatus, PublicDeviceBundleResponse } from './types';
 import type { RemoteIdentityTrustRecord } from '../../types';
 
 type BackendContextValue = {
@@ -36,6 +37,9 @@ type BackendContextValue = {
   trustCurrentDeviceIdentity(): Promise<void>;
   rotateDeviceIdentity(): Promise<void>;
   remoteTrustRecords: RemoteIdentityTrustRecord[];
+  contactDiscoveryResults: AccountDiscoveryResult[];
+  discoverContacts(query: string): Promise<AccountDiscoveryResult[]>;
+  addDiscoveredContact(accountId: string, deviceId: string): Promise<void>;
   syncRemoteIdentity(recordId: string): Promise<void>;
   trustRemoteIdentity(recordId: string): Promise<void>;
   clearSession(): Promise<void>;
@@ -60,6 +64,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [identity, setIdentity] = useState<LocalDeviceIdentity | null>(null);
   const [trustStatus, setTrustStatus] = useState<IdentityTrustStatus | null>(null);
   const [remoteTrustRecords, setRemoteTrustRecords] = useState<RemoteIdentityTrustRecord[]>(remoteIdentityTrust);
+  const [contactDiscoveryResults, setContactDiscoveryResults] = useState<AccountDiscoveryResult[]>([]);
   const [syncingRemoteTrust, setSyncingRemoteTrust] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
@@ -255,6 +260,70 @@ export function BackendProvider({ children }: PropsWithChildren) {
     [liveClient, mode, remoteTrustRecords, session?.token],
   );
 
+  const discoverContacts = useCallback(
+    async (query: string) => {
+      const normalizedQuery = query.trim();
+
+      if (normalizedQuery.length < 2) {
+        setContactDiscoveryResults([]);
+        return [];
+      }
+
+      if (mode === 'live' && !session?.token) {
+        throw new Error('Live contact discovery requires a verified device session.');
+      }
+
+      const response =
+        mode === 'mock'
+          ? await mockCipherChatApiClient.discoverAccounts({ query: normalizedQuery, limit: 10 })
+          : await liveClient.discoverAccounts({
+              query: normalizedQuery,
+              limit: 10,
+              token: session?.token ?? '',
+            });
+
+      setContactDiscoveryResults(response.results);
+      setSummary(
+        response.results.length > 0
+          ? `Found ${response.results.length} contact ${response.results.length === 1 ? 'result' : 'results'}.`
+          : 'No discoverable contacts matched that query.',
+      );
+      return response.results;
+    },
+    [liveClient, mode, session?.token],
+  );
+
+  const addDiscoveredContact = useCallback(
+    async (accountId: string, deviceId: string) => {
+      const account = contactDiscoveryResults.find((result) => result.accountId === accountId);
+      const device = account?.devices.find((item) => item.deviceId === deviceId);
+
+      if (!account || !device) {
+        throw new Error('Discovery result was not found. Search again before adding this key.');
+      }
+
+      const bundle: PublicDeviceBundleResponse = {
+        accountId: account.accountId,
+        accountDisplayName: account.displayName,
+        deviceId: device.deviceId,
+        deviceName: device.deviceName,
+        identityKey: device.identityKey,
+        signedPrekey: device.signedPrekey,
+        signedPrekeySignature: device.signedPrekeySignature,
+        oneTimePrekeys: device.oneTimePrekeys,
+        publishedAt: device.publishedAt,
+      };
+      const nextRecords = await upsertRemoteTrustRecordFromBundle(remoteTrustRecords, bundle, {
+        id: account.accountId,
+        handle: account.username ? `@${account.username}` : undefined,
+      });
+
+      setRemoteTrustRecords(nextRecords);
+      setSummary(`${account.displayName} was added for safety number review.`);
+    },
+    [contactDiscoveryResults, remoteTrustRecords],
+  );
+
   const trustRemoteIdentity = useCallback(
     async (recordId: string) => {
       const nextRecords = await markRemoteTrustRecordTrusted(remoteTrustRecords, recordId);
@@ -295,17 +364,20 @@ export function BackendProvider({ children }: PropsWithChildren) {
       session,
       initializing,
       remoteTrustRecords,
+      contactDiscoveryResults,
       setMode: persistMode,
       setBaseUrl: persistBaseUrl,
       refreshStatus,
       bootstrapPrototypeSession,
       trustCurrentDeviceIdentity,
       rotateDeviceIdentity,
+      discoverContacts,
+      addDiscoveredContact,
       syncRemoteIdentity,
       trustRemoteIdentity,
       clearSession,
     }),
-    [baseUrl, bootstrapPrototypeSession, clearSession, identity?.fingerprint, identity?.provider, initializing, mode, persistBaseUrl, persistMode, ready, refreshStatus, remoteTrustRecords, rotateDeviceIdentity, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, initializing, mode, persistBaseUrl, persistMode, ready, refreshStatus, remoteTrustRecords, rotateDeviceIdentity, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

@@ -40,6 +40,23 @@ export type AccountProfile = {
   createdAt: string;
 };
 
+export type AccountDiscoveryDevice = {
+  deviceId: string;
+  deviceName: string;
+  identityKey: string;
+  signedPrekey: string;
+  signedPrekeySignature: string;
+  oneTimePrekeys: string[];
+  publishedAt: string;
+};
+
+export type AccountDiscoveryResult = {
+  accountId: string;
+  displayName: string;
+  username?: string;
+  devices: AccountDiscoveryDevice[];
+};
+
 export type StoreEncryptedEnvelopeInput = {
   messageId: string;
   conversationId: string;
@@ -156,6 +173,7 @@ export type RevokedDeviceSession = {
 export type AccountRepository = {
   createAccount(input: CreateAccountInput): Promise<AccountProfile>;
   getAccount(accountId: string): Promise<AccountProfile | null>;
+  searchAccounts(query: string, limit: number): Promise<AccountDiscoveryResult[]>;
 };
 
 export type DeviceRepository = {

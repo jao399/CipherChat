@@ -1,5 +1,6 @@
 import type {
   AccountResponse,
+  AccountDiscoveryResponse,
   ApiReadiness,
   DeviceChallengeResponse,
   DeviceSessionResponse,
@@ -39,6 +40,17 @@ export class CipherChatApiClient {
 
   async getCurrentAccount(token: string) {
     return this.request<AccountResponse>('/v1/accounts/me', undefined, { token });
+  }
+
+  async discoverAccounts(input: { query: string; limit?: number; token: string }) {
+    const params = new URLSearchParams({
+      query: input.query,
+      limit: String(input.limit ?? 10),
+    });
+
+    return this.request<AccountDiscoveryResponse>(`/v1/accounts/discover?${params.toString()}`, undefined, {
+      token: input.token,
+    });
   }
 
   async publishDeviceBundle(input: PublishDeviceBundleRequest) {

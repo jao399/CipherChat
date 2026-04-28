@@ -18,6 +18,27 @@ export type AccountResponse = {
   createdAt: string;
 };
 
+export type AccountDiscoveryDevice = {
+  deviceId: string;
+  deviceName: string;
+  identityKey: string;
+  signedPrekey: string;
+  signedPrekeySignature: string;
+  oneTimePrekeys: string[];
+  publishedAt: string;
+};
+
+export type AccountDiscoveryResult = {
+  accountId: string;
+  displayName: string;
+  username?: string;
+  devices: AccountDiscoveryDevice[];
+};
+
+export type AccountDiscoveryResponse = {
+  results: AccountDiscoveryResult[];
+};
+
 export type PublishDeviceBundleRequest = {
   accountId: string;
   accountDisplayName?: string;

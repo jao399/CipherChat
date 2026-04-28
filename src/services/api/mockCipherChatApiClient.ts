@@ -1,4 +1,5 @@
 import type {
+  AccountDiscoveryResponse,
   AccountResponse,
   ApiReadiness,
   DeviceChallengeResponse,
@@ -9,6 +10,7 @@ import type {
   PublicDeviceBundleResponse,
   PublishDeviceBundleRequest,
 } from './types';
+import { remoteIdentityTrust } from '../../data/mockData';
 
 const publishedBundles = new Map<string, PublishDeviceBundleRequest>();
 
@@ -36,6 +38,40 @@ export const mockCipherChatApiClient = {
       username: input.username,
       createdAt: new Date().toISOString(),
     };
+  },
+
+  async discoverAccounts(input: { query: string; limit?: number }): Promise<AccountDiscoveryResponse> {
+    const normalizedQuery = input.query.trim().toLowerCase();
+    const limit = input.limit ?? 10;
+    const results = remoteIdentityTrust
+      .filter((record) => {
+        const handle = record.handle?.toLowerCase() ?? '';
+        return (
+          normalizedQuery.length >= 2 &&
+          (record.displayName.toLowerCase().includes(normalizedQuery) ||
+            handle.includes(normalizedQuery) ||
+            record.accountId.toLowerCase().includes(normalizedQuery))
+        );
+      })
+      .slice(0, limit)
+      .map((record) => ({
+        accountId: record.accountId,
+        displayName: record.displayName,
+        username: record.handle?.replace(/^@/, ''),
+        devices: [
+          {
+            deviceId: record.deviceId,
+            deviceName: `${record.displayName}'s primary device`,
+            identityKey: record.identityKey,
+            signedPrekey: 'mock-signed-prekey-material',
+            signedPrekeySignature: 'mock-signed-prekey-signature-material',
+            oneTimePrekeys: ['mock-one-time-prekey-material'],
+            publishedAt: record.syncedAt ?? new Date().toISOString(),
+          },
+        ],
+      }));
+
+    return { results };
   },
 
   async publishDeviceBundle(input: PublishDeviceBundleRequest) {

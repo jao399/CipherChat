@@ -77,6 +77,65 @@ export const accountResponseSchema = {
   },
 } as const;
 
+export const accountDiscoveryQuerySchema = {
+  type: 'object',
+  required: ['query'],
+  additionalProperties: false,
+  properties: {
+    query: { type: 'string', minLength: 2, maxLength: 80 },
+    limit: { type: 'integer', minimum: 1, maximum: 20, default: 10 },
+  },
+} as const;
+
+export const accountDiscoveryResponseSchema = {
+  type: 'object',
+  required: ['results'],
+  additionalProperties: false,
+  properties: {
+    results: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['accountId', 'displayName', 'devices'],
+        additionalProperties: false,
+        properties: {
+          accountId: { type: 'string' },
+          displayName: { type: 'string' },
+          username: { type: 'string' },
+          devices: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: [
+                'deviceId',
+                'deviceName',
+                'identityKey',
+                'signedPrekey',
+                'signedPrekeySignature',
+                'oneTimePrekeys',
+                'publishedAt',
+              ],
+              additionalProperties: false,
+              properties: {
+                deviceId: { type: 'string' },
+                deviceName: { type: 'string' },
+                identityKey: { type: 'string' },
+                signedPrekey: { type: 'string' },
+                signedPrekeySignature: { type: 'string' },
+                oneTimePrekeys: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                publishedAt: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
 export const deviceChallengeBodySchema = {
   type: 'object',
   required: ['accountId', 'deviceId'],

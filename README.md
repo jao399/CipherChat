@@ -392,12 +392,26 @@ Remote contact trust is now provider-backed and can sync public bundles:
 
 More detail: `docs/architecture/phase-17-remote-trust-sync.md`.
 
+## Phase 18 Contact Discovery
+
+CipherChat now has authenticated contact discovery plumbing:
+
+- `GET /v1/accounts/discover?query=&limit=` searches account metadata and active public device bundles.
+- The route requires a verified device session before returning public key material.
+- Prisma search covers account ID, display name, and username.
+- Mobile `CipherChatApiClient` exposes `discoverAccounts`.
+- Mock mode returns seeded discovery results for prototype use.
+- BackendProvider exposes contact discovery results and can add discovered device keys into local safety-number review.
+- Contacts search now submits real discovery requests instead of being a static field only.
+
+More detail: `docs/architecture/phase-18-contact-discovery.md`.
+
 ## Next Steps
 
 1. Complete a formal threat model before handling production data.
 2. Move the mobile app to an Expo development build before adding SQLCipher or native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Replace mock contact discovery with real account/device discovery and search.
+5. Build encrypted outbound envelope preparation from discovered/trusted device bundles.
 6. Add CI integration tests against disposable Postgres and Redis services.
 7. Add real generic push notification provider integration.

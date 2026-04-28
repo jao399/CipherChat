@@ -19,8 +19,40 @@ import type { RootStackParamList } from '../../navigation/types';
 
 export function ContactsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { remoteTrustRecords, syncRemoteIdentity, trustRemoteIdentity, status } = useBackend();
+  const {
+    remoteTrustRecords,
+    contactDiscoveryResults,
+    discoverContacts,
+    addDiscoveredContact,
+    syncRemoteIdentity,
+    trustRemoteIdentity,
+    status,
+  } = useBackend();
+  const [query, setQuery] = useState('');
+  const [discovering, setDiscovering] = useState(false);
   const [syncing, setSyncing] = useState(false);
+
+  const runDiscovery = async () => {
+    const normalizedQuery = query.trim();
+
+    if (normalizedQuery.length < 2) {
+      Alert.alert('Search needs more detail', 'Enter at least two characters to discover CipherChat accounts.');
+      return;
+    }
+
+    setDiscovering(true);
+
+    try {
+      await discoverContacts(normalizedQuery);
+    } catch (error) {
+      Alert.alert(
+        'Contact discovery unavailable',
+        error instanceof Error ? error.message : 'CipherChat could not search for contact identity bundles.',
+      );
+    } finally {
+      setDiscovering(false);
+    }
+  };
 
   const syncPublicKeys = async () => {
     setSyncing(true);
@@ -54,14 +86,95 @@ export function ContactsScreen() {
     }
   };
 
+  const addDiscoveryResult = async (accountId: string, deviceId?: string) => {
+    if (!deviceId) {
+      Alert.alert('No device bundle', 'This contact has not published an active identity bundle yet.');
+      return;
+    }
+
+    try {
+      await addDiscoveredContact(accountId, deviceId);
+    } catch (error) {
+      Alert.alert(
+        'Could not add contact',
+        error instanceof Error ? error.message : 'CipherChat could not add this discovered contact.',
+      );
+    }
+  };
+
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
       <ScreenHeader title="Contacts" subtitle="Discover verified people and keys" />
 
       <View style={styles.search}>
         <Ionicons name="at" size={18} color={colors.muted} />
-        <TextInput placeholder="Search username or key" placeholderTextColor={colors.muted} style={styles.searchInput} />
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          onSubmitEditing={() => void runDiscovery()}
+          returnKeyType="search"
+          placeholder="Search username or key"
+          placeholderTextColor={colors.muted}
+          style={styles.searchInput}
+        />
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Discover contacts"
+          testID="contacts-discover-submit"
+          disabled={discovering}
+          onPress={() => void runDiscovery()}
+          style={[styles.searchButton, discovering && styles.searchButtonDisabled]}
+        >
+          <Ionicons name={discovering ? 'sync' : 'search'} size={18} color={colors.text} />
+        </TouchableOpacity>
       </View>
+
+      {query.trim().length >= 2 ? (
+        <View style={styles.discoveryBlock}>
+          <SectionHeader title="Discovery Results" action={discovering ? 'Searching...' : `${contactDiscoveryResults.length} found`} />
+          <View style={styles.discoveryList}>
+            {contactDiscoveryResults.length > 0 ? (
+              contactDiscoveryResults.map((result) => {
+                const device = result.devices[0];
+                const tracked = remoteTrustRecords.some(
+                  (record) => record.accountId === result.accountId && record.deviceId === device?.deviceId,
+                );
+
+                return (
+                  <View key={`${result.accountId}:${device?.deviceId ?? 'none'}`} style={styles.discoveryRow}>
+                    <View style={styles.discoveryIcon}>
+                      <Ionicons name="finger-print" size={20} color={colors.primaryBright} />
+                    </View>
+                    <View style={styles.contactBody}>
+                      <Text style={styles.contactName}>{result.displayName}</Text>
+                      <Text style={styles.handle}>
+                        {result.username ? `@${result.username}` : result.accountId} | {result.devices.length} active device
+                        {result.devices.length === 1 ? '' : 's'}
+                      </Text>
+                      <Text style={styles.safetyNumber}>{device?.deviceName ?? 'No active identity bundle'}</Text>
+                    </View>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={tracked ? `${result.displayName} is tracked` : `Add ${result.displayName}`}
+                      testID={`contact-discovery-add-${result.accountId}`}
+                      disabled={tracked || !device}
+                      style={[styles.discoveryAdd, tracked && styles.discoveryTracked]}
+                      onPress={() => void addDiscoveryResult(result.accountId, device?.deviceId)}
+                    >
+                      <Text style={styles.discoveryAddText}>{tracked ? 'Tracked' : 'Add Key'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })
+            ) : (
+              <View style={styles.discoveryEmpty}>
+                <Ionicons name="search" size={18} color={colors.muted} />
+                <Text style={styles.handle}>Search results will show verified public device bundles here.</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      ) : null}
 
       <DarkCard style={styles.profileCard}>
         <Text style={styles.profileTitle}>Your secure profile</Text>
@@ -154,6 +267,70 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.text,
     fontWeight: '600',
+  },
+  searchButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchButtonDisabled: {
+    opacity: 0.6,
+  },
+  discoveryBlock: {
+    marginBottom: spacing.xl,
+  },
+  discoveryList: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: 'rgba(124,45,255,0.35)',
+    backgroundColor: 'rgba(17,17,26,0.72)',
+    overflow: 'hidden',
+  },
+  discoveryRow: {
+    minHeight: 82,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  discoveryIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1,
+    borderColor: 'rgba(168,85,247,0.34)',
+    backgroundColor: 'rgba(124,45,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  discoveryAdd: {
+    minHeight: 34,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  discoveryTracked: {
+    backgroundColor: 'rgba(126,132,153,0.22)',
+  },
+  discoveryAddText: {
+    ...typography.small,
+    color: colors.text,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  discoveryEmpty: {
+    minHeight: 70,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
   },
   profileCard: {
     gap: spacing.md,

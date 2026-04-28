@@ -76,6 +76,30 @@ async function recordFromBundle(
   };
 }
 
+async function newRecordFromBundle(
+  bundle: PublicDeviceBundleResponse,
+  options: { id?: string; handle?: string } = {},
+): Promise<RemoteIdentityTrustRecord> {
+  const now = new Date().toISOString();
+  return {
+    id: options.id ?? `${bundle.accountId}:${bundle.deviceId}`,
+    displayName: bundle.accountDisplayName,
+    handle: options.handle,
+    accountId: bundle.accountId,
+    deviceId: bundle.deviceId,
+    identityKey: bundle.identityKey,
+    trustState: 'new',
+    identityFingerprint: await fingerprintFor(bundle.identityKey),
+    safetyNumberBlocks: await createSafetyNumberBlocks({
+      accountId: bundle.accountId,
+      deviceId: bundle.deviceId,
+      identityKey: bundle.identityKey,
+    }),
+    syncedAt: now,
+    source: 'api',
+  };
+}
+
 export async function readRemoteTrustRecords(seedRecords: RemoteIdentityTrustRecord[] = []) {
   const stored = await AsyncStorage.getItem(REMOTE_TRUST_STORAGE_KEY);
   const storedRecords = stored ? (JSON.parse(stored) as RemoteIdentityTrustRecord[]) : [];
@@ -109,6 +133,25 @@ export async function applyRemoteBundleToTrustRecord(
   }
 
   const nextRecord = await recordFromBundle(existing, bundle);
+  return updateRemoteTrustRecord(records, nextRecord);
+}
+
+export async function upsertRemoteTrustRecordFromBundle(
+  records: RemoteIdentityTrustRecord[],
+  bundle: PublicDeviceBundleResponse,
+  options: { id?: string; handle?: string } = {},
+) {
+  const existing = records.find(
+    (record) =>
+      record.id === options.id || (record.accountId === bundle.accountId && record.deviceId === bundle.deviceId),
+  );
+  const nextRecord = existing
+    ? await recordFromBundle(existing, bundle)
+    : await newRecordFromBundle(bundle, {
+        id: options.id,
+        handle: options.handle,
+      });
+
   return updateRemoteTrustRecord(records, nextRecord);
 }
 

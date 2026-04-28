@@ -649,6 +649,9 @@ describe('account route', () => {
       async getAccount() {
         return null;
       },
+      async searchAccounts() {
+        return [];
+      },
     };
     const app = await buildTestApi({ repositories: { accounts } });
 
@@ -684,6 +687,9 @@ describe('account route', () => {
           createdAt: new Date(0).toISOString(),
         };
       },
+      async searchAccounts() {
+        return [];
+      },
     };
     const app = await buildTestApi({
       repositories: {
@@ -702,6 +708,91 @@ describe('account route', () => {
 
     assert.equal(response.statusCode, 200);
     assert.equal(response.json().accountId, 'account_00000001');
+  });
+
+  it('discovers account public device bundles for authenticated devices', async () => {
+    const accounts: AccountRepository = {
+      async createAccount(input) {
+        return {
+          accountId: input.id ?? 'account_00000001',
+          displayName: input.displayName,
+          username: input.username,
+          createdAt: new Date(0).toISOString(),
+        };
+      },
+      async getAccount() {
+        return null;
+      },
+      async searchAccounts(query, limit) {
+        assert.equal(query, 'maya');
+        assert.equal(limit, 5);
+
+        return [
+          {
+            accountId: 'account_maya_000001',
+            displayName: 'Maya',
+            username: 'maya.sec',
+            devices: [
+              {
+                deviceId: 'device_maya_000001',
+                deviceName: 'Maya Pixel',
+                identityKey: 'identity-key-material-ciphertext-0001',
+                signedPrekey: 'signed-prekey-material-ciphertext-01',
+                signedPrekeySignature: 'signed-prekey-signature-ciphertext',
+                oneTimePrekeys: ['one-time-prekey-0001'],
+                publishedAt: new Date(0).toISOString(),
+              },
+            ],
+          },
+        ];
+      },
+    };
+    const app = await buildTestApi({
+      repositories: {
+        accounts,
+        sessions: createSessionRepository(),
+      },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/accounts/discover?query=maya&limit=5',
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().results.length, 1);
+    assert.equal(response.json().results[0].devices[0].identityKey, 'identity-key-material-ciphertext-0001');
+  });
+
+  it('requires a device session before account discovery', async () => {
+    const accounts: AccountRepository = {
+      async createAccount(input) {
+        return {
+          accountId: input.id ?? 'account_00000001',
+          displayName: input.displayName,
+          username: input.username,
+          createdAt: new Date(0).toISOString(),
+        };
+      },
+      async getAccount() {
+        return null;
+      },
+      async searchAccounts() {
+        throw new Error('should not search without auth');
+      },
+    };
+    const app = await buildTestApi({ repositories: { accounts, sessions: createSessionRepository() } });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/accounts/discover?query=maya',
+    });
+
+    assert.equal(response.statusCode, 401);
+    assert.equal(response.json().error, 'missing_session');
   });
 });
 
