@@ -43,6 +43,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Rate limits and queue limits are configured per environment.
 - Account creation, session creation, discovery, and fanout abuse controls are test-covered.
 - Metadata retention cleanup is configured, tested, and scheduled.
+- Delivery queue retention, queue cleanup, and Redis rate-limit visibility are configured.
 
 ## Privacy
 
@@ -59,5 +60,6 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Production secrets are stored outside source control.
 - Database migrations have rollback plans.
 - Redis and queue monitoring are configured.
+- Internal cleanup jobs are scheduled and alerting thresholds are documented.
 - Incident response plan exists.
 - Dependency review cadence is defined.

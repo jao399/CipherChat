@@ -196,6 +196,31 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
     assert.equal(queuedJobs.length, 1);
     assert.deepEqual(queuedJobs[0]?.data.messageIds, ['message_integration_0001']);
 
+    const queueStatsResponse = await app.inject({
+      method: 'GET',
+      url: '/v1/internal/ops/queue',
+      headers: {
+        'x-internal-job-token': 'test-internal-token',
+      },
+    });
+
+    assert.equal(queueStatsResponse.statusCode, 200);
+    assert.equal(queueStatsResponse.json().queueName, jobQueueName);
+    assert.ok(queueStatsResponse.json().counts.waiting >= 1);
+    assert.equal(queueStatsResponse.json().retention.retainedCompletedJobs, 1000);
+
+    const rateLimitStatsResponse = await app.inject({
+      method: 'GET',
+      url: '/v1/internal/ops/redis/rate-limits',
+      headers: {
+        'x-internal-job-token': 'test-internal-token',
+      },
+    });
+
+    assert.equal(rateLimitStatsResponse.statusCode, 200);
+    assert.equal(rateLimitStatsResponse.json().namespace, 'rate-limit');
+    assert.equal(rateLimitStatsResponse.json().cleanup, 'ttl-managed');
+
     const inboxResponse = await app.inject({
       method: 'GET',
       url: '/v1/messages/envelopes?limit=5',

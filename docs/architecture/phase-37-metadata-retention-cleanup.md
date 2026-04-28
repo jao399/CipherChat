@@ -55,11 +55,6 @@ Cleanup must not remove:
 
 `npm run validate:ci` now includes the metadata retention verification gate.
 
-## Next phase
+## Follow-up
 
-Phase 38 should add delivery queue retention and Redis operational cleanup:
-
-- BullMQ retained job limits per job type
-- Redis rate-limit namespace cleanup visibility
-- queue depth and failed-job monitoring thresholds
-- production runbook entries for cleanup scheduling and alerting
+Phase 38 added delivery queue retention and Redis operational cleanup controls in `docs/architecture/phase-38-delivery-queue-redis-operations.md`.

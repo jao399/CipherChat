@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 import type { ApiConfig } from './config.js';
 import { createRateLimitHook } from './middleware/rateLimit.js';
 import type { RateLimitStore } from './middleware/rateLimit.js';
+import type { RedisRateLimitOperationalStats } from './middleware/redisRateLimitStore.js';
 import type { JobQueuePort } from './queue/jobQueue.js';
 import type { ApiRepositories } from './repositories/types.js';
 import { registerAccountRoutes } from './routes/accountRoutes.js';
@@ -21,6 +22,10 @@ export type ApiDependencies = {
   queueHealthCheck?: () => Promise<void>;
   close?: () => Promise<void>;
 };
+
+function hasOperationalStats(value: unknown): value is { getOperationalStats(): Promise<RedisRateLimitOperationalStats> } {
+  return Boolean(value && typeof (value as { getOperationalStats?: unknown }).getOperationalStats === 'function');
+}
 
 export async function buildApi(config: ApiConfig, dependencies: ApiDependencies = {}) {
   const app = Fastify({
@@ -50,7 +55,12 @@ export async function buildApi(config: ApiConfig, dependencies: ApiDependencies 
     dependencies.repositories?.sessions,
     dependencies.jobQueue,
   );
-  await registerMaintenanceRoutes(app, dependencies.jobQueue, config.internalJobToken);
+  await registerMaintenanceRoutes(
+    app,
+    dependencies.jobQueue,
+    config.internalJobToken,
+    hasOperationalStats(dependencies.rateLimitStore) ? dependencies.rateLimitStore : undefined,
+  );
 
   if (dependencies.close) {
     app.addHook('onClose', async () => {

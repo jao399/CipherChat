@@ -374,3 +374,69 @@ export const queuedJobResponseSchema = {
     queued: { type: 'boolean' },
   },
 } as const;
+
+export const queueOperationalStatsResponseSchema = {
+  type: 'object',
+  required: ['queueName', 'status', 'counts', 'warnings', 'retention'],
+  additionalProperties: false,
+  properties: {
+    queueName: { type: 'string' },
+    status: { type: 'string' },
+    counts: {
+      type: 'object',
+      required: ['waiting', 'active', 'delayed', 'failed', 'completed', 'paused'],
+      additionalProperties: false,
+      properties: {
+        waiting: { type: 'number' },
+        active: { type: 'number' },
+        delayed: { type: 'number' },
+        failed: { type: 'number' },
+        completed: { type: 'number' },
+        paused: { type: 'number' },
+      },
+    },
+    warnings: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    retention: {
+      type: 'object',
+      required: [
+        'retainedCompletedJobs',
+        'retainedFailedJobs',
+        'completedJobCleanupGraceMs',
+        'failedJobCleanupGraceMs',
+      ],
+      additionalProperties: false,
+      properties: {
+        retainedCompletedJobs: { type: 'number' },
+        retainedFailedJobs: { type: 'number' },
+        completedJobCleanupGraceMs: { type: 'number' },
+        failedJobCleanupGraceMs: { type: 'number' },
+      },
+    },
+  },
+} as const;
+
+export const queueOperationalCleanupResponseSchema = {
+  type: 'object',
+  required: ['cleanedCompletedJobs', 'cleanedFailedJobs'],
+  additionalProperties: false,
+  properties: {
+    cleanedCompletedJobs: { type: 'number' },
+    cleanedFailedJobs: { type: 'number' },
+  },
+} as const;
+
+export const redisRateLimitOperationalStatsResponseSchema = {
+  type: 'object',
+  required: ['namespace', 'keyCount', 'scannedKeys', 'scanCount', 'cleanup'],
+  additionalProperties: false,
+  properties: {
+    namespace: { type: 'string' },
+    keyCount: { type: 'number' },
+    scannedKeys: { type: 'number' },
+    scanCount: { type: 'number' },
+    cleanup: { type: 'string' },
+  },
+} as const;

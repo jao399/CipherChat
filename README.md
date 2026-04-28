@@ -655,9 +655,23 @@ CipherChat now has an enforceable server metadata cleanup boundary:
 
 More detail: `docs/architecture/phase-37-metadata-retention-cleanup.md`.
 
+## Phase 38 Delivery Queue and Redis Operations
+
+CipherChat now has explicit Redis/BullMQ operational controls:
+
+- `apps/api/src/operations/queueOperationsPolicy.ts` defines retained job counts, cleanup grace windows, and queue depth thresholds.
+- `BullMqJobQueue` applies the policy to delivery fanout, envelope expiry, and metadata cleanup jobs.
+- Internal ops routes expose queue depth, queue retention settings, and Redis rate-limit namespace stats.
+- `POST /v1/internal/jobs/queue/cleanup` removes retained completed/failed jobs without touching active delivery work.
+- Tests cover queue threshold evaluation, internal ops routes, and Redis-backed integration visibility.
+- `scripts/verify-queue-operations.mjs` adds a release gate.
+- `npm run validate:ci` includes `npm run verify:queue-operations`.
+
+More detail: `docs/architecture/phase-38-delivery-queue-redis-operations.md`.
+
 ## Next Steps
 
-1. Add delivery queue retention and Redis operational cleanup monitoring.
+1. Add production secret and environment validation.
 2. Build and install an Expo development client before adding native Signal/MLS modules.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.

@@ -5,6 +5,7 @@ import type { FastifyInstance } from 'fastify';
 
 import { buildApi } from '../app.js';
 import type { JobQueuePort } from '../queue/jobQueue.js';
+import type { RedisRateLimitOperationalStats } from '../middleware/redisRateLimitStore.js';
 import type {
   AccountRepository,
   DeviceRepository,
@@ -32,6 +33,7 @@ class CapturingJobQueue implements JobQueuePort {
   deliveryFanoutJobs: Array<{ messageIds: string[]; recipientDeviceCount: number }> = [];
   expirySweepCount = 0;
   metadataCleanupCount = 0;
+  queueCleanupCount = 0;
 
   async enqueueDeliveryFanout(input: { messageIds: string[]; recipientDeviceCount: number }) {
     this.deliveryFanoutJobs.push(input);
@@ -43,6 +45,52 @@ class CapturingJobQueue implements JobQueuePort {
 
   async enqueueMetadataRetentionCleanup() {
     this.metadataCleanupCount += 1;
+  }
+
+  async getOperationalStats() {
+    return {
+      queueName: 'cipherchat-jobs',
+      status: 'healthy' as const,
+      counts: {
+        waiting: 1,
+        active: 0,
+        delayed: 0,
+        failed: 0,
+        completed: 0,
+        paused: 0,
+      },
+      warnings: [],
+      retention: {
+        retainedCompletedJobs: 1000,
+        retainedFailedJobs: 5000,
+        completedJobCleanupGraceMs: 86_400_000,
+        failedJobCleanupGraceMs: 604_800_000,
+      },
+    };
+  }
+
+  async cleanupOperationalState() {
+    this.queueCleanupCount += 1;
+    return {
+      cleanedCompletedJobs: 2,
+      cleanedFailedJobs: 1,
+    };
+  }
+}
+
+class CapturingRateLimitStatsStore {
+  async increment() {
+    return 1;
+  }
+
+  async getOperationalStats(): Promise<RedisRateLimitOperationalStats> {
+    return {
+      namespace: 'rate-limit',
+      keyCount: 3,
+      scannedKeys: 3,
+      scanCount: 1000,
+      cleanup: 'ttl-managed',
+    };
   }
 }
 
@@ -975,5 +1023,58 @@ describe('maintenance route', () => {
     });
 
     assert.equal(response.statusCode, 403);
+  });
+
+  it('returns queue operational stats with the internal token', async () => {
+    const app = await buildTestApi({ jobQueue: new CapturingJobQueue() });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/internal/ops/queue',
+      headers: {
+        'x-internal-job-token': 'test-internal-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().queueName, 'cipherchat-jobs');
+    assert.equal(response.json().status, 'healthy');
+    assert.equal(response.json().counts.waiting, 1);
+    assert.equal(response.json().retention.retainedFailedJobs, 5000);
+  });
+
+  it('runs queue operational cleanup with the internal token', async () => {
+    const jobQueue = new CapturingJobQueue();
+    const app = await buildTestApi({ jobQueue });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/internal/jobs/queue/cleanup',
+      headers: {
+        'x-internal-job-token': 'test-internal-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().cleanedCompletedJobs, 2);
+    assert.equal(response.json().cleanedFailedJobs, 1);
+    assert.equal(jobQueue.queueCleanupCount, 1);
+  });
+
+  it('returns Redis rate-limit namespace stats with the internal token', async () => {
+    const app = await buildTestApi({ rateLimitStore: new CapturingRateLimitStatsStore() });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/internal/ops/redis/rate-limits',
+      headers: {
+        'x-internal-job-token': 'test-internal-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().namespace, 'rate-limit');
+    assert.equal(response.json().keyCount, 3);
+    assert.equal(response.json().cleanup, 'ttl-managed');
   });
 });

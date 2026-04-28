@@ -42,6 +42,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Envelope size, fanout recipient count, and queue depth must have explicit per-environment limits.
 - Account/session abuse-control tests must pass before release.
 - Metadata retention cleanup tests must pass before release.
+- Delivery queue retention, cleanup, and Redis operational visibility tests must pass before release.
 - Internal routes must use managed secrets, rotation policy, and network restrictions where available.
 - PostgreSQL and Redis credentials must live outside source control and CI logs.
 
@@ -50,6 +51,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Contact discovery must have scraping resistance and a privacy review.
 - Metadata retention limits must exist for delivery events, expired envelopes, audit records, and queue jobs.
 - Metadata cleanup must not delete active sessions, active challenges, or valid queued envelopes.
+- Queue cleanup must not delete waiting, active, delayed, or paused delivery jobs.
 - Push notifications must use generic payloads with no message content or sensitive contact names.
 - Abuse reports must disclose only user-selected message content or metadata.
 - Audit events must avoid plaintext content, file names, private contact graph details, and private keys.
@@ -61,11 +63,13 @@ These criteria are production blockers. CipherChat must not process production u
 - Outbound plaintext lifecycle gate output: `npm run verify:plaintext-lifecycle`
 - Account/session abuse-control gate output: `npm run verify:abuse-controls`
 - Metadata retention gate output: `npm run verify:metadata-retention`
+- Queue operations gate output: `npm run verify:queue-operations`
 - Passing CI output for `npm run validate:ci`
 - Android development-client SQLCipher verification result
 - iOS development-client SQLCipher verification result
 - Cryptography design review and implementation evidence
 - Account/session abuse-control test evidence
 - Metadata retention cleanup test evidence
+- Queue operations and Redis stats test evidence
 - Key-change warning UX test evidence
 - Production secret storage and rotation plan
