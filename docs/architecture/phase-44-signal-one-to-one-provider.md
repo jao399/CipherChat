@@ -22,6 +22,7 @@ The adapter must own:
 - Double Ratchet session state
 - message header encryption/serialization
 - ciphertext generation
+- inbound envelope decryption
 - session persistence into encrypted local storage
 - key rotation and stale-session recovery
 

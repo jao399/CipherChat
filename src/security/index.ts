@@ -53,6 +53,7 @@ export {
   SECURITY_INVARIANTS,
 } from './securityPolicy';
 export {
+  assertCanProcessInboundEnvelopes,
   assertCanPrepareOutboundFanout,
   canSendWithMessageCrypto,
   getMessageCryptoReadiness,

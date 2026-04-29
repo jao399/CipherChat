@@ -83,6 +83,16 @@ describe('message encryption provider selection', () => {
           ciphertext: 'signal-body:opaque',
         };
       },
+      async decryptInboundEnvelope(input) {
+        return {
+          conversationId: input.envelope.conversationId,
+          messageId: input.envelope.messageId,
+          plaintext: 'hello',
+          receivedAt: '2026-04-29T00:00:00.000Z',
+          senderAccountId: input.envelope.senderAccountId,
+          senderDeviceId: input.envelope.senderDeviceId,
+        };
+      },
     });
     const fanout = await provider.prepareOutboundFanout({
       conversationId: 'chat_1',

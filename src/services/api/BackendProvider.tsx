@@ -16,6 +16,7 @@ import {
   prototypeDeviceIdentityProvider,
   readRemoteTrustRecords,
   assertCanPrepareOutboundFanout,
+  assertCanProcessInboundEnvelopes,
   canSendWithMessageCrypto,
   getMessageCryptoReadiness,
   upsertRemoteTrustRecordFromBundle,
@@ -597,6 +598,22 @@ export function BackendProvider({ children }: PropsWithChildren) {
       throw new Error(unavailableStatus.lastError);
     }
 
+    if (mode === 'live') {
+      try {
+        assertCanProcessInboundEnvelopes(mode, messageCryptoReadiness);
+      } catch (error) {
+        const unavailableStatus = createInboundStatus(inboundSyncState, {
+          pendingCount: inboundEnvelopeStatus.pendingCount,
+          acknowledgedCount: inboundEnvelopeStatus.acknowledgedCount,
+          pageCount: inboundEnvelopeStatus.pageCount,
+          lastPolledAt: inboundEnvelopeStatus.lastPolledAt,
+          lastError: error instanceof Error ? error.message : 'Production inbound crypto is unavailable.',
+        });
+        setInboundEnvelopeStatus(unavailableStatus);
+        throw error;
+      }
+    }
+
     setInboundEnvelopeStatus((current) => ({
       ...current,
       polling: true,
@@ -668,7 +685,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       setSummary('Encrypted inbox polling failed.');
       return failedStatus;
     }
-  }, [bootstrapPrototypeSession, inboundEnvelopeStatus, inboundSyncState, liveClient, mode, session]);
+  }, [bootstrapPrototypeSession, inboundEnvelopeStatus, inboundSyncState, liveClient, messageCryptoReadiness, mode, session]);
 
   const trustRemoteIdentity = useCallback(
     async (recordId: string) => {

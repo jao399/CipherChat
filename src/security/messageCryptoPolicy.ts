@@ -40,3 +40,11 @@ export function assertCanPrepareOutboundFanout(mode: BackendMode, readiness = ge
     );
   }
 }
+
+export function assertCanProcessInboundEnvelopes(mode: BackendMode, readiness = getMessageCryptoReadiness(mode)) {
+  if (!canSendWithMessageCrypto(mode, readiness)) {
+    throw new Error(
+      'Live encrypted receiving is blocked because CipherChat does not have a production-ready message crypto provider. Integrate reviewed Signal/X3DH + Double Ratchet decrypt support before production receives.',
+    );
+  }
+}

@@ -1,4 +1,5 @@
 import type { EncryptedEnvelopeFanoutRequest } from '../api/types';
+import type { PendingEnvelope } from '../api/types';
 import type { RemoteIdentityTrustRecord } from '../../types';
 import type {
   MessageEncryptionProvider,
@@ -20,10 +21,26 @@ export type SignalOneToOneEncryptInput = {
   disappearingTimer: string;
 };
 
+export type SignalOneToOneDecryptInput = {
+  envelope: PendingEnvelope;
+  localAccountId: string;
+  localDeviceId: string;
+};
+
+export type SignalOneToOneDecryptedMessage = {
+  messageId: string;
+  conversationId: string;
+  senderAccountId: string;
+  senderDeviceId: string;
+  plaintext: string;
+  receivedAt: string;
+};
+
 export type SignalOneToOneCryptoAdapter = {
   id: string;
   productionReady: boolean;
   encryptForRecipient(input: SignalOneToOneEncryptInput): Promise<SignalOneToOneEncryptedEnvelope>;
+  decryptInboundEnvelope(input: SignalOneToOneDecryptInput): Promise<SignalOneToOneDecryptedMessage>;
 };
 
 function normalizedSignalConversationId(conversationId: string, senderAccountId: string) {

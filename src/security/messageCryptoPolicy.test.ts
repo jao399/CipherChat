@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   assertCanPrepareOutboundFanout,
+  assertCanProcessInboundEnvelopes,
   canSendWithMessageCrypto,
   getMessageCryptoReadiness,
   type MessageCryptoReadiness,
@@ -17,6 +18,13 @@ describe('message crypto production gate', () => {
   it('blocks live sends while the active provider is not production ready', () => {
     assert.throws(
       () => assertCanPrepareOutboundFanout('live'),
+      /production-ready message crypto provider/,
+    );
+  });
+
+  it('blocks live inbound processing while the active provider is not production ready', () => {
+    assert.throws(
+      () => assertCanProcessInboundEnvelopes('live'),
       /production-ready message crypto provider/,
     );
   });
@@ -40,5 +48,6 @@ describe('message crypto production gate', () => {
 
     assert.equal(canSendWithMessageCrypto('live', futureProvider), true);
     assert.doesNotThrow(() => assertCanPrepareOutboundFanout('live', futureProvider));
+    assert.doesNotThrow(() => assertCanProcessInboundEnvelopes('live', futureProvider));
   });
 });
