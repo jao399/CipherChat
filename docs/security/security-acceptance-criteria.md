@@ -40,6 +40,8 @@ These criteria are production blockers. CipherChat must not process production u
 ## API and infrastructure gates
 
 - All protected endpoints must require verified device sessions.
+- Additional-device bundle publication must require an authenticated session for the same account.
+- Existing-device bundle updates must require an authenticated session for that same device.
 - Sender device identity must match the authenticated session for outbound envelopes.
 - Recipient account and device filters must be enforced for inbox reads and acknowledgements.
 - Account creation, discovery, bundle lookup, envelope fanout, and session creation must have durable rate limits.

@@ -34,6 +34,8 @@ export async function registerDeviceRoutes(
           202: {
             ...acceptedResponseSchema,
           },
+          401: errorResponseSchema,
+          403: errorResponseSchema,
           503: errorResponseSchema,
         },
       },
@@ -44,6 +46,40 @@ export async function registerDeviceRoutes(
           error: 'database_unavailable',
           message: 'Device bundle persistence requires DATABASE_URL and a reachable database.',
         });
+      }
+
+      const publicationStatus = await repository.getDeviceBundlePublicationStatus({
+        accountId: request.body.accountId,
+        deviceId: request.body.deviceId,
+      });
+
+      if (publicationStatus.deviceAccountId && publicationStatus.deviceAccountId !== request.body.accountId) {
+        return reply.code(403).send({
+          error: 'device_account_mismatch',
+          message: 'That device identity is already associated with another account.',
+        });
+      }
+
+      if (publicationStatus.accountDeviceCount > 0) {
+        const session = await requireDeviceSession(request, reply, sessions);
+
+        if (!session) {
+          return reply;
+        }
+
+        if (session.accountId !== request.body.accountId) {
+          return reply.code(403).send({
+            error: 'account_device_publish_forbidden',
+            message: 'Only an authenticated device for this account can add device bundle material.',
+          });
+        }
+
+        if (publicationStatus.deviceExists && session.deviceId !== request.body.deviceId) {
+          return reply.code(403).send({
+            error: 'device_bundle_update_forbidden',
+            message: 'Only the authenticated device can update its own device bundle material.',
+          });
+        }
       }
 
       const published = await repository.publishDeviceBundle(request.body);

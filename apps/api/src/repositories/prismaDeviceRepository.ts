@@ -9,6 +9,34 @@ function readOneTimePrekeys(value: unknown) {
 export class PrismaDeviceRepository implements DeviceRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
+  async getDeviceBundlePublicationStatus(input: { accountId: string; deviceId: string }) {
+    const [account, device] = await Promise.all([
+      this.prisma.account.findUnique({
+        where: { id: input.accountId },
+        select: {
+          id: true,
+          _count: {
+            select: { devices: true },
+          },
+        },
+      }),
+      this.prisma.device.findUnique({
+        where: { id: input.deviceId },
+        select: {
+          id: true,
+          accountId: true,
+        },
+      }),
+    ]);
+
+    return {
+      accountExists: Boolean(account),
+      accountDeviceCount: account?._count.devices ?? 0,
+      deviceExists: Boolean(device),
+      deviceAccountId: device?.accountId,
+    };
+  }
+
   async publishDeviceBundle(input: PublishDeviceBundleInput) {
     const accountDisplayName = input.accountDisplayName ?? 'CipherChat User';
 

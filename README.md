@@ -731,6 +731,17 @@ CipherChat now has a centralized recipient trust send policy:
 
 More detail: `docs/architecture/phase-51-key-change-send-blocking.md`.
 
+### Phase 52 - Device Bundle Publication Authorization
+
+CipherChat now hardens the public device bundle/prekey publication path:
+
+- First-device bootstrap remains possible for accounts with no devices.
+- Adding another device bundle requires an authenticated session for the same account.
+- Updating an existing device bundle requires an authenticated session for that same device.
+- Device IDs cannot be republished under another account.
+
+More detail: `docs/architecture/phase-52-device-bundle-publication-auth.md`.
+
 ## Next Steps
 
 1. Build and install an Expo Android development client, then record SQLCipher verification evidence.

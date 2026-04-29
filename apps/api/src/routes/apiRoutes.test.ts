@@ -213,6 +213,13 @@ describe('device bundle route', () => {
   it('persists a device bundle through the injected repository', async () => {
     const publishedBundles: PublishDeviceBundleInput[] = [];
     const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        return {
+          accountExists: true,
+          accountDeviceCount: 0,
+          deviceExists: false,
+        };
+      },
       async publishDeviceBundle(input) {
         publishedBundles.push(input);
         return {
@@ -240,8 +247,118 @@ describe('device bundle route', () => {
     assert.equal(publishedBundles[0]?.identityKey, body.identityKey);
   });
 
+  it('requires an account device session before adding another device bundle to an existing account', async () => {
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        return {
+          accountExists: true,
+          accountDeviceCount: 1,
+          deviceExists: false,
+        };
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish without auth');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/devices/bundles',
+      payload: {
+        ...body,
+        deviceId: 'device_000000002',
+      },
+    });
+
+    assert.equal(response.statusCode, 401);
+    assert.equal(response.json().error, 'missing_session');
+  });
+
+  it('allows an authenticated account device to publish a new device bundle for that account', async () => {
+    const publishedBundles: PublishDeviceBundleInput[] = [];
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        return {
+          accountExists: true,
+          accountDeviceCount: 1,
+          deviceExists: false,
+        };
+      },
+      async publishDeviceBundle(input) {
+        publishedBundles.push(input);
+        return {
+          accountId: input.accountId,
+          deviceId: input.deviceId,
+          bundleId: 'bundle_000000002',
+        };
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/devices/bundles',
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+      payload: {
+        ...body,
+        deviceId: 'device_000000002',
+      },
+    });
+
+    assert.equal(response.statusCode, 202);
+    assert.equal(response.json().bundleId, 'bundle_000000002');
+    assert.equal(publishedBundles.length, 1);
+  });
+
+  it('rejects updating an existing device bundle from a different authenticated device', async () => {
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        return {
+          accountExists: true,
+          accountDeviceCount: 2,
+          deviceExists: true,
+          deviceAccountId: body.accountId,
+        };
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish from a different device');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/devices/bundles',
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+      payload: {
+        ...body,
+        deviceId: 'device_000000002',
+      },
+    });
+
+    assert.equal(response.statusCode, 403);
+    assert.equal(response.json().error, 'device_bundle_update_forbidden');
+  });
+
   it('returns a public device bundle for authenticated devices', async () => {
     const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        throw new Error('should not check publication status during lookup');
+      },
       async publishDeviceBundle() {
         throw new Error('should not publish during lookup');
       },
@@ -281,6 +398,9 @@ describe('device bundle route', () => {
 
   it('requires a device session before returning public device bundles', async () => {
     const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        throw new Error('should not check publication status during lookup');
+      },
       async publishDeviceBundle() {
         throw new Error('should not publish during lookup');
       },
@@ -301,6 +421,9 @@ describe('device bundle route', () => {
 
   it('returns 404 when a public device bundle is not found', async () => {
     const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        throw new Error('should not check publication status during lookup');
+      },
       async publishDeviceBundle() {
         throw new Error('should not publish during lookup');
       },

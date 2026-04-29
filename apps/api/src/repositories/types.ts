@@ -15,6 +15,13 @@ export type PublishedDeviceBundle = {
   bundleId: string;
 };
 
+export type DeviceBundlePublicationStatus = {
+  accountExists: boolean;
+  accountDeviceCount: number;
+  deviceExists: boolean;
+  deviceAccountId?: string;
+};
+
 export type PublicDeviceBundle = {
   accountId: string;
   accountDisplayName: string;
@@ -186,6 +193,7 @@ export type AccountRepository = {
 };
 
 export type DeviceRepository = {
+  getDeviceBundlePublicationStatus(input: { accountId: string; deviceId: string }): Promise<DeviceBundlePublicationStatus>;
   publishDeviceBundle(input: PublishDeviceBundleInput): Promise<PublishedDeviceBundle>;
   getDeviceBundle(accountId: string, deviceId: string): Promise<PublicDeviceBundle | null>;
 };
