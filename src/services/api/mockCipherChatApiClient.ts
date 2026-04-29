@@ -3,6 +3,7 @@ import type {
   AccountResponse,
   ApiReadiness,
   DeviceChallengeResponse,
+  DeviceRevocationResponse,
   DeviceSessionResponse,
   EncryptedEnvelopeFanoutRequest,
   EncryptedEnvelopeFanoutResponse,
@@ -134,6 +135,17 @@ export const mockCipherChatApiClient = {
       deviceId: input.deviceId,
       token: 'mock-session-token',
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    };
+  },
+
+  async revokeDevice(input: { accountId: string; deviceId: string }): Promise<DeviceRevocationResponse> {
+    publishedBundles.delete(bundleKey(input.accountId, input.deviceId));
+
+    return {
+      accountId: input.accountId,
+      deviceId: input.deviceId,
+      revoked: true,
+      revokedAt: new Date().toISOString(),
     };
   },
 

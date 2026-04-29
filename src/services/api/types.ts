@@ -78,6 +78,13 @@ export type DeviceSessionResponse = {
   expiresAt: string;
 };
 
+export type DeviceRevocationResponse = {
+  accountId: string;
+  deviceId: string;
+  revoked: boolean;
+  revokedAt: string;
+};
+
 export type EncryptedEnvelopeRequest = {
   messageId: string;
   conversationId: string;

@@ -766,9 +766,20 @@ CipherChat now supports server-enforced account device revocation:
 
 More detail: `docs/architecture/phase-54-device-revocation-compromise-handling.md`.
 
+### Phase 55 - Mobile Device Revocation UX
+
+CipherChat now exposes device revocation in the Expo app:
+
+- `CipherChatApiClient.revokeDevice` calls the authenticated backend revocation endpoint.
+- Mock mode removes the mock public bundle for the revoked device.
+- `BackendProvider.revokeCurrentDevice` clears the local stored session after revocation.
+- Settings includes a guarded **Revoke This Device** action.
+
+More detail: `docs/architecture/phase-55-mobile-device-revocation-ux.md`.
+
 ## Next Steps
 
-1. Add mobile UI actions for device management and revocation.
+1. Add a full device-management screen for all account devices.
 2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
 3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
 4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.

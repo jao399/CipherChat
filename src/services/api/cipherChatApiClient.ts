@@ -3,6 +3,7 @@ import type {
   AccountDiscoveryResponse,
   ApiReadiness,
   DeviceChallengeResponse,
+  DeviceRevocationResponse,
   DeviceSessionResponse,
   EncryptedEnvelopeFanoutRequest,
   EncryptedEnvelopeFanoutResponse,
@@ -92,6 +93,14 @@ export class CipherChatApiClient {
       '/v1/auth/device-sessions/current',
       { method: 'DELETE' },
       { token },
+    );
+  }
+
+  async revokeDevice(input: { accountId: string; deviceId: string; token: string }) {
+    return this.request<DeviceRevocationResponse>(
+      `/v1/devices/${encodeURIComponent(input.accountId)}/${encodeURIComponent(input.deviceId)}`,
+      { method: 'DELETE' },
+      { token: input.token },
     );
   }
 

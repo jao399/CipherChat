@@ -26,12 +26,21 @@ import type { RootStackParamList } from '../../navigation/types';
 
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { status, setMode, refreshStatus, clearSession, rotateDeviceIdentity, inboundEnvelopeStatus, pollInboundEnvelopes } =
-    useBackend();
+  const {
+    status,
+    setMode,
+    refreshStatus,
+    clearSession,
+    revokeCurrentDevice,
+    rotateDeviceIdentity,
+    inboundEnvelopeStatus,
+    pollInboundEnvelopes,
+  } = useBackend();
   const [readReceipts, setReadReceipts] = useState(false);
   const [appLock, setAppLock] = useState(true);
   const [disappearing, setDisappearing] = useState(true);
   const [pollingInbox, setPollingInbox] = useState(false);
+  const [revokingDevice, setRevokingDevice] = useState(false);
   const [checkingEncryptedDatabase, setCheckingEncryptedDatabase] = useState(false);
   const [encryptedDatabaseStatus, setEncryptedDatabaseStatus] = useState<EncryptedLocalDatabaseStatus | null>(null);
   const [checkingMigrationReadiness, setCheckingMigrationReadiness] = useState(false);
@@ -62,6 +71,35 @@ export function SettingsScreen() {
   const rotateIdentity = async () => {
     await rotateDeviceIdentity();
     await refreshStatus();
+  };
+
+  const revokeThisDevice = () => {
+    Alert.alert(
+      'Revoke this device?',
+      'This removes the device from public key discovery and invalidates its active session. You will need to verify again before using live encrypted delivery.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Revoke Device',
+          style: 'destructive',
+          onPress: () => {
+            setRevokingDevice(true);
+            void revokeCurrentDevice()
+              .then(refreshStatus)
+              .then(() => {
+                Alert.alert('Device revoked', 'This device session has been cleared locally.');
+              })
+              .catch((error) => {
+                Alert.alert(
+                  'Device revocation failed',
+                  error instanceof Error ? error.message : 'CipherChat could not revoke this device.',
+                );
+              })
+              .finally(() => setRevokingDevice(false));
+          },
+        },
+      ],
+    );
   };
 
   const pollEncryptedInbox = async () => {
@@ -231,6 +269,19 @@ export function SettingsScreen() {
           subtitle={status.identityFingerprint ? `${trustLabel} - ${status.identityFingerprint}` : 'Preparing local identity'}
           testID="settings-device-identity"
           onPress={rotateIdentity}
+        />
+        <SettingRow
+          icon={revokingDevice ? 'sync' : 'trash'}
+          title="Revoke This Device"
+          subtitle={
+            revokingDevice
+              ? 'Revoking device access...'
+              : status.sessionActive
+                ? 'Remove this device and invalidate its session'
+                : 'Start a verified session before revocation'
+          }
+          testID="settings-revoke-device"
+          onPress={revokeThisDevice}
         />
         <SettingRow
           icon={status.identityTrustState === 'changed' ? 'warning' : 'shield-checkmark'}

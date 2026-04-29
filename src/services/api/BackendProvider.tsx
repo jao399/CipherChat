@@ -75,6 +75,7 @@ type BackendContextValue = {
   pollInboundEnvelopes(): Promise<InboundEnvelopeSyncStatus>;
   syncRemoteIdentity(recordId: string): Promise<void>;
   trustRemoteIdentity(recordId: string): Promise<void>;
+  revokeCurrentDevice(): Promise<void>;
   clearSession(): Promise<void>;
 };
 
@@ -707,6 +708,29 @@ export function BackendProvider({ children }: PropsWithChildren) {
     setSession(null);
   }, [liveClient, mode, session?.token]);
 
+  const revokeCurrentDevice = useCallback(async () => {
+    if (!session) {
+      throw new Error('Start a verified device session before revoking this device.');
+    }
+
+    if (mode === 'mock') {
+      await mockCipherChatApiClient.revokeDevice({
+        accountId: session.accountId,
+        deviceId: session.deviceId,
+      });
+    } else {
+      await liveClient.revokeDevice({
+        accountId: session.accountId,
+        deviceId: session.deviceId,
+        token: session.token,
+      });
+    }
+
+    await clearStoredApiSession();
+    setSession(null);
+    setSummary('This device was revoked. Verify again before sending or receiving encrypted envelopes.');
+  }, [liveClient, mode, session]);
+
   const value = useMemo<BackendContextValue>(
     () => ({
       status: {
@@ -743,9 +767,10 @@ export function BackendProvider({ children }: PropsWithChildren) {
       pollInboundEnvelopes,
       syncRemoteIdentity,
       trustRemoteIdentity,
+      revokeCurrentDevice,
       clearSession,
     }),
-    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, messageCryptoReadiness, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshStatus, remoteTrustRecords, retryOutboundMessage, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, messageCryptoReadiness, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshStatus, remoteTrustRecords, retryOutboundMessage, revokeCurrentDevice, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;
