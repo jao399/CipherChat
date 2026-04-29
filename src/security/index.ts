@@ -27,6 +27,16 @@ export type {
 } from './deviceIdentityProvider';
 export { prototypeDeviceIdentityProvider } from './deviceIdentityProvider';
 export { createSafetyNumberBlocks } from './safetyNumber';
+export {
+  assertSignalX3dhPrekeyBundle,
+  isSignalX3dhPublicKeyMaterial,
+  isSignalX3dhSignedPrekeySignature,
+  signalX3dhPrekeyBundleFormat,
+  validateSignalX3dhPrekeyBundle,
+  type SignalX3dhPrekeyBundle,
+  type SignalX3dhPrekeyBundleFormat,
+  type SignalX3dhPrekeyBundleValidation,
+} from './signalPrekeyBundle';
 export type {
   IdentityTrustState,
   IdentityTrustStatus,

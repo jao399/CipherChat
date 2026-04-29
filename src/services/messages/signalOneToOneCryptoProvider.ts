@@ -1,6 +1,7 @@
 import type { EncryptedEnvelopeFanoutRequest } from '../api/types';
 import type { PendingEnvelope } from '../api/types';
 import type { RemoteIdentityTrustRecord } from '../../types';
+import { signalX3dhPrekeyBundleFormat, type SignalX3dhPrekeyBundleFormat } from '../../security/signalPrekeyBundle';
 import type {
   MessageEncryptionProvider,
   PrepareMessageFanoutInput,
@@ -39,6 +40,7 @@ export type SignalOneToOneDecryptedMessage = {
 export type SignalOneToOneCryptoAdapter = {
   id: string;
   productionReady: boolean;
+  prekeyBundleFormat: SignalX3dhPrekeyBundleFormat;
   encryptForRecipient(input: SignalOneToOneEncryptInput): Promise<SignalOneToOneEncryptedEnvelope>;
   decryptInboundEnvelope(input: SignalOneToOneDecryptInput): Promise<SignalOneToOneDecryptedMessage>;
 };
@@ -70,19 +72,22 @@ function assertSignalInputReady(input: PrepareMessageFanoutInput) {
 export function createSignalOneToOneMessageEncryptionProvider(
   adapter?: SignalOneToOneCryptoAdapter,
 ): MessageEncryptionProvider {
+  const adapterReady =
+    adapter?.productionReady === true && adapter.prekeyBundleFormat === signalX3dhPrekeyBundleFormat;
+
   return {
     id: 'signal-x3dh-double-ratchet-v1',
-    label: adapter?.productionReady ? 'Signal one-to-one encryption' : 'Signal provider gated',
-    detail: adapter?.productionReady
-      ? `Using ${adapter.id} for X3DH session setup and Double Ratchet message encryption.`
+    label: adapterReady ? 'Signal one-to-one encryption' : 'Signal provider gated',
+    detail: adapterReady
+      ? `Using ${adapter.id} for ${adapter.prekeyBundleFormat} session setup and Double Ratchet message encryption.`
       : 'Awaiting reviewed libsignal/native adapter for Signal/X3DH + Double Ratchet one-to-one encryption.',
-    productionReady: adapter?.productionReady === true,
+    productionReady: adapterReady,
     mockReady: false,
     async prepareOutboundFanout(input): Promise<EncryptedEnvelopeFanoutRequest> {
       const trustedRecipients = assertSignalInputReady(input);
 
-      if (!adapter?.productionReady) {
-        throw new Error('Signal/X3DH + Double Ratchet adapter is not installed or not marked production-ready.');
+      if (!adapterReady) {
+        throw new Error('Signal/X3DH + Double Ratchet adapter is not installed, not marked production-ready, or not using signal-x3dh-v1 prekey bundles.');
       }
 
       const conversationId = normalizedSignalConversationId(input.conversationId, input.senderAccountId);

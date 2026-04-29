@@ -831,9 +831,20 @@ CipherChat now has endpoint-specific abuse controls for prekey claim and top-up 
 
 More detail: `docs/architecture/phase-60-prekey-abuse-controls.md`.
 
+### Phase 61 - Signal X3DH Prekey Contract
+
+CipherChat now has a stricter production prekey contract for future Signal/libsignal integration:
+
+- `signal-x3dh-v1` is the only accepted production prekey bundle format in the mobile security boundary.
+- Prototype placeholders are rejected by the Signal prekey bundle validator.
+- Signal one-to-one adapters must declare the reviewed prekey bundle format before the provider can report production readiness.
+- Tests cover valid bundle shape, prototype rejection, and adapter format gating.
+
+More detail: `docs/architecture/phase-61-signal-x3dh-prekey-contract.md`.
+
 ## Next Steps
 
-1. Replace prototype public prekeys with reviewed Signal/libsignal-compatible X3DH prekey bundles.
+1. Install and review a real libsignal-compatible native adapter for Signal identity/prekey generation and X3DH session setup.
 2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
 3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
 4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.

@@ -9,6 +9,7 @@ import {
   selectMessageEncryptionProvider,
   type MessageEncryptionProvider,
 } from './messageEncryptionProvider';
+import { signalX3dhPrekeyBundleFormat } from '../../security/signalPrekeyBundle';
 
 describe('message encryption provider selection', () => {
   it('uses the explicit prototype provider only when mock mode needs UI fanout', () => {
@@ -76,6 +77,7 @@ describe('message encryption provider selection', () => {
     const provider = createSignalOneToOneMessageEncryptionProvider({
       id: 'test-libsignal-adapter',
       productionReady: true,
+      prekeyBundleFormat: signalX3dhPrekeyBundleFormat,
       async encryptForRecipient(input) {
         return {
           messageId: `signal_${input.recipient.deviceId}`,
@@ -117,6 +119,44 @@ describe('message encryption provider selection', () => {
     assert.equal(provider.productionReady, true);
     assert.equal(fanout.conversationId, 'signal_chat_1_account_1');
     assert.equal(fanout.envelopes[0].ciphertext, 'signal-body:opaque');
+  });
+
+  it('rejects adapters that do not declare the reviewed Signal X3DH prekey bundle format', async () => {
+    const provider = createSignalOneToOneMessageEncryptionProvider({
+      id: 'wrong-prekey-format-adapter',
+      productionReady: true,
+      prekeyBundleFormat: 'legacy-prekey-format' as typeof signalX3dhPrekeyBundleFormat,
+      async encryptForRecipient() {
+        throw new Error('should not encrypt with a mismatched prekey format');
+      },
+      async decryptInboundEnvelope() {
+        throw new Error('should not decrypt with a mismatched prekey format');
+      },
+    });
+
+    assert.equal(provider.productionReady, false);
+    await assert.rejects(
+      provider.prepareOutboundFanout({
+        conversationId: 'chat_1',
+        senderAccountId: 'account_1',
+        senderDeviceId: 'device_1',
+        plaintext: 'hello',
+        disappearingTimer: '30s',
+        recipients: [
+          {
+            accountId: 'account_2',
+            deviceId: 'device_2',
+            displayName: 'Maya',
+            id: 'maya',
+            identityFingerprint: 'ABCD',
+            identityKey: 'signal-x3dh-v1:identity:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-=',
+            safetyNumberBlocks: ['ABCD'],
+            trustState: 'trusted',
+          },
+        ],
+      }),
+      /signal-x3dh-v1 prekey bundles/,
+    );
   });
 
   it('defines the provider shape expected by production crypto implementations', () => {

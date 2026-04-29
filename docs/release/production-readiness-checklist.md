@@ -24,6 +24,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Message encryption provider selection is explicit and test-covered.
 - No custom message cryptography is introduced.
 - One-to-one messaging uses a reviewed Signal/X3DH + Double Ratchet implementation.
+- Signal one-to-one adapters declare and validate the `signal-x3dh-v1` prekey bundle contract.
 - One-time prekeys are claimed through a transactional consume-on-read path.
 - Current-device prekey inventory reports counts and low-watermark status without returning key material.
 - Current-device prekey top-up accepts client-generated public prekeys only and never logs or returns prekey values.
