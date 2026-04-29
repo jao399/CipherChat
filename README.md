@@ -797,9 +797,20 @@ CipherChat now has a future-ready one-time prekey consumption path:
 
 More detail: `docs/architecture/phase-57-one-time-prekey-claiming.md`.
 
+### Phase 58 - Prekey Inventory Status
+
+CipherChat now reports metadata-only current-device prekey inventory:
+
+- `GET /v1/devices/prekeys/status` requires a verified device session.
+- The route reports one-time prekey count, low watermark, recommended inventory, and whether top-up is needed.
+- The response never includes identity keys, signed prekeys, one-time prekey values, safety numbers, push tokens, or message metadata.
+- Device Management displays the current device prekey inventory state.
+
+More detail: `docs/architecture/phase-58-prekey-inventory-status.md`.
+
 ## Next Steps
 
-1. Add prekey top-up and low-watermark handling for active devices.
+1. Add authenticated prekey top-up publishing for active devices.
 2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
 3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
 4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.

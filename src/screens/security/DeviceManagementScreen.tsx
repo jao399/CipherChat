@@ -14,7 +14,14 @@ import type { AccountDevice } from '../../services/api/types';
 type Props = NativeStackScreenProps<RootStackParamList, 'DeviceManagement'>;
 
 export function DeviceManagementScreen({ navigation }: Props) {
-  const { accountDevices, refreshAccountDevices, revokeAccountDevice, status } = useBackend();
+  const {
+    accountDevices,
+    devicePrekeyStatus,
+    refreshAccountDevices,
+    refreshDevicePrekeyStatus,
+    revokeAccountDevice,
+    status,
+  } = useBackend();
   const [loading, setLoading] = useState(false);
   const [revokingDeviceId, setRevokingDeviceId] = useState<string | null>(null);
 
@@ -22,7 +29,7 @@ export function DeviceManagementScreen({ navigation }: Props) {
     setLoading(true);
 
     try {
-      await refreshAccountDevices();
+      await Promise.all([refreshAccountDevices(), refreshDevicePrekeyStatus()]);
     } catch (error) {
       Alert.alert(
         'Device list unavailable',
@@ -103,6 +110,28 @@ export function DeviceManagementScreen({ navigation }: Props) {
         <View style={styles.summaryText}>
           <Text style={styles.summaryTitle}>{status.sessionActive ? 'Verified session active' : 'No active session'}</Text>
           <Text style={styles.summarySubtitle}>{status.identityFingerprint ?? 'Verify this device before loading live account devices.'}</Text>
+        </View>
+      </DarkCard>
+
+      <DarkCard style={styles.prekeyCard}>
+        <View style={styles.summaryIcon}>
+          <Ionicons
+            name={devicePrekeyStatus?.needsTopUp ? 'warning' : 'key'}
+            size={24}
+            color={devicePrekeyStatus?.needsTopUp ? colors.primaryBright : colors.security}
+          />
+        </View>
+        <View style={styles.summaryText}>
+          <Text style={styles.summaryTitle}>
+            {devicePrekeyStatus ? `${devicePrekeyStatus.oneTimePrekeyCount} one-time prekeys` : 'Prekey inventory unavailable'}
+          </Text>
+          <Text style={styles.summarySubtitle}>
+            {devicePrekeyStatus
+              ? devicePrekeyStatus.needsTopUp
+                ? `Below low watermark ${devicePrekeyStatus.lowWatermark}; top-up path is required before production.`
+                : `Healthy. Recommended inventory is ${devicePrekeyStatus.recommendedCount}.`
+              : 'Refresh after starting a verified session.'}
+          </Text>
         </View>
       </DarkCard>
 
@@ -205,6 +234,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   summary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  prekeyCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,

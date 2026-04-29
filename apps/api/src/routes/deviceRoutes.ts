@@ -6,6 +6,7 @@ import {
   acceptedResponseSchema,
   accountDeviceListResponseSchema,
   deviceBundleBodySchema,
+  devicePrekeyStatusResponseSchema,
   deviceRevokedResponseSchema,
   errorResponseSchema,
   publicDeviceBundleResponseSchema,
@@ -248,6 +249,48 @@ export async function registerDeviceRoutes(
       }
 
       return reply.send(revoked);
+    },
+  );
+
+  app.get(
+    '/v1/devices/prekeys/status',
+    {
+      schema: {
+        response: {
+          200: devicePrekeyStatusResponseSchema,
+          401: errorResponseSchema,
+          404: errorResponseSchema,
+          503: errorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const session = await requireDeviceSession(request, reply, sessions);
+
+      if (!session) {
+        return reply;
+      }
+
+      if (!repository) {
+        return reply.code(503).send({
+          error: 'database_unavailable',
+          message: 'Device prekey inventory requires DATABASE_URL and a reachable database.',
+        });
+      }
+
+      const status = await repository.getDevicePrekeyStatus({
+        accountId: session.accountId,
+        deviceId: session.deviceId,
+      });
+
+      if (!status) {
+        return reply.code(404).send({
+          error: 'device_prekey_status_not_found',
+          message: 'No active prekey bundle was found for the authenticated device.',
+        });
+      }
+
+      return reply.send(status);
     },
   );
 

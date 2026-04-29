@@ -4,6 +4,7 @@ import type {
   AccountDeviceListResponse,
   ApiReadiness,
   DeviceChallengeResponse,
+  DevicePrekeyStatus,
   DeviceRevocationResponse,
   DeviceSessionResponse,
   EncryptedEnvelopeFanoutRequest,
@@ -115,6 +116,10 @@ export class CipherChatApiClient {
 
   async listAccountDevices(token: string) {
     return this.request<AccountDeviceListResponse>('/v1/devices', undefined, { token });
+  }
+
+  async getDevicePrekeyStatus(token: string) {
+    return this.request<DevicePrekeyStatus>('/v1/devices/prekeys/status', undefined, { token });
   }
 
   async sendEnvelope(input: EncryptedEnvelopeRequest, token: string) {

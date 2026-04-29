@@ -32,6 +32,7 @@ import type {
   AccountDiscoveryResult,
   AccountDevice,
   BackendStatus,
+  DevicePrekeyStatus,
   InboundEnvelopeSyncStatus,
   PublicDeviceBundleResponse,
 } from './types';
@@ -63,8 +64,10 @@ type BackendContextValue = {
   remoteTrustRecords: RemoteIdentityTrustRecord[];
   contactDiscoveryResults: AccountDiscoveryResult[];
   accountDevices: AccountDevice[];
+  devicePrekeyStatus: DevicePrekeyStatus | null;
   discoverContacts(query: string): Promise<AccountDiscoveryResult[]>;
   refreshAccountDevices(): Promise<AccountDevice[]>;
+  refreshDevicePrekeyStatus(): Promise<DevicePrekeyStatus>;
   addDiscoveredContact(accountId: string, deviceId: string): Promise<void>;
   sendSecureMessage(input: {
     conversationId: string;
@@ -123,6 +126,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [remoteTrustRecords, setRemoteTrustRecords] = useState<RemoteIdentityTrustRecord[]>(remoteIdentityTrust);
   const [contactDiscoveryResults, setContactDiscoveryResults] = useState<AccountDiscoveryResult[]>([]);
   const [accountDevices, setAccountDevices] = useState<AccountDevice[]>([]);
+  const [devicePrekeyStatus, setDevicePrekeyStatus] = useState<DevicePrekeyStatus | null>(null);
   const [outboundQueue, setOutboundQueue] = useState<OutboundQueueItem[]>([]);
   const [inboundSyncState, setInboundSyncState] = useState<InboundEnvelopeSyncState>(emptyInboundEnvelopeSyncState);
   const [inboundEnvelopeStatus, setInboundEnvelopeStatus] = useState<InboundEnvelopeSyncStatus>(
@@ -377,6 +381,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const refreshAccountDevices = useCallback(async () => {
     if (!session) {
       setAccountDevices([]);
+      setDevicePrekeyStatus(null);
       throw new Error('Start a verified device session before loading account devices.');
     }
 
@@ -395,6 +400,29 @@ export function BackendProvider({ children }: PropsWithChildren) {
         : 'No account devices were returned.',
     );
     return response.devices;
+  }, [liveClient, mode, session]);
+
+  const refreshDevicePrekeyStatus = useCallback(async () => {
+    if (!session) {
+      setDevicePrekeyStatus(null);
+      throw new Error('Start a verified device session before loading prekey inventory.');
+    }
+
+    const status =
+      mode === 'mock'
+        ? await mockCipherChatApiClient.getDevicePrekeyStatus({
+            accountId: session.accountId,
+            deviceId: session.deviceId,
+          })
+        : await liveClient.getDevicePrekeyStatus(session.token);
+
+    setDevicePrekeyStatus(status);
+    setSummary(
+      status.needsTopUp
+        ? `Prekey inventory is below ${status.lowWatermark}. Top up before production messaging.`
+        : `Prekey inventory healthy with ${status.oneTimePrekeyCount} one-time prekeys.`,
+    );
+    return status;
   }, [liveClient, mode, session]);
 
   const addDiscoveredContact = useCallback(
@@ -735,6 +763,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
     await clearStoredApiSession();
     setSession(null);
     setAccountDevices([]);
+    setDevicePrekeyStatus(null);
   }, [liveClient, mode, session?.token]);
 
   const revokeCurrentDevice = useCallback(async () => {
@@ -758,6 +787,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
     await clearStoredApiSession();
     setSession(null);
     setAccountDevices([]);
+    setDevicePrekeyStatus(null);
     setSummary('This device was revoked. Verify again before sending or receiving encrypted envelopes.');
   }, [liveClient, mode, session]);
 
@@ -784,6 +814,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
         await clearStoredApiSession();
         setSession(null);
         setAccountDevices([]);
+        setDevicePrekeyStatus(null);
       } else {
         setAccountDevices((current) =>
           current.map((device) =>
@@ -824,6 +855,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       remoteTrustRecords,
       contactDiscoveryResults,
       accountDevices,
+      devicePrekeyStatus,
       outboundQueue,
       inboundEnvelopeStatus,
       setMode: persistMode,
@@ -834,6 +866,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       rotateDeviceIdentity,
       discoverContacts,
       refreshAccountDevices,
+      refreshDevicePrekeyStatus,
       addDiscoveredContact,
       sendSecureMessage,
       retryOutboundMessage,
@@ -844,7 +877,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       revokeCurrentDevice,
       clearSession,
     }),
-    [accountDevices, addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, messageCryptoReadiness, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshAccountDevices, refreshStatus, remoteTrustRecords, retryOutboundMessage, revokeAccountDevice, revokeCurrentDevice, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [accountDevices, addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, devicePrekeyStatus, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, messageCryptoReadiness, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshAccountDevices, refreshDevicePrekeyStatus, refreshStatus, remoteTrustRecords, retryOutboundMessage, revokeAccountDevice, revokeCurrentDevice, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

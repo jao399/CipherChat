@@ -188,6 +188,19 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
     assert.equal(exhaustedPrekey.statusCode, 200);
     assert.deepEqual(exhaustedPrekey.json().oneTimePrekeys, []);
 
+    const prekeyStatus = await app.inject({
+      method: 'GET',
+      url: '/v1/devices/prekeys/status',
+      headers: {
+        authorization: `Bearer ${recipientToken}`,
+      },
+    });
+
+    assert.equal(prekeyStatus.statusCode, 200);
+    assert.equal(prekeyStatus.json().oneTimePrekeyCount, 0);
+    assert.equal(prekeyStatus.json().needsTopUp, true);
+    assert.doesNotMatch(JSON.stringify(prekeyStatus.json()), /identity-key|signed-prekey|one-time-prekey/i);
+
     const sendResponse = await app.inject({
       method: 'POST',
       url: '/v1/messages/envelopes/fanout',

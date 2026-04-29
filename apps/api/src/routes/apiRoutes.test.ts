@@ -234,6 +234,9 @@ describe('device bundle route', () => {
       async claimDevicePrekeyBundle() {
         return null;
       },
+      async getDevicePrekeyStatus() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -272,6 +275,9 @@ describe('device bundle route', () => {
         return null;
       },
       async claimDevicePrekeyBundle() {
+        return null;
+      },
+      async getDevicePrekeyStatus() {
         return null;
       },
       async revokeDevice() {
@@ -320,6 +326,9 @@ describe('device bundle route', () => {
       async claimDevicePrekeyBundle() {
         return null;
       },
+      async getDevicePrekeyStatus() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -363,6 +372,9 @@ describe('device bundle route', () => {
         return null;
       },
       async claimDevicePrekeyBundle() {
+        return null;
+      },
+      async getDevicePrekeyStatus() {
         return null;
       },
       async revokeDevice() {
@@ -412,6 +424,9 @@ describe('device bundle route', () => {
         };
       },
       async claimDevicePrekeyBundle() {
+        return null;
+      },
+      async getDevicePrekeyStatus() {
         return null;
       },
       async revokeDevice() {
@@ -467,6 +482,9 @@ describe('device bundle route', () => {
           publishedAt: new Date(0).toISOString(),
         };
       },
+      async getDevicePrekeyStatus() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -508,6 +526,9 @@ describe('device bundle route', () => {
       async claimDevicePrekeyBundle() {
         return null;
       },
+      async getDevicePrekeyStatus() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -538,6 +559,9 @@ describe('device bundle route', () => {
         return null;
       },
       async claimDevicePrekeyBundle() {
+        return null;
+      },
+      async getDevicePrekeyStatus() {
         return null;
       },
       async revokeDevice() {
@@ -579,6 +603,9 @@ describe('device bundle route', () => {
         return null;
       },
       async claimDevicePrekeyBundle() {
+        return null;
+      },
+      async getDevicePrekeyStatus() {
         return null;
       },
       async revokeDevice(input) {
@@ -627,6 +654,9 @@ describe('device bundle route', () => {
         return null;
       },
       async claimDevicePrekeyBundle() {
+        return null;
+      },
+      async getDevicePrekeyStatus() {
         return null;
       },
       async revokeDevice() {
@@ -678,6 +708,9 @@ describe('device bundle route', () => {
       async claimDevicePrekeyBundle() {
         return null;
       },
+      async getDevicePrekeyStatus() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -716,6 +749,53 @@ describe('device bundle route', () => {
         currentDeviceId: body.deviceId,
       },
     ]);
+  });
+
+  it('returns current-device prekey inventory without key material', async () => {
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        throw new Error('should not check publication status during prekey status');
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish during prekey status');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle() {
+        return null;
+      },
+      async getDevicePrekeyStatus(input) {
+        return {
+          accountId: input.accountId,
+          deviceId: input.deviceId,
+          oneTimePrekeyCount: 8,
+          lowWatermark: 20,
+          recommendedCount: 100,
+          needsTopUp: true,
+        };
+      },
+      async revokeDevice() {
+        return null;
+      },
+      async listAccountDevices() {
+        return [];
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/devices/prekeys/status',
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().oneTimePrekeyCount, 8);
+    assert.equal(response.json().needsTopUp, true);
+    assert.doesNotMatch(JSON.stringify(response.json()), /identity-key|signed-prekey|one-time-prekey/i);
   });
 });
 

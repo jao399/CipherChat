@@ -4,6 +4,7 @@ import type {
   AccountResponse,
   ApiReadiness,
   DeviceChallengeResponse,
+  DevicePrekeyStatus,
   DeviceRevocationResponse,
   DeviceSessionResponse,
   EncryptedEnvelopeFanoutRequest,
@@ -173,6 +174,17 @@ export const mockCipherChatApiClient = {
           isCurrentDevice: true,
         },
       ],
+    };
+  },
+
+  async getDevicePrekeyStatus(input: { accountId: string; deviceId: string }): Promise<DevicePrekeyStatus> {
+    return {
+      accountId: input.accountId,
+      deviceId: input.deviceId,
+      oneTimePrekeyCount: 100,
+      lowWatermark: 20,
+      recommendedCount: 100,
+      needsTopUp: false,
     };
   },
 

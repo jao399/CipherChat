@@ -59,6 +59,15 @@ export type AccountDevice = {
   isCurrentDevice: boolean;
 };
 
+export type DevicePrekeyStatus = {
+  accountId: string;
+  deviceId: string;
+  oneTimePrekeyCount: number;
+  lowWatermark: number;
+  recommendedCount: number;
+  needsTopUp: boolean;
+};
+
 export type CreateAccountInput = {
   id?: string;
   displayName: string;
@@ -222,6 +231,7 @@ export type DeviceRepository = {
   publishDeviceBundle(input: PublishDeviceBundleInput): Promise<PublishedDeviceBundle>;
   getDeviceBundle(accountId: string, deviceId: string): Promise<PublicDeviceBundle | null>;
   claimDevicePrekeyBundle(accountId: string, deviceId: string): Promise<PublicDeviceBundle | null>;
+  getDevicePrekeyStatus(input: { accountId: string; deviceId: string }): Promise<DevicePrekeyStatus | null>;
   revokeDevice(input: RevokeDeviceInput): Promise<RevokedDevice | null>;
   listAccountDevices(input: { accountId: string; currentDeviceId: string }): Promise<AccountDevice[]>;
 };

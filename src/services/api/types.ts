@@ -101,6 +101,15 @@ export type AccountDeviceListResponse = {
   devices: AccountDevice[];
 };
 
+export type DevicePrekeyStatus = {
+  accountId: string;
+  deviceId: string;
+  oneTimePrekeyCount: number;
+  lowWatermark: number;
+  recommendedCount: number;
+  needsTopUp: boolean;
+};
+
 export type EncryptedEnvelopeRequest = {
   messageId: string;
   conversationId: string;

@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 
+import { prekeyInventoryPolicy } from '../security/prekeyPolicy.js';
 import type { DeviceRepository, PublishDeviceBundleInput } from './types.js';
 
 function readOneTimePrekeys(value: unknown) {
@@ -209,6 +210,34 @@ export class PrismaDeviceRepository implements DeviceRepository {
         publishedAt: device.prekeyBundle.publishedAt.toISOString(),
       };
     });
+  }
+
+  async getDevicePrekeyStatus(input: { accountId: string; deviceId: string }) {
+    const device = await this.prisma.device.findFirst({
+      where: {
+        id: input.deviceId,
+        accountId: input.accountId,
+        revokedAt: null,
+      },
+      include: {
+        prekeyBundle: true,
+      },
+    });
+
+    if (!device?.prekeyBundle) {
+      return null;
+    }
+
+    const oneTimePrekeyCount = readOneTimePrekeys(device.prekeyBundle.oneTimePrekeys).length;
+
+    return {
+      accountId: device.accountId,
+      deviceId: device.id,
+      oneTimePrekeyCount,
+      lowWatermark: prekeyInventoryPolicy.lowWatermark,
+      recommendedCount: prekeyInventoryPolicy.recommendedCount,
+      needsTopUp: oneTimePrekeyCount < prekeyInventoryPolicy.lowWatermark,
+    };
   }
 
   async revokeDevice(input: { accountId: string; deviceId: string; actorDeviceId: string }) {

@@ -230,6 +230,20 @@ export const accountDeviceListResponseSchema = {
   },
 } as const;
 
+export const devicePrekeyStatusResponseSchema = {
+  type: 'object',
+  required: ['accountId', 'deviceId', 'oneTimePrekeyCount', 'lowWatermark', 'recommendedCount', 'needsTopUp'],
+  additionalProperties: false,
+  properties: {
+    accountId: { type: 'string' },
+    deviceId: { type: 'string' },
+    oneTimePrekeyCount: { type: 'number' },
+    lowWatermark: { type: 'number' },
+    recommendedCount: { type: 'number' },
+    needsTopUp: { type: 'boolean' },
+  },
+} as const;
+
 export const deviceSessionResponseSchema = {
   type: 'object',
   required: ['sessionId', 'accountId', 'deviceId', 'token', 'expiresAt'],
