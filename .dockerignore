@@ -1,0 +1,12 @@
+node_modules
+apps/api/node_modules
+apps/api/dist
+.expo
+android
+ios
+artifacts
+.git
+*.log
+*.tsbuildinfo
+.env*
+!.env.example

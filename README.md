@@ -696,6 +696,18 @@ CipherChat now checks configured runtime dependencies before accepting API traff
 
 More detail: `docs/architecture/phase-40-startup-health-hardening.md`.
 
+### Phase 49 - Production Release Operations
+
+CipherChat now has a production release-operations scaffold:
+
+- `apps/api/Dockerfile` builds the API runtime container.
+- `.github/workflows/release-smoke.yml` builds and smoke-tests the API image with disposable PostgreSQL and Redis.
+- `scripts/release-smoke-test.mjs` checks `/health`, `/ready`, and queue operational visibility.
+- `scripts/verify-release-operations.mjs` adds a release gate.
+- `npm run validate:ci` includes `npm run verify:release-operations`.
+
+More detail: `docs/architecture/phase-49-production-release-operations.md`.
+
 ## Next Steps
 
 1. Build and install an Expo Android development client, then record SQLCipher verification evidence.
