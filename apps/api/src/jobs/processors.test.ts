@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import type { GenericPushWakeResult, PushNotificationPort } from '../push/pushNotificationService.js';
 import type { MessageRepository, MetadataRetentionRepository } from '../repositories/types.js';
 import { createJobProcessor } from './processors.js';
 
@@ -69,5 +70,37 @@ describe('job processor', () => {
         } as never),
       /Metadata retention repository is not configured/,
     );
+  });
+
+  it('sends only generic push wake payloads for delivery fanout jobs', async () => {
+    const sentPayloads: unknown[] = [];
+    const pushNotifications: PushNotificationPort = {
+      async sendGenericWake(input) {
+        sentPayloads.push(input.payload);
+        return {
+          provider: 'configured',
+          queuedGenericPushes: input.recipientDeviceCount,
+          opaqueEventId: input.payload.opaqueEventId,
+        };
+      },
+    };
+    const processor = createJobProcessor(createMessageRepository(), undefined, pushNotifications);
+
+    const result = await processor({
+      name: 'delivery.fanout',
+      data: {
+        messageIds: ['message_001', 'message_002'],
+        recipientDeviceCount: 2,
+      },
+    } as never);
+
+    assert.equal(sentPayloads.length, 1);
+    assert.deepEqual(Object.keys(sentPayloads[0] as Record<string, unknown>).sort(), [
+      'deliveryHint',
+      'opaqueEventId',
+    ]);
+    const pushResult = result as GenericPushWakeResult;
+    assert.equal(pushResult.queuedGenericPushes, 2);
+    assert.equal(pushResult.provider, 'configured');
   });
 });

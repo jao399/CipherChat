@@ -57,7 +57,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Queue cleanup must not delete waiting, active, delayed, or paused delivery jobs.
 - Production API startup must fail when required persistence, queue, signature-verifier, CORS, or internal-token configuration is unsafe.
 - Startup and readiness health checks must expose safe reason codes without leaking connection strings or credentials.
-- Push notifications must use generic payloads with no message content or sensitive contact names.
+- Push notifications must use generic payloads with no message content, sender names, group names, filenames, or plaintext previews.
 - Abuse reports must disclose only user-selected message content or metadata.
 - Audit events must avoid plaintext content, file names, private contact graph details, and private keys.
 

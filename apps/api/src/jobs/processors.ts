@@ -1,9 +1,15 @@
 import type { Job } from 'bullmq';
 
 import type { MessageRepository, MetadataRetentionRepository } from '../repositories/types.js';
-import type { CipherChatJob } from './types.js';
+import { NoopPushNotificationService, type PushNotificationPort } from '../push/pushNotificationService.js';
+import { createGenericDeliveryPushPayload } from '../push/pushPrivacy.js';
+import type { CipherChatJob, DeliveryFanoutJobData } from './types.js';
 
-export function createJobProcessor(messages: MessageRepository, metadataRetention?: MetadataRetentionRepository) {
+export function createJobProcessor(
+  messages: MessageRepository,
+  metadataRetention?: MetadataRetentionRepository,
+  pushNotifications: PushNotificationPort = new NoopPushNotificationService(),
+) {
   return async function processJob(job: Job<CipherChatJob['data'], unknown, CipherChatJob['name']>) {
     if (job.name === 'envelopes.expire') {
       const expiredCount = await messages.expireStaleEnvelopes();
@@ -19,10 +25,12 @@ export function createJobProcessor(messages: MessageRepository, metadataRetentio
     }
 
     if (job.name === 'delivery.fanout') {
-      // Push payloads must stay generic. Actual clients fetch encrypted envelopes after wake.
-      return {
-        queuedGenericPushes: (job.data as { recipientDeviceCount: number }).recipientDeviceCount,
-      };
+      const data = job.data as DeliveryFanoutJobData;
+      const payload = createGenericDeliveryPushPayload(data);
+      return pushNotifications.sendGenericWake({
+        recipientDeviceCount: data.recipientDeviceCount,
+        payload,
+      });
     }
 
     return { ignored: true };
