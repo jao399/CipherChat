@@ -38,6 +38,12 @@ After the APK is available:
 
 ## iOS simulator development client
 
+First verify that this machine is capable of checking the iOS SQLCipher path:
+
+```bash
+npm run verify:ios-sqlcipher-readiness
+```
+
 ```bash
 npx eas build --profile development --platform ios
 ```
