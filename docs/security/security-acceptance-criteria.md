@@ -22,6 +22,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Device identity keys, signed prekeys, one-time prekeys, and session state must have documented lifecycle rules.
 - One-time prekey claim routes must consume at most one prekey transactionally and avoid returning reusable prekey arrays for production session setup.
 - Prekey inventory status must expose counts and thresholds only, never key material or message/contact metadata.
+- Prekey top-up routes must accept only client-generated public one-time prekeys from the authenticated current device and must not log or return prekey values.
 - The server must only receive public key material, ciphertext, opaque headers, delivery metadata, and selected user-disclosed abuse report content.
 - No custom cryptographic primitive may be introduced without a formal design review.
 - One-to-one production sends must use the `signal-x3dh-double-ratchet-v1` provider with a reviewed Signal/libsignal-compatible adapter.

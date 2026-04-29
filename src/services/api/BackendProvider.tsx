@@ -68,6 +68,7 @@ type BackendContextValue = {
   discoverContacts(query: string): Promise<AccountDiscoveryResult[]>;
   refreshAccountDevices(): Promise<AccountDevice[]>;
   refreshDevicePrekeyStatus(): Promise<DevicePrekeyStatus>;
+  topUpCurrentDevicePrekeys(count?: number): Promise<DevicePrekeyStatus>;
   addDiscoveredContact(accountId: string, deviceId: string): Promise<void>;
   sendSecureMessage(input: {
     conversationId: string;
@@ -87,6 +88,8 @@ type BackendContextValue = {
 };
 
 export const BackendContext = createContext<BackendContextValue | null>(null);
+
+const MAX_PREKEY_TOP_UP_COUNT = 200;
 
 function summarizeReadiness(mode: BackendMode, ready: boolean, checks?: BackendStatus['summary']) {
   if (mode === 'mock') {
@@ -424,6 +427,39 @@ export function BackendProvider({ children }: PropsWithChildren) {
     );
     return status;
   }, [liveClient, mode, session]);
+
+  const topUpCurrentDevicePrekeys = useCallback(
+    async (count?: number) => {
+      if (!session) {
+        setDevicePrekeyStatus(null);
+        throw new Error('Start a verified device session before topping up prekeys.');
+      }
+
+      const currentStatus = devicePrekeyStatus ?? (await refreshDevicePrekeyStatus());
+      const requestedCount = count ?? Math.max(0, currentStatus.recommendedCount - currentStatus.oneTimePrekeyCount);
+      const topUpCount = Math.min(MAX_PREKEY_TOP_UP_COUNT, Math.max(0, requestedCount));
+
+      if (topUpCount === 0) {
+        setSummary(`Prekey inventory already has ${currentStatus.oneTimePrekeyCount} one-time prekeys.`);
+        return currentStatus;
+      }
+
+      const oneTimePrekeys = await prototypeDeviceIdentityProvider.generateOneTimePrekeys(topUpCount);
+      const status =
+        mode === 'mock'
+          ? await mockCipherChatApiClient.topUpDevicePrekeys({
+              accountId: session.accountId,
+              deviceId: session.deviceId,
+              oneTimePrekeys,
+            })
+          : await liveClient.topUpDevicePrekeys({ oneTimePrekeys }, session.token);
+
+      setDevicePrekeyStatus(status);
+      setSummary(`Published ${topUpCount} public one-time prekeys from this device.`);
+      return status;
+    },
+    [devicePrekeyStatus, liveClient, mode, refreshDevicePrekeyStatus, session],
+  );
 
   const addDiscoveredContact = useCallback(
     async (accountId: string, deviceId: string) => {
@@ -867,6 +903,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       discoverContacts,
       refreshAccountDevices,
       refreshDevicePrekeyStatus,
+      topUpCurrentDevicePrekeys,
       addDiscoveredContact,
       sendSecureMessage,
       retryOutboundMessage,
@@ -877,7 +914,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       revokeCurrentDevice,
       clearSession,
     }),
-    [accountDevices, addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, devicePrekeyStatus, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, messageCryptoReadiness, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshAccountDevices, refreshDevicePrekeyStatus, refreshStatus, remoteTrustRecords, retryOutboundMessage, revokeAccountDevice, revokeCurrentDevice, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [accountDevices, addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, devicePrekeyStatus, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, messageCryptoReadiness, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshAccountDevices, refreshDevicePrekeyStatus, refreshStatus, remoteTrustRecords, retryOutboundMessage, revokeAccountDevice, revokeCurrentDevice, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, topUpCurrentDevicePrekeys, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

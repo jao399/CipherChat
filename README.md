@@ -808,9 +808,21 @@ CipherChat now reports metadata-only current-device prekey inventory:
 
 More detail: `docs/architecture/phase-58-prekey-inventory-status.md`.
 
+### Phase 59 - Authenticated Prekey Top-Up Publishing
+
+CipherChat now lets a verified current device replenish its own public one-time prekey inventory:
+
+- `POST /v1/devices/prekeys/top-up` requires an active device session.
+- The route only tops up the authenticated current device and stores client-generated public one-time prekeys.
+- The server never generates private key material and responses expose counts only.
+- Device Management can publish additional public one-time prekeys when inventory is below target.
+- Persistence tests prove topped-up public prekeys can be claimed once and consumed transactionally.
+
+More detail: `docs/architecture/phase-59-prekey-top-up-publishing.md`.
+
 ## Next Steps
 
-1. Add authenticated prekey top-up publishing for active devices.
+1. Add abuse controls and durable rate limits for prekey claim/top-up endpoints.
 2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
 3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
 4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.

@@ -1,4 +1,5 @@
 import { envelopeAbusePolicy } from './security/abusePolicy.js';
+import { prekeyInventoryPolicy } from './security/prekeyPolicy.js';
 
 export const errorResponseSchema = {
   type: 'object',
@@ -241,6 +242,20 @@ export const devicePrekeyStatusResponseSchema = {
     lowWatermark: { type: 'number' },
     recommendedCount: { type: 'number' },
     needsTopUp: { type: 'boolean' },
+  },
+} as const;
+
+export const devicePrekeyTopUpBodySchema = {
+  type: 'object',
+  required: ['oneTimePrekeys'],
+  additionalProperties: false,
+  properties: {
+    oneTimePrekeys: {
+      type: 'array',
+      minItems: 1,
+      maxItems: prekeyInventoryPolicy.maxTopUpCount,
+      items: { type: 'string', minLength: 16 },
+    },
   },
 } as const;
 

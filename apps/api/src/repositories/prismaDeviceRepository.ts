@@ -240,6 +240,59 @@ export class PrismaDeviceRepository implements DeviceRepository {
     };
   }
 
+  async topUpDevicePrekeys(input: { accountId: string; deviceId: string; oneTimePrekeys: string[] }) {
+    return this.prisma.$transaction(async (tx) => {
+      const device = await tx.device.findFirst({
+        where: {
+          id: input.deviceId,
+          accountId: input.accountId,
+          revokedAt: null,
+        },
+        include: {
+          prekeyBundle: true,
+        },
+      });
+
+      if (!device?.prekeyBundle) {
+        return null;
+      }
+
+      const existing = readOneTimePrekeys(device.prekeyBundle.oneTimePrekeys);
+      const incoming = input.oneTimePrekeys.filter((prekey) => !existing.includes(prekey));
+      const nextPrekeys = [...existing, ...incoming];
+
+      await tx.prekeyBundle.update({
+        where: { deviceId: input.deviceId },
+        data: {
+          oneTimePrekeys: nextPrekeys,
+          publishedAt: new Date(),
+        },
+      });
+
+      await tx.auditEvent.create({
+        data: {
+          accountId: input.accountId,
+          eventType: 'device_bundle.one_time_prekeys_topped_up',
+          actorId: input.deviceId,
+          targetId: input.deviceId,
+          metadata: {
+            addedOneTimePrekeyCount: incoming.length,
+            oneTimePrekeyCount: nextPrekeys.length,
+          },
+        },
+      });
+
+      return {
+        accountId: device.accountId,
+        deviceId: device.id,
+        oneTimePrekeyCount: nextPrekeys.length,
+        lowWatermark: prekeyInventoryPolicy.lowWatermark,
+        recommendedCount: prekeyInventoryPolicy.recommendedCount,
+        needsTopUp: nextPrekeys.length < prekeyInventoryPolicy.lowWatermark,
+      };
+    });
+  }
+
   async revokeDevice(input: { accountId: string; deviceId: string; actorDeviceId: string }) {
     const revokedAt = new Date();
 

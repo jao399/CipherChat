@@ -68,6 +68,12 @@ export type DevicePrekeyStatus = {
   needsTopUp: boolean;
 };
 
+export type TopUpDevicePrekeysInput = {
+  accountId: string;
+  deviceId: string;
+  oneTimePrekeys: string[];
+};
+
 export type CreateAccountInput = {
   id?: string;
   displayName: string;
@@ -232,6 +238,7 @@ export type DeviceRepository = {
   getDeviceBundle(accountId: string, deviceId: string): Promise<PublicDeviceBundle | null>;
   claimDevicePrekeyBundle(accountId: string, deviceId: string): Promise<PublicDeviceBundle | null>;
   getDevicePrekeyStatus(input: { accountId: string; deviceId: string }): Promise<DevicePrekeyStatus | null>;
+  topUpDevicePrekeys(input: TopUpDevicePrekeysInput): Promise<DevicePrekeyStatus | null>;
   revokeDevice(input: RevokeDeviceInput): Promise<RevokedDevice | null>;
   listAccountDevices(input: { accountId: string; currentDeviceId: string }): Promise<AccountDevice[]>;
 };

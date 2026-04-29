@@ -5,6 +5,7 @@ import type {
   ApiReadiness,
   DeviceChallengeResponse,
   DevicePrekeyStatus,
+  DevicePrekeyTopUpRequest,
   DeviceRevocationResponse,
   DeviceSessionResponse,
   EncryptedEnvelopeFanoutRequest,
@@ -120,6 +121,17 @@ export class CipherChatApiClient {
 
   async getDevicePrekeyStatus(token: string) {
     return this.request<DevicePrekeyStatus>('/v1/devices/prekeys/status', undefined, { token });
+  }
+
+  async topUpDevicePrekeys(input: DevicePrekeyTopUpRequest, token: string) {
+    return this.request<DevicePrekeyStatus>(
+      '/v1/devices/prekeys/top-up',
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+      { token },
+    );
   }
 
   async sendEnvelope(input: EncryptedEnvelopeRequest, token: string) {

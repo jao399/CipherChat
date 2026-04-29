@@ -237,6 +237,9 @@ describe('device bundle route', () => {
       async getDevicePrekeyStatus() {
         return null;
       },
+      async topUpDevicePrekeys() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -278,6 +281,9 @@ describe('device bundle route', () => {
         return null;
       },
       async getDevicePrekeyStatus() {
+        return null;
+      },
+      async topUpDevicePrekeys() {
         return null;
       },
       async revokeDevice() {
@@ -329,6 +335,9 @@ describe('device bundle route', () => {
       async getDevicePrekeyStatus() {
         return null;
       },
+      async topUpDevicePrekeys() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -375,6 +384,9 @@ describe('device bundle route', () => {
         return null;
       },
       async getDevicePrekeyStatus() {
+        return null;
+      },
+      async topUpDevicePrekeys() {
         return null;
       },
       async revokeDevice() {
@@ -427,6 +439,9 @@ describe('device bundle route', () => {
         return null;
       },
       async getDevicePrekeyStatus() {
+        return null;
+      },
+      async topUpDevicePrekeys() {
         return null;
       },
       async revokeDevice() {
@@ -485,6 +500,9 @@ describe('device bundle route', () => {
       async getDevicePrekeyStatus() {
         return null;
       },
+      async topUpDevicePrekeys() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -529,6 +547,9 @@ describe('device bundle route', () => {
       async getDevicePrekeyStatus() {
         return null;
       },
+      async topUpDevicePrekeys() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -562,6 +583,9 @@ describe('device bundle route', () => {
         return null;
       },
       async getDevicePrekeyStatus() {
+        return null;
+      },
+      async topUpDevicePrekeys() {
         return null;
       },
       async revokeDevice() {
@@ -606,6 +630,9 @@ describe('device bundle route', () => {
         return null;
       },
       async getDevicePrekeyStatus() {
+        return null;
+      },
+      async topUpDevicePrekeys() {
         return null;
       },
       async revokeDevice(input) {
@@ -659,6 +686,9 @@ describe('device bundle route', () => {
       async getDevicePrekeyStatus() {
         return null;
       },
+      async topUpDevicePrekeys() {
+        return null;
+      },
       async revokeDevice() {
         throw new Error('should not revoke another account device');
       },
@@ -709,6 +739,9 @@ describe('device bundle route', () => {
         return null;
       },
       async getDevicePrekeyStatus() {
+        return null;
+      },
+      async topUpDevicePrekeys() {
         return null;
       },
       async revokeDevice() {
@@ -775,6 +808,9 @@ describe('device bundle route', () => {
           needsTopUp: true,
         };
       },
+      async topUpDevicePrekeys() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -796,6 +832,61 @@ describe('device bundle route', () => {
     assert.equal(response.json().oneTimePrekeyCount, 8);
     assert.equal(response.json().needsTopUp, true);
     assert.doesNotMatch(JSON.stringify(response.json()), /identity-key|signed-prekey|one-time-prekey/i);
+  });
+
+  it('tops up current-device prekeys for the authenticated session only', async () => {
+    const topUps: string[][] = [];
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        throw new Error('should not check publication status during prekey top-up');
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish during prekey top-up');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle() {
+        return null;
+      },
+      async getDevicePrekeyStatus() {
+        return null;
+      },
+      async topUpDevicePrekeys(input) {
+        topUps.push(input.oneTimePrekeys);
+        return {
+          accountId: input.accountId,
+          deviceId: input.deviceId,
+          oneTimePrekeyCount: input.oneTimePrekeys.length,
+          lowWatermark: 20,
+          recommendedCount: 100,
+          needsTopUp: input.oneTimePrekeys.length < 20,
+        };
+      },
+      async revokeDevice() {
+        return null;
+      },
+      async listAccountDevices() {
+        return [];
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/devices/prekeys/top-up',
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+      payload: {
+        oneTimePrekeys: ['top-up-prekey-material-0001', 'top-up-prekey-material-0002'],
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().oneTimePrekeyCount, 2);
+    assert.deepEqual(topUps, [['top-up-prekey-material-0001', 'top-up-prekey-material-0002']]);
+    assert.doesNotMatch(JSON.stringify(response.json()), /top-up-prekey-material/i);
   });
 });
 

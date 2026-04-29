@@ -18,6 +18,7 @@ import type {
 import { remoteIdentityTrust } from '../../data/mockData';
 
 const publishedBundles = new Map<string, PublishDeviceBundleRequest>();
+const prekeyInventoryCounts = new Map<string, number>();
 
 function bundleKey(accountId: string, deviceId: string) {
   return `${accountId}:${deviceId}`;
@@ -81,6 +82,7 @@ export const mockCipherChatApiClient = {
 
   async publishDeviceBundle(input: PublishDeviceBundleRequest) {
     publishedBundles.set(bundleKey(input.accountId, input.deviceId), input);
+    prekeyInventoryCounts.set(bundleKey(input.accountId, input.deviceId), input.oneTimePrekeys?.length ?? 0);
 
     return {
       accepted: true,
@@ -122,6 +124,9 @@ export const mockCipherChatApiClient = {
 
   async claimDevicePrekeyBundle(input: { accountId: string; deviceId: string }): Promise<PublicDeviceBundleResponse> {
     const bundle = await this.getPublicDeviceBundle(input);
+    const key = bundleKey(input.accountId, input.deviceId);
+    const currentCount = prekeyInventoryCounts.get(key) ?? bundle.oneTimePrekeys.length;
+    prekeyInventoryCounts.set(key, Math.max(0, currentCount - 1));
 
     return {
       ...bundle,
@@ -151,6 +156,7 @@ export const mockCipherChatApiClient = {
 
   async revokeDevice(input: { accountId: string; deviceId: string }): Promise<DeviceRevocationResponse> {
     publishedBundles.delete(bundleKey(input.accountId, input.deviceId));
+    prekeyInventoryCounts.delete(bundleKey(input.accountId, input.deviceId));
 
     return {
       accountId: input.accountId,
@@ -178,13 +184,35 @@ export const mockCipherChatApiClient = {
   },
 
   async getDevicePrekeyStatus(input: { accountId: string; deviceId: string }): Promise<DevicePrekeyStatus> {
+    const count = prekeyInventoryCounts.get(bundleKey(input.accountId, input.deviceId)) ?? 100;
+
     return {
       accountId: input.accountId,
       deviceId: input.deviceId,
-      oneTimePrekeyCount: 100,
+      oneTimePrekeyCount: count,
       lowWatermark: 20,
       recommendedCount: 100,
-      needsTopUp: false,
+      needsTopUp: count < 20,
+    };
+  },
+
+  async topUpDevicePrekeys(input: {
+    accountId: string;
+    deviceId: string;
+    oneTimePrekeys: string[];
+  }): Promise<DevicePrekeyStatus> {
+    const key = bundleKey(input.accountId, input.deviceId);
+    const currentCount = prekeyInventoryCounts.get(key) ?? 0;
+    const nextCount = currentCount + input.oneTimePrekeys.length;
+    prekeyInventoryCounts.set(key, nextCount);
+
+    return {
+      accountId: input.accountId,
+      deviceId: input.deviceId,
+      oneTimePrekeyCount: nextCount,
+      lowWatermark: 20,
+      recommendedCount: 100,
+      needsTopUp: nextCount < 20,
     };
   },
 

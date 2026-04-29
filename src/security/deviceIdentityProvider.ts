@@ -32,6 +32,7 @@ export type DeviceIdentityProvider = {
   rotateIdentity(): Promise<LocalDeviceIdentity>;
   clearIdentity(): Promise<void>;
   createDeviceBundle(identity: LocalDeviceIdentity): PublishDeviceBundleRequest;
+  generateOneTimePrekeys(count: number): Promise<string[]>;
   signDeviceChallenge(input: {
     identity: LocalDeviceIdentity;
     challenge: string;
@@ -185,6 +186,10 @@ export const prototypeDeviceIdentityProvider: DeviceIdentityProvider = {
       signedPrekeySignature: identity.signedPrekeySignature,
       oneTimePrekeys: identity.oneTimePrekeys,
     };
+  },
+
+  async generateOneTimePrekeys(count) {
+    return Array.from({ length: count }, () => randomToken('prototype_one_time_prekey'));
   },
 
   async signDeviceChallenge({ challenge }) {

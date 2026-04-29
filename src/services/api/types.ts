@@ -110,6 +110,10 @@ export type DevicePrekeyStatus = {
   needsTopUp: boolean;
 };
 
+export type DevicePrekeyTopUpRequest = {
+  oneTimePrekeys: string[];
+};
+
 export type EncryptedEnvelopeRequest = {
   messageId: string;
   conversationId: string;

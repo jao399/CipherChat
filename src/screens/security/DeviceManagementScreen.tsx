@@ -21,9 +21,11 @@ export function DeviceManagementScreen({ navigation }: Props) {
     refreshDevicePrekeyStatus,
     revokeAccountDevice,
     status,
+    topUpCurrentDevicePrekeys,
   } = useBackend();
   const [loading, setLoading] = useState(false);
   const [revokingDeviceId, setRevokingDeviceId] = useState<string | null>(null);
+  const [toppingUpPrekeys, setToppingUpPrekeys] = useState(false);
 
   const loadDevices = async () => {
     setLoading(true);
@@ -77,6 +79,25 @@ export function DeviceManagementScreen({ navigation }: Props) {
     );
   };
 
+  const handleTopUpPrekeys = async () => {
+    setToppingUpPrekeys(true);
+
+    try {
+      const status = await topUpCurrentDevicePrekeys();
+      Alert.alert(
+        'Prekeys topped up',
+        `This device now has ${status.oneTimePrekeyCount} public one-time prekeys available for secure session setup.`,
+      );
+    } catch (error) {
+      Alert.alert(
+        'Prekey top-up failed',
+        error instanceof Error ? error.message : 'CipherChat could not publish new public one-time prekeys.',
+      );
+    } finally {
+      setToppingUpPrekeys(false);
+    }
+  };
+
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
       <View style={styles.topBar}>
@@ -114,25 +135,38 @@ export function DeviceManagementScreen({ navigation }: Props) {
       </DarkCard>
 
       <DarkCard style={styles.prekeyCard}>
-        <View style={styles.summaryIcon}>
-          <Ionicons
-            name={devicePrekeyStatus?.needsTopUp ? 'warning' : 'key'}
-            size={24}
-            color={devicePrekeyStatus?.needsTopUp ? colors.primaryBright : colors.security}
-          />
+        <View style={styles.prekeySummaryRow}>
+          <View style={styles.summaryIcon}>
+            <Ionicons
+              name={devicePrekeyStatus?.needsTopUp ? 'warning' : 'key'}
+              size={24}
+              color={devicePrekeyStatus?.needsTopUp ? colors.primaryBright : colors.security}
+            />
+          </View>
+          <View style={styles.summaryText}>
+            <Text style={styles.summaryTitle}>
+              {devicePrekeyStatus ? `${devicePrekeyStatus.oneTimePrekeyCount} one-time prekeys` : 'Prekey inventory unavailable'}
+            </Text>
+            <Text style={styles.summarySubtitle}>
+              {devicePrekeyStatus
+                ? devicePrekeyStatus.needsTopUp
+                  ? `Below low watermark ${devicePrekeyStatus.lowWatermark}; publish new public prekeys from this device.`
+                  : `Healthy. Recommended inventory is ${devicePrekeyStatus.recommendedCount}.`
+                : 'Refresh after starting a verified session.'}
+            </Text>
+          </View>
         </View>
-        <View style={styles.summaryText}>
-          <Text style={styles.summaryTitle}>
-            {devicePrekeyStatus ? `${devicePrekeyStatus.oneTimePrekeyCount} one-time prekeys` : 'Prekey inventory unavailable'}
-          </Text>
-          <Text style={styles.summarySubtitle}>
-            {devicePrekeyStatus
-              ? devicePrekeyStatus.needsTopUp
-                ? `Below low watermark ${devicePrekeyStatus.lowWatermark}; top-up path is required before production.`
-                : `Healthy. Recommended inventory is ${devicePrekeyStatus.recommendedCount}.`
-              : 'Refresh after starting a verified session.'}
-          </Text>
-        </View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Top up public one-time prekeys"
+          testID="device-management-top-up-prekeys"
+          disabled={toppingUpPrekeys || !devicePrekeyStatus}
+          style={[styles.topUpButton, (toppingUpPrekeys || !devicePrekeyStatus) && styles.topUpButtonDisabled]}
+          onPress={handleTopUpPrekeys}
+        >
+          <Ionicons name={toppingUpPrekeys ? 'sync' : 'cloud-upload'} size={18} color={colors.text} />
+          <Text style={styles.topUpButtonText}>{toppingUpPrekeys ? 'Publishing...' : 'Top Up Prekeys'}</Text>
+        </TouchableOpacity>
       </DarkCard>
 
       {loading ? <LoadingState label="Loading account devices..." /> : null}
@@ -240,10 +274,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   prekeyCard: {
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  prekeySummaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    marginBottom: spacing.lg,
   },
   summaryIcon: {
     width: 48,
@@ -266,6 +303,24 @@ const styles = StyleSheet.create({
   summarySubtitle: {
     ...typography.small,
     color: colors.textSecondary,
+  },
+  topUpButton: {
+    height: 46,
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  topUpButtonDisabled: {
+    opacity: 0.55,
+  },
+  topUpButtonText: {
+    ...typography.small,
+    color: colors.text,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   list: {
     gap: spacing.md,

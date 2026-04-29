@@ -201,6 +201,33 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
     assert.equal(prekeyStatus.json().needsTopUp, true);
     assert.doesNotMatch(JSON.stringify(prekeyStatus.json()), /identity-key|signed-prekey|one-time-prekey/i);
 
+    const topUpPrekeys = await app.inject({
+      method: 'POST',
+      url: '/v1/devices/prekeys/top-up',
+      headers: {
+        authorization: `Bearer ${recipientToken}`,
+      },
+      payload: {
+        oneTimePrekeys: ['recipient-top-up-prekey-0001', 'recipient-top-up-prekey-0002'],
+      },
+    });
+
+    assert.equal(topUpPrekeys.statusCode, 200);
+    assert.equal(topUpPrekeys.json().oneTimePrekeyCount, 2);
+    assert.equal(topUpPrekeys.json().needsTopUp, true);
+    assert.doesNotMatch(JSON.stringify(topUpPrekeys.json()), /recipient-top-up-prekey/i);
+
+    const toppedUpClaim = await app.inject({
+      method: 'POST',
+      url: `/v1/devices/bundles/${recipientAccountId}/${recipientDeviceId}/claim`,
+      headers: {
+        authorization: `Bearer ${senderToken}`,
+      },
+    });
+
+    assert.equal(toppedUpClaim.statusCode, 200);
+    assert.deepEqual(toppedUpClaim.json().oneTimePrekeys, ['recipient-top-up-prekey-0001']);
+
     const sendResponse = await app.inject({
       method: 'POST',
       url: '/v1/messages/envelopes/fanout',
@@ -332,6 +359,7 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
             'device_bundle.first_device_published',
             'device_session.created',
             'device_bundle.one_time_prekey_claimed',
+            'device_bundle.one_time_prekeys_topped_up',
             'encrypted_envelopes.fanout_queued',
             'encrypted_envelopes.delivered',
             'encrypted_envelope.acknowledged',
@@ -343,8 +371,8 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
 
     assert.equal(storedEnvelope?.deliveryState, 'ACKNOWLEDGED');
     assert.equal(storedEnvelope?.bodyCiphertext, 'encrypted-body-only');
-    assert.ok(auditEvents.length >= 8);
-    assert.doesNotMatch(JSON.stringify(auditEvents), /identity-key|signed-prekey|one-time-prekey/i);
+    assert.ok(auditEvents.length >= 10);
+    assert.doesNotMatch(JSON.stringify(auditEvents), /identity-key|signed-prekey|recipient-top-up-prekey/i);
   });
 
   it('cleans expired metadata without touching active sessions or valid queued envelopes', async () => {
