@@ -218,7 +218,8 @@ export function SettingsScreen() {
       <View style={styles.group}>
         <SettingRow icon="person" title="Account" subtitle="Profile, email, and recovery" testID="settings-account" />
         <SettingRow icon="shield-checkmark" title="Privacy Dashboard" subtitle="97% privacy score" testID="settings-privacy-row" onPress={() => navigation.navigate('PrivacyDashboard')} />
-        <SettingRow icon="phone-portrait" title="Device Verification" subtitle="Manage trusted devices" testID="settings-device-verification" onPress={() => navigation.navigate('DeviceVerification')} />
+        <SettingRow icon="phone-portrait" title="Device Management" subtitle="Review and revoke account devices" testID="settings-device-management" onPress={() => navigation.navigate('DeviceManagement')} />
+        <SettingRow icon="qr-code" title="Device Verification" subtitle="Verify this device safety number" testID="settings-device-verification" onPress={() => navigation.navigate('DeviceVerification')} />
       </View>
 
       <SectionHeader title="Privacy & Security" />

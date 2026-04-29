@@ -30,6 +30,7 @@ import { getStoredApiSession, setStoredApiSession, clearStoredApiSession, type S
 import { mockCipherChatApiClient } from './mockCipherChatApiClient';
 import type {
   AccountDiscoveryResult,
+  AccountDevice,
   BackendStatus,
   InboundEnvelopeSyncStatus,
   PublicDeviceBundleResponse,
@@ -61,7 +62,9 @@ type BackendContextValue = {
   rotateDeviceIdentity(): Promise<void>;
   remoteTrustRecords: RemoteIdentityTrustRecord[];
   contactDiscoveryResults: AccountDiscoveryResult[];
+  accountDevices: AccountDevice[];
   discoverContacts(query: string): Promise<AccountDiscoveryResult[]>;
+  refreshAccountDevices(): Promise<AccountDevice[]>;
   addDiscoveredContact(accountId: string, deviceId: string): Promise<void>;
   sendSecureMessage(input: {
     conversationId: string;
@@ -75,6 +78,7 @@ type BackendContextValue = {
   pollInboundEnvelopes(): Promise<InboundEnvelopeSyncStatus>;
   syncRemoteIdentity(recordId: string): Promise<void>;
   trustRemoteIdentity(recordId: string): Promise<void>;
+  revokeAccountDevice(deviceId: string): Promise<void>;
   revokeCurrentDevice(): Promise<void>;
   clearSession(): Promise<void>;
 };
@@ -118,6 +122,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [trustStatus, setTrustStatus] = useState<IdentityTrustStatus | null>(null);
   const [remoteTrustRecords, setRemoteTrustRecords] = useState<RemoteIdentityTrustRecord[]>(remoteIdentityTrust);
   const [contactDiscoveryResults, setContactDiscoveryResults] = useState<AccountDiscoveryResult[]>([]);
+  const [accountDevices, setAccountDevices] = useState<AccountDevice[]>([]);
   const [outboundQueue, setOutboundQueue] = useState<OutboundQueueItem[]>([]);
   const [inboundSyncState, setInboundSyncState] = useState<InboundEnvelopeSyncState>(emptyInboundEnvelopeSyncState);
   const [inboundEnvelopeStatus, setInboundEnvelopeStatus] = useState<InboundEnvelopeSyncStatus>(
@@ -368,6 +373,29 @@ export function BackendProvider({ children }: PropsWithChildren) {
     },
     [liveClient, mode, session?.token],
   );
+
+  const refreshAccountDevices = useCallback(async () => {
+    if (!session) {
+      setAccountDevices([]);
+      throw new Error('Start a verified device session before loading account devices.');
+    }
+
+    const response =
+      mode === 'mock'
+        ? await mockCipherChatApiClient.listAccountDevices({
+            accountId: session.accountId,
+            deviceId: session.deviceId,
+          })
+        : await liveClient.listAccountDevices(session.token);
+
+    setAccountDevices(response.devices);
+    setSummary(
+      response.devices.length > 0
+        ? `Loaded ${response.devices.length} account device${response.devices.length === 1 ? '' : 's'}.`
+        : 'No account devices were returned.',
+    );
+    return response.devices;
+  }, [liveClient, mode, session]);
 
   const addDiscoveredContact = useCallback(
     async (accountId: string, deviceId: string) => {
@@ -706,6 +734,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
 
     await clearStoredApiSession();
     setSession(null);
+    setAccountDevices([]);
   }, [liveClient, mode, session?.token]);
 
   const revokeCurrentDevice = useCallback(async () => {
@@ -728,8 +757,50 @@ export function BackendProvider({ children }: PropsWithChildren) {
 
     await clearStoredApiSession();
     setSession(null);
+    setAccountDevices([]);
     setSummary('This device was revoked. Verify again before sending or receiving encrypted envelopes.');
   }, [liveClient, mode, session]);
+
+  const revokeAccountDevice = useCallback(
+    async (deviceId: string) => {
+      if (!session) {
+        throw new Error('Start a verified device session before revoking account devices.');
+      }
+
+      if (mode === 'mock') {
+        await mockCipherChatApiClient.revokeDevice({
+          accountId: session.accountId,
+          deviceId,
+        });
+      } else {
+        await liveClient.revokeDevice({
+          accountId: session.accountId,
+          deviceId,
+          token: session.token,
+        });
+      }
+
+      if (deviceId === session.deviceId) {
+        await clearStoredApiSession();
+        setSession(null);
+        setAccountDevices([]);
+      } else {
+        setAccountDevices((current) =>
+          current.map((device) =>
+            device.deviceId === deviceId
+              ? {
+                  ...device,
+                  revokedAt: new Date().toISOString(),
+                }
+              : device,
+          ),
+        );
+      }
+
+      setSummary('Account device was revoked.');
+    },
+    [liveClient, mode, session],
+  );
 
   const value = useMemo<BackendContextValue>(
     () => ({
@@ -752,6 +823,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       initializing,
       remoteTrustRecords,
       contactDiscoveryResults,
+      accountDevices,
       outboundQueue,
       inboundEnvelopeStatus,
       setMode: persistMode,
@@ -761,16 +833,18 @@ export function BackendProvider({ children }: PropsWithChildren) {
       trustCurrentDeviceIdentity,
       rotateDeviceIdentity,
       discoverContacts,
+      refreshAccountDevices,
       addDiscoveredContact,
       sendSecureMessage,
       retryOutboundMessage,
       pollInboundEnvelopes,
       syncRemoteIdentity,
       trustRemoteIdentity,
+      revokeAccountDevice,
       revokeCurrentDevice,
       clearSession,
     }),
-    [addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, messageCryptoReadiness, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshStatus, remoteTrustRecords, retryOutboundMessage, revokeCurrentDevice, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
+    [accountDevices, addDiscoveredContact, baseUrl, bootstrapPrototypeSession, clearSession, contactDiscoveryResults, discoverContacts, identity?.fingerprint, identity?.provider, inboundEnvelopeStatus, initializing, messageCryptoReadiness, mode, outboundQueue, persistBaseUrl, persistMode, pollInboundEnvelopes, ready, refreshAccountDevices, refreshStatus, remoteTrustRecords, retryOutboundMessage, revokeAccountDevice, revokeCurrentDevice, rotateDeviceIdentity, sendSecureMessage, session, summary, syncRemoteIdentity, syncingRemoteTrust, trustCurrentDeviceIdentity, trustRemoteIdentity, trustStatus?.record.safetyNumberBlocks, trustStatus?.state],
   );
 
   return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;

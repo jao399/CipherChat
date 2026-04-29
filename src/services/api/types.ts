@@ -85,6 +85,22 @@ export type DeviceRevocationResponse = {
   revokedAt: string;
 };
 
+export type AccountDevice = {
+  accountId: string;
+  deviceId: string;
+  deviceName: string;
+  trustState: string;
+  lastSeenAt?: string;
+  revokedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  isCurrentDevice: boolean;
+};
+
+export type AccountDeviceListResponse = {
+  devices: AccountDevice[];
+};
+
 export type EncryptedEnvelopeRequest = {
   messageId: string;
   conversationId: string;

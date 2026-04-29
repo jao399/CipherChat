@@ -47,6 +47,18 @@ export type RevokedDevice = {
   revokedAt: string;
 };
 
+export type AccountDevice = {
+  accountId: string;
+  deviceId: string;
+  deviceName: string;
+  trustState: string;
+  lastSeenAt?: string;
+  revokedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  isCurrentDevice: boolean;
+};
+
 export type CreateAccountInput = {
   id?: string;
   displayName: string;
@@ -210,6 +222,7 @@ export type DeviceRepository = {
   publishDeviceBundle(input: PublishDeviceBundleInput): Promise<PublishedDeviceBundle>;
   getDeviceBundle(accountId: string, deviceId: string): Promise<PublicDeviceBundle | null>;
   revokeDevice(input: RevokeDeviceInput): Promise<RevokedDevice | null>;
+  listAccountDevices(input: { accountId: string; currentDeviceId: string }): Promise<AccountDevice[]>;
 };
 
 export type MessageRepository = {

@@ -212,6 +212,37 @@ export class PrismaDeviceRepository implements DeviceRepository {
       };
     });
   }
+
+  async listAccountDevices(input: { accountId: string; currentDeviceId: string }) {
+    const devices = await this.prisma.device.findMany({
+      where: {
+        accountId: input.accountId,
+      },
+      orderBy: [{ revokedAt: 'asc' }, { updatedAt: 'desc' }],
+      select: {
+        id: true,
+        accountId: true,
+        displayName: true,
+        trustState: true,
+        lastSeenAt: true,
+        revokedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return devices.map((device) => ({
+      accountId: device.accountId,
+      deviceId: device.id,
+      deviceName: device.displayName,
+      trustState: device.trustState,
+      lastSeenAt: device.lastSeenAt?.toISOString(),
+      revokedAt: device.revokedAt?.toISOString(),
+      createdAt: device.createdAt.toISOString(),
+      updatedAt: device.updatedAt.toISOString(),
+      isCurrentDevice: device.id === input.currentDeviceId,
+    }));
+  }
 }
 
 function selectDeviceBundleAuditEvent(accountDeviceCount: number, deviceKnown: boolean, identityChanged: boolean) {

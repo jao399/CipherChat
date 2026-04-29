@@ -9,6 +9,7 @@ import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
 import { ConversationScreen } from '../screens/main/ConversationScreen';
 import { AboutScreen } from '../screens/settings/AboutScreen';
 import { DeviceVerificationScreen } from '../screens/security/DeviceVerificationScreen';
+import { DeviceManagementScreen } from '../screens/security/DeviceManagementScreen';
 import { PrivacyDashboardScreen } from '../screens/security/PrivacyDashboardScreen';
 import { SecureFileTransferScreen } from '../screens/security/SecureFileTransferScreen';
 import { colors } from '../theme';
@@ -48,6 +49,7 @@ export function AppNavigator() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="Conversation" component={ConversationScreen} />
         <Stack.Screen name="DeviceVerification" component={DeviceVerificationScreen} />
+        <Stack.Screen name="DeviceManagement" component={DeviceManagementScreen} />
         <Stack.Screen name="SecureFileTransfer" component={SecureFileTransferScreen} />
         <Stack.Screen name="PrivacyDashboard" component={PrivacyDashboardScreen} />
         <Stack.Screen name="About" component={AboutScreen} />

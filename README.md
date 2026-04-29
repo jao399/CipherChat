@@ -777,11 +777,21 @@ CipherChat now exposes device revocation in the Expo app:
 
 More detail: `docs/architecture/phase-55-mobile-device-revocation-ux.md`.
 
+### Phase 56 - Account Device Management
+
+CipherChat now has an authenticated account-device listing path:
+
+- `GET /v1/devices` returns device metadata for the authenticated account only.
+- The endpoint marks the current device and includes revocation status without returning public keys, prekeys, tokens, push tokens, or message metadata.
+- `DeviceManagementScreen` lets users review active/revoked devices and revoke account devices from the app.
+
+More detail: `docs/architecture/phase-56-account-device-management.md`.
+
 ## Next Steps
 
-1. Add a full device-management screen for all account devices.
-2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
-3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
-4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
-5. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-6. Add key transparency or auditable key-history review before production contact trust.
+1. Build and install an Expo Android development client, then record SQLCipher verification evidence.
+2. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
+3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
+4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
+5. Add key transparency or auditable key-history review before production contact trust.
+6. Add account-recovery warnings for final-device revocation.

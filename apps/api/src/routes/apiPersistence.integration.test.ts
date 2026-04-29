@@ -244,6 +244,19 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
     assert.equal(ackResponse.statusCode, 200);
     assert.equal(ackResponse.json().deliveryState, 'ACKNOWLEDGED');
 
+    const deviceListResponse = await app.inject({
+      method: 'GET',
+      url: '/v1/devices',
+      headers: {
+        authorization: `Bearer ${recipientToken}`,
+      },
+    });
+
+    assert.equal(deviceListResponse.statusCode, 200);
+    assert.equal(deviceListResponse.json().devices.length, 1);
+    assert.equal(deviceListResponse.json().devices[0].deviceId, recipientDeviceId);
+    assert.equal(deviceListResponse.json().devices[0].isCurrentDevice, true);
+
     const revokeDeviceResponse = await app.inject({
       method: 'DELETE',
       url: `/v1/devices/${recipientAccountId}/${recipientDeviceId}`,

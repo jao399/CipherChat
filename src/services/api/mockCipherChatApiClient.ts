@@ -1,5 +1,6 @@
 import type {
   AccountDiscoveryResponse,
+  AccountDeviceListResponse,
   AccountResponse,
   ApiReadiness,
   DeviceChallengeResponse,
@@ -146,6 +147,23 @@ export const mockCipherChatApiClient = {
       deviceId: input.deviceId,
       revoked: true,
       revokedAt: new Date().toISOString(),
+    };
+  },
+
+  async listAccountDevices(input: { accountId: string; deviceId: string }): Promise<AccountDeviceListResponse> {
+    return {
+      devices: [
+        {
+          accountId: input.accountId,
+          deviceId: input.deviceId,
+          deviceName: 'Prototype Device',
+          trustState: 'VERIFIED',
+          lastSeenAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isCurrentDevice: true,
+        },
+      ],
     };
   },
 

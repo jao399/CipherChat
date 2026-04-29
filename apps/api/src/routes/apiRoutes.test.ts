@@ -234,6 +234,9 @@ describe('device bundle route', () => {
       async revokeDevice() {
         return null;
       },
+      async listAccountDevices() {
+        return [];
+      },
     };
     const app = await buildTestApi({ repositories: { devices } });
 
@@ -267,6 +270,9 @@ describe('device bundle route', () => {
       },
       async revokeDevice() {
         return null;
+      },
+      async listAccountDevices() {
+        return [];
       },
     };
     const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
@@ -308,6 +314,9 @@ describe('device bundle route', () => {
       async revokeDevice() {
         return null;
       },
+      async listAccountDevices() {
+        return [];
+      },
     };
     const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
 
@@ -346,6 +355,9 @@ describe('device bundle route', () => {
       },
       async revokeDevice() {
         return null;
+      },
+      async listAccountDevices() {
+        return [];
       },
     };
     const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
@@ -390,6 +402,9 @@ describe('device bundle route', () => {
       async revokeDevice() {
         return null;
       },
+      async listAccountDevices() {
+        return [];
+      },
     };
     const app = await buildTestApi({
       repositories: {
@@ -425,6 +440,9 @@ describe('device bundle route', () => {
       async revokeDevice() {
         return null;
       },
+      async listAccountDevices() {
+        return [];
+      },
     };
     const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
 
@@ -450,6 +468,9 @@ describe('device bundle route', () => {
       },
       async revokeDevice() {
         return null;
+      },
+      async listAccountDevices() {
+        return [];
       },
     };
     const app = await buildTestApi({
@@ -492,6 +513,9 @@ describe('device bundle route', () => {
           revokedAt: new Date(0).toISOString(),
         };
       },
+      async listAccountDevices() {
+        return [];
+      },
     };
     const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
 
@@ -528,6 +552,9 @@ describe('device bundle route', () => {
       async revokeDevice() {
         throw new Error('should not revoke another account device');
       },
+      async listAccountDevices() {
+        return [];
+      },
     };
     const app = await buildTestApi({
       repositories: {
@@ -554,6 +581,58 @@ describe('device bundle route', () => {
 
     assert.equal(response.statusCode, 403);
     assert.equal(response.json().error, 'device_revoke_forbidden');
+  });
+
+  it('lists account devices for the authenticated session account', async () => {
+    const listRequests: Array<{ accountId: string; currentDeviceId: string }> = [];
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        throw new Error('should not check publication status during device listing');
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish during device listing');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+      async revokeDevice() {
+        return null;
+      },
+      async listAccountDevices(input) {
+        listRequests.push(input);
+        return [
+          {
+            accountId: input.accountId,
+            deviceId: input.currentDeviceId,
+            deviceName: 'Pixel Test Device',
+            trustState: 'UNVERIFIED',
+            lastSeenAt: new Date(0).toISOString(),
+            createdAt: new Date(0).toISOString(),
+            updatedAt: new Date(0).toISOString(),
+            isCurrentDevice: true,
+          },
+        ];
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/devices',
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().devices.length, 1);
+    assert.equal(response.json().devices[0].isCurrentDevice, true);
+    assert.deepEqual(listRequests, [
+      {
+        accountId: body.accountId,
+        currentDeviceId: body.deviceId,
+      },
+    ]);
   });
 });
 

@@ -55,6 +55,7 @@ These criteria are production blockers. CipherChat must not process production u
 - PostgreSQL and Redis credentials must live outside source control and CI logs.
 - Device bundle publication and identity-key changes must create metadata-only audit events.
 - Device revocation must require same-account device authentication and create metadata-only audit events.
+- Account device listing must be scoped to the authenticated account and must not return key material, session tokens, push tokens, or message metadata.
 
 ## Privacy and abuse gates
 

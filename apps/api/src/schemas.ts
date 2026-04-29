@@ -203,6 +203,33 @@ export const deviceRevokedResponseSchema = {
   },
 } as const;
 
+export const accountDeviceListResponseSchema = {
+  type: 'object',
+  required: ['devices'],
+  additionalProperties: false,
+  properties: {
+    devices: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['accountId', 'deviceId', 'deviceName', 'trustState', 'createdAt', 'updatedAt', 'isCurrentDevice'],
+        additionalProperties: false,
+        properties: {
+          accountId: { type: 'string' },
+          deviceId: { type: 'string' },
+          deviceName: { type: 'string' },
+          trustState: { type: 'string' },
+          lastSeenAt: { type: 'string' },
+          revokedAt: { type: 'string' },
+          createdAt: { type: 'string' },
+          updatedAt: { type: 'string' },
+          isCurrentDevice: { type: 'boolean' },
+        },
+      },
+    },
+  },
+} as const;
+
 export const deviceSessionResponseSchema = {
   type: 'object',
   required: ['sessionId', 'accountId', 'deviceId', 'token', 'expiresAt'],

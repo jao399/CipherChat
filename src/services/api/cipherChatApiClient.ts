@@ -1,6 +1,7 @@
 import type {
   AccountResponse,
   AccountDiscoveryResponse,
+  AccountDeviceListResponse,
   ApiReadiness,
   DeviceChallengeResponse,
   DeviceRevocationResponse,
@@ -102,6 +103,10 @@ export class CipherChatApiClient {
       { method: 'DELETE' },
       { token: input.token },
     );
+  }
+
+  async listAccountDevices(token: string) {
+    return this.request<AccountDeviceListResponse>('/v1/devices', undefined, { token });
   }
 
   async sendEnvelope(input: EncryptedEnvelopeRequest, token: string) {

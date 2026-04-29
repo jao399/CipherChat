@@ -4,6 +4,7 @@ import { requireDeviceSession } from '../auth/deviceAuth.js';
 import type { DeviceRepository, SessionRepository } from '../repositories/types.js';
 import {
   acceptedResponseSchema,
+  accountDeviceListResponseSchema,
   deviceBundleBodySchema,
   deviceRevokedResponseSchema,
   errorResponseSchema,
@@ -199,6 +200,40 @@ export async function registerDeviceRoutes(
       }
 
       return reply.send(revoked);
+    },
+  );
+
+  app.get(
+    '/v1/devices',
+    {
+      schema: {
+        response: {
+          200: accountDeviceListResponseSchema,
+          401: errorResponseSchema,
+          503: errorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const session = await requireDeviceSession(request, reply, sessions);
+
+      if (!session) {
+        return reply;
+      }
+
+      if (!repository) {
+        return reply.code(503).send({
+          error: 'database_unavailable',
+          message: 'Device listing requires DATABASE_URL and a reachable database.',
+        });
+      }
+
+      const devices = await repository.listAccountDevices({
+        accountId: session.accountId,
+        currentDeviceId: session.deviceId,
+      });
+
+      return reply.send({ devices });
     },
   );
 }
