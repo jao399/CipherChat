@@ -60,3 +60,8 @@ export {
   type MessageCryptoProviderId,
   type MessageCryptoReadiness,
 } from './messageCryptoPolicy';
+export {
+  assertRecipientTrustedForSend,
+  evaluateRecipientTrustForSend,
+  type RecipientTrustDecision,
+} from './recipientTrustPolicy';

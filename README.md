@@ -721,6 +721,16 @@ This does not mark CipherChat production-ready. Real Signal/libsignal crypto, ML
 
 More detail: `docs/architecture/phase-50-external-security-review-audit-readiness.md`.
 
+### Phase 51 - Key-Change Send Blocking
+
+CipherChat now has a centralized recipient trust send policy:
+
+- `src/security/recipientTrustPolicy.ts` blocks missing, new, and changed recipient identities.
+- First sends and queued-message retries both re-check the current trust record.
+- A queued retry cannot bypass a changed safety-number warning.
+
+More detail: `docs/architecture/phase-51-key-change-send-blocking.md`.
+
 ## Next Steps
 
 1. Build and install an Expo Android development client, then record SQLCipher verification evidence.

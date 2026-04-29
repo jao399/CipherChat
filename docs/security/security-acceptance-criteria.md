@@ -73,6 +73,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Production config gate output: `npm run verify:production-config`
 - Startup health gate output: `npm run verify:startup-health`
 - Audit readiness gate output: `npm run verify:audit-readiness`
+- Key-change send blocking test output: `npm run app:test`
 - Passing CI output for `npm run validate:ci`
 - Android development-client SQLCipher verification result
 - iOS development-client SQLCipher verification result

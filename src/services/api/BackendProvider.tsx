@@ -17,6 +17,7 @@ import {
   readRemoteTrustRecords,
   assertCanPrepareOutboundFanout,
   assertCanProcessInboundEnvelopes,
+  assertRecipientTrustedForSend,
   canSendWithMessageCrypto,
   getMessageCryptoReadiness,
   upsertRemoteTrustRecordFromBundle,
@@ -419,14 +420,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       }
 
       const recipient = remoteTrustRecords.find((record) => record.id === input.recipientRecordId);
-
-      if (!recipient) {
-        throw new Error('No recipient identity key is available for this conversation.');
-      }
-
-      if (recipient.trustState !== 'trusted') {
-        throw new Error('Verify this contact safety number before sending encrypted messages.');
-      }
+      assertRecipientTrustedForSend(recipient);
 
       const fanout = await messageEncryptionProvider.prepareOutboundFanout({
         conversationId: input.conversationId,
@@ -528,6 +522,9 @@ export function BackendProvider({ children }: PropsWithChildren) {
         throw new Error('Start a verified device session before retrying.');
       }
 
+      const recipient = remoteTrustRecords.find((record) => record.id === item.recipientRecordId);
+      assertRecipientTrustedForSend(recipient);
+
       let nextQueue = await updateOutboundQueueItem(outboundQueue, item.id, (current) => ({
         ...current,
         state: 'sending',
@@ -568,7 +565,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       );
       return updated;
     },
-    [bootstrapPrototypeSession, liveClient, messageCryptoReadiness, mode, outboundQueue, session],
+    [bootstrapPrototypeSession, liveClient, messageCryptoReadiness, mode, outboundQueue, remoteTrustRecords, session],
   );
 
   const pollInboundEnvelopes = useCallback(async () => {
