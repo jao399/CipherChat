@@ -24,6 +24,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Message encryption provider selection is explicit and test-covered.
 - No custom message cryptography is introduced.
 - One-to-one messaging uses a reviewed Signal/X3DH + Double Ratchet implementation.
+- One-time prekeys are claimed through a transactional consume-on-read path.
 - Group messaging uses MLS or a reviewed MLS implementation strategy.
 - Key verification UX handles new, trusted, changed, and revoked identities.
 - Key rotation behavior is documented and tested.

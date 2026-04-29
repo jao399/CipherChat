@@ -75,6 +75,14 @@ export class CipherChatApiClient {
     );
   }
 
+  async claimDevicePrekeyBundle(input: { accountId: string; deviceId: string; token: string }) {
+    return this.request<PublicDeviceBundleResponse>(
+      `/v1/devices/bundles/${encodeURIComponent(input.accountId)}/${encodeURIComponent(input.deviceId)}/claim`,
+      { method: 'POST', body: '{}' },
+      { token: input.token },
+    );
+  }
+
   async createDeviceChallenge(input: { accountId: string; deviceId: string }) {
     return this.request<DeviceChallengeResponse>('/v1/auth/device-challenges', {
       method: 'POST',

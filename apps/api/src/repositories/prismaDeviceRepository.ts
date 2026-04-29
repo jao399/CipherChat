@@ -156,6 +156,61 @@ export class PrismaDeviceRepository implements DeviceRepository {
     };
   }
 
+  async claimDevicePrekeyBundle(accountId: string, deviceId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const device = await tx.device.findFirst({
+        where: {
+          id: deviceId,
+          accountId,
+          revokedAt: null,
+        },
+        include: {
+          account: true,
+          prekeyBundle: true,
+        },
+      });
+
+      if (!device?.prekeyBundle) {
+        return null;
+      }
+
+      const oneTimePrekeys = readOneTimePrekeys(device.prekeyBundle.oneTimePrekeys);
+      const claimedOneTimePrekey = oneTimePrekeys[0];
+
+      if (claimedOneTimePrekey) {
+        await tx.prekeyBundle.update({
+          where: { deviceId },
+          data: {
+            oneTimePrekeys: oneTimePrekeys.slice(1),
+          },
+        });
+
+        await tx.auditEvent.create({
+          data: {
+            accountId,
+            eventType: 'device_bundle.one_time_prekey_claimed',
+            targetId: deviceId,
+            metadata: {
+              remainingOneTimePrekeyCount: oneTimePrekeys.length - 1,
+            },
+          },
+        });
+      }
+
+      return {
+        accountId: device.accountId,
+        accountDisplayName: device.account.displayName,
+        deviceId: device.id,
+        deviceName: device.displayName,
+        identityKey: device.identityKey,
+        signedPrekey: device.prekeyBundle.signedPrekey,
+        signedPrekeySignature: device.prekeyBundle.signedPrekeySignature,
+        oneTimePrekeys: claimedOneTimePrekey ? [claimedOneTimePrekey] : [],
+        publishedAt: device.prekeyBundle.publishedAt.toISOString(),
+      };
+    });
+  }
+
   async revokeDevice(input: { accountId: string; deviceId: string; actorDeviceId: string }) {
     const revokedAt = new Date();
 

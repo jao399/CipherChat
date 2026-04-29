@@ -221,6 +221,7 @@ export type DeviceRepository = {
   getDeviceBundlePublicationStatus(input: { accountId: string; deviceId: string }): Promise<DeviceBundlePublicationStatus>;
   publishDeviceBundle(input: PublishDeviceBundleInput): Promise<PublishedDeviceBundle>;
   getDeviceBundle(accountId: string, deviceId: string): Promise<PublicDeviceBundle | null>;
+  claimDevicePrekeyBundle(accountId: string, deviceId: string): Promise<PublicDeviceBundle | null>;
   revokeDevice(input: RevokeDeviceInput): Promise<RevokedDevice | null>;
   listAccountDevices(input: { accountId: string; currentDeviceId: string }): Promise<AccountDevice[]>;
 };

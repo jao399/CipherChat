@@ -787,11 +787,21 @@ CipherChat now has an authenticated account-device listing path:
 
 More detail: `docs/architecture/phase-56-account-device-management.md`.
 
+### Phase 57 - One-Time Prekey Claiming
+
+CipherChat now has a future-ready one-time prekey consumption path:
+
+- `POST /v1/devices/bundles/:accountId/:deviceId/claim` requires a verified device session.
+- The route returns at most one one-time prekey and removes it transactionally from the stored bundle.
+- Claims record metadata-only audit events with remaining prekey count, not key material or contact graph details.
+
+More detail: `docs/architecture/phase-57-one-time-prekey-claiming.md`.
+
 ## Next Steps
 
-1. Build and install an Expo Android development client, then record SQLCipher verification evidence.
-2. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
-3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
-4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Add key transparency or auditable key-history review before production contact trust.
-6. Add account-recovery warnings for final-device revocation.
+1. Add prekey top-up and low-watermark handling for active devices.
+2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
+3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
+4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
+5. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
+6. Add key transparency or auditable key-history review before production contact trust.

@@ -20,6 +20,7 @@ These criteria are production blockers. CipherChat must not process production u
 - One-to-one messaging must use a reviewed Signal-style X3DH plus Double Ratchet implementation.
 - Group messaging must use MLS or a reviewed MLS implementation strategy before production group E2EE.
 - Device identity keys, signed prekeys, one-time prekeys, and session state must have documented lifecycle rules.
+- One-time prekey claim routes must consume at most one prekey transactionally and avoid returning reusable prekey arrays for production session setup.
 - The server must only receive public key material, ciphertext, opaque headers, delivery metadata, and selected user-disclosed abuse report content.
 - No custom cryptographic primitive may be introduced without a formal design review.
 - One-to-one production sends must use the `signal-x3dh-double-ratchet-v1` provider with a reviewed Signal/libsignal-compatible adapter.

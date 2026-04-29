@@ -119,6 +119,15 @@ export const mockCipherChatApiClient = {
     };
   },
 
+  async claimDevicePrekeyBundle(input: { accountId: string; deviceId: string }): Promise<PublicDeviceBundleResponse> {
+    const bundle = await this.getPublicDeviceBundle(input);
+
+    return {
+      ...bundle,
+      oneTimePrekeys: bundle.oneTimePrekeys.slice(0, 1),
+    };
+  },
+
   async createDeviceChallenge(input: { accountId: string; deviceId: string }): Promise<DeviceChallengeResponse> {
     return {
       challengeId: 'mock_challenge_0001',

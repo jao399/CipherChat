@@ -231,6 +231,9 @@ describe('device bundle route', () => {
       async getDeviceBundle() {
         return null;
       },
+      async claimDevicePrekeyBundle() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -266,6 +269,9 @@ describe('device bundle route', () => {
         throw new Error('should not publish without auth');
       },
       async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle() {
         return null;
       },
       async revokeDevice() {
@@ -311,6 +317,9 @@ describe('device bundle route', () => {
       async getDeviceBundle() {
         return null;
       },
+      async claimDevicePrekeyBundle() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -351,6 +360,9 @@ describe('device bundle route', () => {
         throw new Error('should not publish from a different device');
       },
       async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle() {
         return null;
       },
       async revokeDevice() {
@@ -399,6 +411,9 @@ describe('device bundle route', () => {
           publishedAt: new Date(0).toISOString(),
         };
       },
+      async claimDevicePrekeyBundle() {
+        return null;
+      },
       async revokeDevice() {
         return null;
       },
@@ -426,6 +441,59 @@ describe('device bundle route', () => {
     assert.equal(response.json().oneTimePrekeys.length, 1);
   });
 
+  it('claims a single one-time prekey bundle for authenticated devices', async () => {
+    const claimedBundles: Array<{ accountId: string; deviceId: string }> = [];
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        throw new Error('should not check publication status during prekey claim');
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish during prekey claim');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle(accountId, deviceId) {
+        claimedBundles.push({ accountId, deviceId });
+        return {
+          accountId,
+          accountDisplayName: 'Eleanor',
+          deviceId,
+          deviceName: 'Pixel Test Device',
+          identityKey: body.identityKey,
+          signedPrekey: body.signedPrekey,
+          signedPrekeySignature: body.signedPrekeySignature,
+          oneTimePrekeys: ['one-time-prekey-0001'],
+          publishedAt: new Date(0).toISOString(),
+        };
+      },
+      async revokeDevice() {
+        return null;
+      },
+      async listAccountDevices() {
+        return [];
+      },
+    };
+    const app = await buildTestApi({
+      repositories: {
+        devices,
+        sessions: createSessionRepository(),
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/v1/devices/bundles/${body.accountId}/${body.deviceId}/claim`,
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.json().oneTimePrekeys, ['one-time-prekey-0001']);
+    assert.deepEqual(claimedBundles, [{ accountId: body.accountId, deviceId: body.deviceId }]);
+  });
+
   it('requires a device session before returning public device bundles', async () => {
     const devices: DeviceRepository = {
       async getDeviceBundlePublicationStatus() {
@@ -436,6 +504,9 @@ describe('device bundle route', () => {
       },
       async getDeviceBundle() {
         throw new Error('should not look up without auth');
+      },
+      async claimDevicePrekeyBundle() {
+        return null;
       },
       async revokeDevice() {
         return null;
@@ -464,6 +535,9 @@ describe('device bundle route', () => {
         throw new Error('should not publish during lookup');
       },
       async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle() {
         return null;
       },
       async revokeDevice() {
@@ -502,6 +576,9 @@ describe('device bundle route', () => {
         throw new Error('should not publish during revocation');
       },
       async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle() {
         return null;
       },
       async revokeDevice(input) {
@@ -549,6 +626,9 @@ describe('device bundle route', () => {
       async getDeviceBundle() {
         return null;
       },
+      async claimDevicePrekeyBundle() {
+        return null;
+      },
       async revokeDevice() {
         throw new Error('should not revoke another account device');
       },
@@ -593,6 +673,9 @@ describe('device bundle route', () => {
         throw new Error('should not publish during device listing');
       },
       async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle() {
         return null;
       },
       async revokeDevice() {

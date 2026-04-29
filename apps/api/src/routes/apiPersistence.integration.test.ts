@@ -167,6 +167,27 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
 
     const senderToken = senderSession.json().token;
     const recipientToken = recipientSession.json().token;
+
+    const claimedPrekey = await app.inject({
+      method: 'POST',
+      url: `/v1/devices/bundles/${recipientAccountId}/${recipientDeviceId}/claim`,
+      headers: {
+        authorization: `Bearer ${senderToken}`,
+      },
+    });
+    const exhaustedPrekey = await app.inject({
+      method: 'POST',
+      url: `/v1/devices/bundles/${recipientAccountId}/${recipientDeviceId}/claim`,
+      headers: {
+        authorization: `Bearer ${senderToken}`,
+      },
+    });
+
+    assert.equal(claimedPrekey.statusCode, 200);
+    assert.deepEqual(claimedPrekey.json().oneTimePrekeys, ['recipient-one-time-prekey-material-01']);
+    assert.equal(exhaustedPrekey.statusCode, 200);
+    assert.deepEqual(exhaustedPrekey.json().oneTimePrekeys, []);
+
     const sendResponse = await app.inject({
       method: 'POST',
       url: '/v1/messages/envelopes/fanout',
@@ -297,6 +318,7 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
           in: [
             'device_bundle.first_device_published',
             'device_session.created',
+            'device_bundle.one_time_prekey_claimed',
             'encrypted_envelopes.fanout_queued',
             'encrypted_envelopes.delivered',
             'encrypted_envelope.acknowledged',
@@ -308,7 +330,7 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
 
     assert.equal(storedEnvelope?.deliveryState, 'ACKNOWLEDGED');
     assert.equal(storedEnvelope?.bodyCiphertext, 'encrypted-body-only');
-    assert.ok(auditEvents.length >= 7);
+    assert.ok(auditEvents.length >= 8);
     assert.doesNotMatch(JSON.stringify(auditEvents), /identity-key|signed-prekey|one-time-prekey/i);
   });
 
