@@ -31,7 +31,8 @@ These criteria are production blockers. CipherChat must not process production u
 - Prototype AsyncStorage metadata migration must preserve source data until verified rollback exists.
 - Production builds must block plaintext message persistence unless encrypted storage is active.
 - Durable outbound queue records must reject plaintext-shaped fields before persistence.
-- Non-exportable Android Keystore and iOS Keychain options must be evaluated for device identity keys.
+- Device identity signing must be isolated behind a key-store/provider boundary; direct app flows must not load private key bytes.
+- Non-exportable Android Keystore and iOS Keychain options must replace the Expo SecureStore fallback before production encrypted messaging.
 
 ## API and infrastructure gates
 

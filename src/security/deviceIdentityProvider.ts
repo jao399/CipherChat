@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ed25519 } from '@noble/curves/ed25519.js';
 import * as Crypto from 'expo-crypto';
-import * as SecureStore from 'expo-secure-store';
 
 import { PROTOTYPE_ACCOUNT_DISPLAY_NAME } from '../config/api';
 import type { PublishDeviceBundleRequest } from '../services/api/types';
+import {
+  expoSecureStoreDeviceSigningKeyStore,
+  type DeviceSigningKeyProtection,
+} from './deviceSigningKeyStore';
 
 const DEVICE_IDENTITY_STORAGE_KEY = '@cipherchat/device-identity-public-v2';
 const LEGACY_DEVICE_IDENTITY_STORAGE_KEY = '@cipherchat/device-identity-public-v1';
-const DEVICE_IDENTITY_PRIVATE_KEY = 'cipherchat.device-identity-ed25519-private-key-v1';
-const LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY = 'cipherchat.device-identity-private-seed-v1';
 const ED25519_SPKI_PREFIX = '302a300506032b6570032100';
 
 export type LocalDeviceIdentity = {
@@ -22,7 +22,8 @@ export type LocalDeviceIdentity = {
   signedPrekeySignature: string;
   oneTimePrekeys: string[];
   fingerprint: string;
-  provider: 'ed25519-noble-v1';
+  provider: 'ed25519-noble-v1' | 'ed25519-noble-os-secure-store-v1';
+  privateKeyProtection?: DeviceSigningKeyProtection;
   createdAt: string;
 };
 
@@ -107,32 +108,15 @@ async function fingerprintFor(identityKey: string) {
   return digest.match(/.{1,4}/g)?.slice(0, 6).join(' ') ?? digest.slice(0, 24);
 }
 
-function spkiIdentityKey(publicKey: Uint8Array) {
+export function spkiIdentityKey(publicKey: Uint8Array) {
   const spki = hexToBytes(`${ED25519_SPKI_PREFIX}${bytesToHex(publicKey)}`);
   return `ed25519-spki:${bytesToBase64(spki)}`;
 }
 
-async function storePrivateKey(privateKey: Uint8Array) {
-  await SecureStore.setItemAsync(DEVICE_IDENTITY_PRIVATE_KEY, bytesToHex(privateKey), {
-    keychainService: 'cipherchat',
-  });
-}
-
-async function loadPrivateKey() {
-  const stored = await SecureStore.getItemAsync(DEVICE_IDENTITY_PRIVATE_KEY, {
-    keychainService: 'cipherchat',
-  });
-
-  return stored ? hexToBytes(stored) : null;
-}
-
 async function createIdentity(existing?: Partial<LocalDeviceIdentity>): Promise<LocalDeviceIdentity> {
   const suffix = nowSuffix();
-  const privateKey = randomBytes(32);
-  const publicKey = ed25519.getPublicKey(privateKey);
-  const identityKey = spkiIdentityKey(publicKey);
-
-  await storePrivateKey(privateKey);
+  const signingKey = await expoSecureStoreDeviceSigningKeyStore.rotateKeyPair();
+  const identityKey = spkiIdentityKey(signingKey.publicKey);
 
   const identity: LocalDeviceIdentity = {
     accountId: existing?.accountId ?? `account_mobile_${suffix}`,
@@ -144,30 +128,35 @@ async function createIdentity(existing?: Partial<LocalDeviceIdentity>): Promise<
     signedPrekeySignature: randomToken('prototype_signed_prekey_signature'),
     oneTimePrekeys: [randomToken('prototype_one_time_prekey')],
     fingerprint: await fingerprintFor(identityKey),
-    provider: 'ed25519-noble-v1',
+    provider: signingKey.provider,
+    privateKeyProtection: signingKey.protection,
     createdAt: new Date().toISOString(),
   };
 
   await AsyncStorage.setItem(DEVICE_IDENTITY_STORAGE_KEY, JSON.stringify(identity));
   await AsyncStorage.removeItem(LEGACY_DEVICE_IDENTITY_STORAGE_KEY);
-  await SecureStore.deleteItemAsync(LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY, {
-    keychainService: 'cipherchat',
-  });
   return identity;
 }
 
 export const prototypeDeviceIdentityProvider: DeviceIdentityProvider = {
   async getOrCreateIdentity() {
-    const [stored, privateKey] = await Promise.all([
+    const [stored, signingKey] = await Promise.all([
       AsyncStorage.getItem(DEVICE_IDENTITY_STORAGE_KEY),
-      loadPrivateKey(),
+      expoSecureStoreDeviceSigningKeyStore.getPublicKey(),
     ]);
 
-    if (stored && privateKey) {
+    if (stored && signingKey) {
       const identity = JSON.parse(stored) as LocalDeviceIdentity;
+      const identityKey = spkiIdentityKey(signingKey.publicKey);
 
-      if (identity.provider === 'ed25519-noble-v1') {
-        return identity;
+      if (identity.identityKey === identityKey) {
+        const upgradedIdentity: LocalDeviceIdentity = {
+          ...identity,
+          provider: signingKey.provider,
+          privateKeyProtection: signingKey.protection,
+        };
+        await AsyncStorage.setItem(DEVICE_IDENTITY_STORAGE_KEY, JSON.stringify(upgradedIdentity));
+        return upgradedIdentity;
       }
     }
 
@@ -182,12 +171,7 @@ export const prototypeDeviceIdentityProvider: DeviceIdentityProvider = {
 
   async clearIdentity() {
     await AsyncStorage.multiRemove([DEVICE_IDENTITY_STORAGE_KEY, LEGACY_DEVICE_IDENTITY_STORAGE_KEY]);
-    await SecureStore.deleteItemAsync(DEVICE_IDENTITY_PRIVATE_KEY, {
-      keychainService: 'cipherchat',
-    });
-    await SecureStore.deleteItemAsync(LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY, {
-      keychainService: 'cipherchat',
-    });
+    await expoSecureStoreDeviceSigningKeyStore.clear();
   },
 
   createDeviceBundle(identity) {
@@ -204,13 +188,7 @@ export const prototypeDeviceIdentityProvider: DeviceIdentityProvider = {
   },
 
   async signDeviceChallenge({ challenge }) {
-    const privateKey = await loadPrivateKey();
-
-    if (!privateKey) {
-      throw new Error('Device identity private key is missing. Rotate the device identity and verify again.');
-    }
-
-    const signature = ed25519.sign(utf8Bytes(challenge), privateKey);
+    const signature = await expoSecureStoreDeviceSigningKeyStore.sign(utf8Bytes(challenge));
     return `ed25519:${bytesToBase64(signature)}`;
   },
 };
