@@ -50,6 +50,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Device revocation invalidates active sessions and removes revoked devices from public key discovery.
 - Account device listing is scoped to authenticated account metadata only.
 - Rate limits and queue limits are configured per environment.
+- Prekey claim and prekey top-up routes have endpoint-specific rate limits.
 - Account creation, session creation, discovery, and fanout abuse controls are test-covered.
 - Metadata retention cleanup is configured, tested, and scheduled.
 - Delivery queue retention, queue cleanup, and Redis rate-limit visibility are configured.

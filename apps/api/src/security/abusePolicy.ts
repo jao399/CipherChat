@@ -40,6 +40,20 @@ export const routeRateLimitPolicies = [
     windowMs: 60_000,
     maxRequests: 120,
   },
+  {
+    id: 'prekey-claim',
+    method: 'POST',
+    path: '/v1/devices/bundles/:accountId/:deviceId/claim',
+    windowMs: 60_000,
+    maxRequests: 30,
+  },
+  {
+    id: 'prekey-top-up',
+    method: 'POST',
+    path: '/v1/devices/prekeys/top-up',
+    windowMs: 60_000,
+    maxRequests: 10,
+  },
 ] as const;
 
 export type RouteRateLimitPolicy = (typeof routeRateLimitPolicies)[number];

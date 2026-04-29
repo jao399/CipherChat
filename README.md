@@ -820,9 +820,20 @@ CipherChat now lets a verified current device replenish its own public one-time 
 
 More detail: `docs/architecture/phase-59-prekey-top-up-publishing.md`.
 
+### Phase 60 - Prekey Abuse Controls
+
+CipherChat now has endpoint-specific abuse controls for prekey claim and top-up paths:
+
+- `prekey-claim` rate limits dynamic one-time prekey claim routes.
+- `prekey-top-up` rate limits current-device public prekey replenishment.
+- The rate-limit middleware supports colon-parameter route policies.
+- API tests and the abuse-control verification script cover these controls.
+
+More detail: `docs/architecture/phase-60-prekey-abuse-controls.md`.
+
 ## Next Steps
 
-1. Add abuse controls and durable rate limits for prekey claim/top-up endpoints.
+1. Replace prototype public prekeys with reviewed Signal/libsignal-compatible X3DH prekey bundles.
 2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
 3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
 4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.

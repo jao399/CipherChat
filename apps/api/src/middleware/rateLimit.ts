@@ -46,7 +46,22 @@ function getPathname(request: FastifyRequest) {
 
 function findRoutePolicy(request: FastifyRequest, policies: readonly RouteRateLimitPolicy[]) {
   const pathname = getPathname(request);
-  return policies.find((policy) => policy.method === request.method && policy.path === pathname);
+  return policies.find((policy) => policy.method === request.method && routePathMatches(policy.path, pathname));
+}
+
+function routePathMatches(policyPath: string, pathname: string) {
+  if (policyPath === pathname) {
+    return true;
+  }
+
+  const policySegments = policyPath.split('/').filter(Boolean);
+  const pathSegments = pathname.split('/').filter(Boolean);
+
+  if (policySegments.length !== pathSegments.length) {
+    return false;
+  }
+
+  return policySegments.every((segment, index) => segment.startsWith(':') || segment === pathSegments[index]);
 }
 
 export function createRateLimitHook(options: RateLimitOptions) {

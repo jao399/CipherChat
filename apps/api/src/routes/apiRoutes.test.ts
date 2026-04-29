@@ -888,6 +888,124 @@ describe('device bundle route', () => {
     assert.deepEqual(topUps, [['top-up-prekey-material-0001', 'top-up-prekey-material-0002']]);
     assert.doesNotMatch(JSON.stringify(response.json()), /top-up-prekey-material/i);
   });
+
+  it('throttles dynamic one-time prekey claim attempts per route policy', async () => {
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        return {
+          accountExists: true,
+          accountDeviceCount: 1,
+          deviceExists: true,
+          deviceAccountId: 'account_sender',
+        };
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish during claim throttle test');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle(accountId, deviceId) {
+        return {
+          accountId,
+          accountDisplayName: 'Recipient',
+          deviceId,
+          deviceName: 'Recipient Device',
+          identityKey: 'recipient-identity-key',
+          signedPrekey: 'recipient-signed-prekey',
+          signedPrekeySignature: 'recipient-signed-prekey-signature',
+          oneTimePrekeys: [],
+          publishedAt: new Date(0).toISOString(),
+        };
+      },
+      async getDevicePrekeyStatus() {
+        return null;
+      },
+      async topUpDevicePrekeys() {
+        return null;
+      },
+      async revokeDevice() {
+        return null;
+      },
+      async listAccountDevices() {
+        return [];
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+    let response;
+
+    for (let index = 0; index < 31; index += 1) {
+      response = await app.inject({
+        method: 'POST',
+        url: '/v1/devices/bundles/account_recipient/device_recipient/claim',
+        headers: {
+          authorization: 'Bearer valid-session-token',
+        },
+      });
+    }
+
+    assert.equal(response?.statusCode, 429);
+    assert.equal(response?.json().error, 'rate_limited');
+  });
+
+  it('throttles current-device prekey top-up attempts per route policy', async () => {
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        return {
+          accountExists: true,
+          accountDeviceCount: 1,
+          deviceExists: true,
+          deviceAccountId: 'account_sender',
+        };
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish during top-up throttle test');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+      async claimDevicePrekeyBundle() {
+        return null;
+      },
+      async getDevicePrekeyStatus() {
+        return null;
+      },
+      async topUpDevicePrekeys(input) {
+        return {
+          accountId: input.accountId,
+          deviceId: input.deviceId,
+          oneTimePrekeyCount: input.oneTimePrekeys.length,
+          lowWatermark: 20,
+          recommendedCount: 100,
+          needsTopUp: true,
+        };
+      },
+      async revokeDevice() {
+        return null;
+      },
+      async listAccountDevices() {
+        return [];
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+    let response;
+
+    for (let index = 0; index < 11; index += 1) {
+      response = await app.inject({
+        method: 'POST',
+        url: '/v1/devices/prekeys/top-up',
+        headers: {
+          authorization: 'Bearer valid-session-token',
+        },
+        payload: {
+          oneTimePrekeys: [`rate-limit-top-up-prekey-${String(index).padStart(4, '0')}`],
+        },
+      });
+    }
+
+    assert.equal(response?.statusCode, 429);
+    assert.equal(response?.json().error, 'rate_limited');
+  });
 });
 
 describe('encrypted envelope route', () => {

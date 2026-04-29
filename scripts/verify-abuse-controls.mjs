@@ -15,6 +15,8 @@ const checks = [
       'device-session',
       'account-discovery',
       'envelope-fanout',
+      'prekey-claim',
+      'prekey-top-up',
     ],
   },
   {
@@ -22,6 +24,7 @@ const checks = [
     markers: [
       'routeRateLimitPolicies',
       'findRoutePolicy',
+      'routePathMatches',
       'keyPrefix',
     ],
   },
@@ -29,6 +32,8 @@ const checks = [
     path: 'apps/api/src/routes/apiRoutes.test.ts',
     markers: [
       'throttles repeated account creation attempts per route policy',
+      'throttles dynamic one-time prekey claim attempts per route policy',
+      'throttles current-device prekey top-up attempts per route policy',
       'rejects encrypted fanout requests above the recipient-device cap',
       'rejects encrypted envelopes above the payload-size cap',
     ],
@@ -38,6 +43,14 @@ const checks = [
     markers: [
       'Route-aware rate limiting',
       'Envelope abuse policy',
+    ],
+  },
+  {
+    path: 'docs/architecture/phase-60-prekey-abuse-controls.md',
+    markers: [
+      'Prekey claim throttling',
+      'Prekey top-up throttling',
+      'Dynamic route matching',
     ],
   },
 ];

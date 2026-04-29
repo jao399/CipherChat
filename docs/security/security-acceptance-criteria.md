@@ -50,6 +50,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Sender device identity must match the authenticated session for outbound envelopes.
 - Recipient account and device filters must be enforced for inbox reads and acknowledgements.
 - Account creation, discovery, bundle lookup, envelope fanout, and session creation must have durable rate limits.
+- One-time prekey claim and current-device prekey top-up routes must have endpoint-specific durable rate limits.
 - Envelope size, fanout recipient count, and queue depth must have explicit per-environment limits.
 - Account/session abuse-control tests must pass before release.
 - Metadata retention cleanup tests must pass before release.
