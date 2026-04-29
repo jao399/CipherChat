@@ -80,13 +80,13 @@ export const LOCAL_DATA_CLASSIFICATION: LocalDataClassification[] = [
     notes: 'Receipt metadata reveals routing history and should move behind database encryption.',
   },
   {
-    name: 'Plaintext message cache',
+    name: 'Prototype local message records',
     currentStore: 'future-encrypted-database',
     targetStore: 'encrypted-database',
     sensitivity: 'sensitive',
     recordKind: 'message',
-    migrationRequired: false,
-    notes: 'Do not add plaintext message persistence before the encrypted database exists.',
+    migrationRequired: true,
+    notes: 'Prototype message records can be copied only after SQLCipher is active; future production plaintext cache must remain encrypted-at-rest.',
   },
   {
     name: 'Ratchet session state',
@@ -121,7 +121,7 @@ export const LOCAL_DATABASE_MIGRATION_STEPS: LocalDatabaseMigrationStep[] = [
   {
     id: 'migration',
     title: 'Migrate prototype AsyncStorage records',
-    gate: 'Remote trust, outbound queue, and inbound receipt metadata are copied then removed from AsyncStorage.',
+    gate: 'Message records, remote trust, outbound queue, and inbound receipt metadata are copied before any source cleanup.',
     details: 'Migration must be idempotent and safe to resume after interruption.',
   },
   {

@@ -101,11 +101,11 @@ export function SettingsScreen() {
       ? `${inboundEnvelopeStatus.pendingCount} fetched now | ${inboundEnvelopeStatus.totalAcknowledged} total acknowledged${inboundEnvelopeStatus.nextCursor ? ' | more pages ready' : ''}`
       : 'Poll pending envelopes for this device';
   const migrationSubtitle = migrationPreview
-    ? `${migrationPreview.remoteTrustRecords} trust | ${migrationPreview.outboundQueueItems} outbound | ${migrationPreview.inboundReceipts} receipts`
+    ? `${migrationPreview.localMessages} messages | ${migrationPreview.remoteTrustRecords} trust | ${migrationPreview.outboundQueueItems} outbound | ${migrationPreview.inboundReceipts} receipts`
     : 'Preview prototype stores before copying';
   const migrationRunSubtitle = migrationResult
     ? migrationResult.status === 'completed'
-      ? `${migrationResult.migratedCounts.remoteTrustRecords + migrationResult.migratedCounts.outboundQueueItems + migrationResult.migratedCounts.inboundReceipts} records copied`
+      ? `${migrationResult.migratedCounts.localMessages + migrationResult.migratedCounts.remoteTrustRecords + migrationResult.migratedCounts.outboundQueueItems + migrationResult.migratedCounts.inboundReceipts} records copied`
       : migrationResult.reason ?? 'Migration did not run'
     : 'Copies only when encrypted DB is active';
 
@@ -116,6 +116,7 @@ export function SettingsScreen() {
       const items = await collectPrototypeStoreMigrationItems();
       setMigrationPreview({
         inboundReceipts: items.inboundReceipts.length,
+        localMessages: items.localMessages.length,
         outboundQueueItems: items.outboundQueueItems.length,
         remoteTrustRecords: items.remoteTrustRecords.length,
       });
@@ -143,7 +144,7 @@ export function SettingsScreen() {
       Alert.alert(
         result.status === 'completed' ? 'Migration copied' : 'Migration blocked',
         result.status === 'completed'
-          ? `${result.migratedCounts.remoteTrustRecords} trust records, ${result.migratedCounts.outboundQueueItems} outbound items, and ${result.migratedCounts.inboundReceipts} inbound receipts were copied. Source AsyncStorage data was not deleted.`
+          ? `${result.migratedCounts.localMessages} message records, ${result.migratedCounts.remoteTrustRecords} trust records, ${result.migratedCounts.outboundQueueItems} outbound items, and ${result.migratedCounts.inboundReceipts} inbound receipts were copied. Source AsyncStorage data was not deleted.`
           : result.reason ?? 'Encrypted local database is not ready.',
       );
     } catch (error) {

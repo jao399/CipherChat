@@ -14,6 +14,13 @@ export type PrototypeStoreMigrationItem = {
 };
 
 export type PrototypeStoreMigrationReaders = {
+  readLocalMessages(): Promise<
+    Array<{
+      id: string;
+      chatId?: string;
+      time?: string;
+    }>
+  >;
   readRemoteTrustRecords(): Promise<unknown[]>;
   readOutboundQueue(): Promise<
     Array<{
@@ -41,6 +48,7 @@ export type PrototypeStoreMigrationResult = {
   encryptedDatabaseStatus?: EncryptedLocalDatabaseStatus;
   migratedCounts: {
     inboundReceipts: number;
+    localMessages: number;
     outboundQueueItems: number;
     remoteTrustRecords: number;
   };
@@ -48,11 +56,16 @@ export type PrototypeStoreMigrationResult = {
 
 const zeroCounts = {
   inboundReceipts: 0,
+  localMessages: 0,
   outboundQueueItems: 0,
   remoteTrustRecords: 0,
 };
 
 const defaultReaders: PrototypeStoreMigrationReaders = {
+  readLocalMessages: async () => {
+    const { messages } = await import('../../data/mockData');
+    return messages;
+  },
   readRemoteTrustRecords: async () => {
     const { readRemoteTrustRecords } = await import('../../security/remoteContactTrust');
     return readRemoteTrustRecords([]);
@@ -83,20 +96,36 @@ function remoteTrustId(value: unknown, index: number) {
   return `remote-trust-${index}`;
 }
 
+function localMessageId(value: { id: string }, index: number) {
+  return value.id || `local-message-${index}`;
+}
+
 export async function collectPrototypeStoreMigrationItems(
   readers: PrototypeStoreMigrationReaders = defaultReaders,
 ): Promise<{
   inboundReceipts: PrototypeStoreMigrationItem[];
+  localMessages: PrototypeStoreMigrationItem[];
   outboundQueueItems: PrototypeStoreMigrationItem[];
   remoteTrustRecords: PrototypeStoreMigrationItem[];
 }> {
-  const [remoteTrustRecords, outboundQueue, inboundSync] = await Promise.all([
+  const [localMessages, remoteTrustRecords, outboundQueue, inboundSync] = await Promise.all([
+    readers.readLocalMessages(),
     readers.readRemoteTrustRecords(),
     readers.readOutboundQueue(),
     readers.readInboundEnvelopeSyncState(),
   ]);
 
   return {
+    localMessages: localMessages.map((message, index) => {
+      const timestamp = fallbackTimestamp();
+      return {
+        createdAt: timestampFrom(message.time) || timestamp,
+        id: localMessageId(message, index),
+        kind: 'message',
+        updatedAt: timestamp,
+        value: message,
+      };
+    }),
     remoteTrustRecords: remoteTrustRecords.map((record, index) => {
       const timestamp = fallbackTimestamp();
       return {
@@ -161,6 +190,7 @@ export async function migratePrototypeStoresToEncryptedDatabase(
 
   const items = await collectPrototypeStoreMigrationItems(readers);
   const records = [
+    ...items.localMessages,
     ...items.remoteTrustRecords,
     ...items.outboundQueueItems,
     ...items.inboundReceipts,
@@ -177,6 +207,7 @@ export async function migratePrototypeStoresToEncryptedDatabase(
     encryptedDatabaseStatus,
     migratedCounts: {
       inboundReceipts: items.inboundReceipts.length,
+      localMessages: items.localMessages.length,
       outboundQueueItems: items.outboundQueueItems.length,
       remoteTrustRecords: items.remoteTrustRecords.length,
     },

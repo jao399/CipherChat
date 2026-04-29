@@ -15,6 +15,13 @@ import {
 
 function createReaders(): PrototypeStoreMigrationReaders {
   return {
+    readLocalMessages: async () => [
+      {
+        chatId: 'chat-1',
+        id: 'message-local-1',
+        time: '2026-04-28T00:30:00.000Z',
+      },
+    ],
     readRemoteTrustRecords: async () => [
       {
         deviceId: 'device-1',
@@ -72,6 +79,8 @@ describe('prototype store migration', () => {
 
     assert.equal(items.remoteTrustRecords[0].id, 'trust-1');
     assert.equal(items.remoteTrustRecords[0].kind, 'remoteTrustRecord');
+    assert.equal(items.localMessages[0].id, 'message-local-1');
+    assert.equal(items.localMessages[0].kind, 'message');
     assert.equal(items.outboundQueueItems[0].id, 'outbound-1');
     assert.equal(items.outboundQueueItems[0].kind, 'outboundEnvelope');
     assert.equal(items.inboundReceipts[0].id, 'message-1');
@@ -125,9 +134,10 @@ describe('prototype store migration', () => {
     assert.equal(result.status, 'completed');
     assert.deepEqual(result.migratedCounts, {
       inboundReceipts: 1,
+      localMessages: 1,
       outboundQueueItems: 1,
       remoteTrustRecords: 1,
     });
-    assert.deepEqual(kinds, ['inboundReceipt', 'outboundEnvelope', 'remoteTrustRecord'] satisfies EncryptedLocalRecordKind[]);
+    assert.deepEqual(kinds, ['inboundReceipt', 'message', 'outboundEnvelope', 'remoteTrustRecord'] satisfies EncryptedLocalRecordKind[]);
   });
 });
