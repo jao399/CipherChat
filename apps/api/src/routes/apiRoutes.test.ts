@@ -152,6 +152,7 @@ describe('health routes', () => {
 
     assert.equal(response.statusCode, 200);
     assert.equal(response.json().checks.database, 'disabled');
+    assert.equal(response.json().reasons.database, 'not_configured');
   });
 
   it('reports a connected database when the health check succeeds', async () => {
@@ -162,6 +163,26 @@ describe('health routes', () => {
 
     assert.equal(response.statusCode, 200);
     assert.equal(response.json().checks.database, 'connected');
+  });
+
+  it('reports unavailable dependencies with safe readiness reasons', async () => {
+    const app = await buildTestApi({
+      databaseHealthCheck: async () => {
+        throw new Error('postgresql://user:password@db.internal/cipherchat');
+      },
+      queueHealthCheck: async () => {
+        throw new Error('redis://:password@redis.internal:6379');
+      },
+    });
+    const response = await app.inject({ method: 'GET', url: '/ready' });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().ok, false);
+    assert.equal(response.json().checks.database, 'unavailable');
+    assert.equal(response.json().checks.queue, 'unavailable');
+    assert.equal(response.json().reasons.database, 'connection_failed');
+    assert.equal(response.json().reasons.queue, 'connection_failed');
+    assert.doesNotMatch(JSON.stringify(response.json()), /password|postgresql:\/\/|redis:\/\//);
   });
 });
 

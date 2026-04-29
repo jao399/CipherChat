@@ -7,6 +7,9 @@ import { jobQueueName } from './jobs/types.js';
 import { createRedisClient } from './redis/client.js';
 import { PrismaMessageRepository } from './repositories/prismaMessageRepository.js';
 import { PrismaMetadataRetentionRepository } from './repositories/prismaMetadataRetentionRepository.js';
+import { checkPrismaReady } from './db/prisma.js';
+import { createGracefulShutdown } from './startup/gracefulShutdown.js';
+import { ensureStartupDependencies } from './startup/runtimeHealth.js';
 
 const config = readApiConfig();
 
@@ -16,6 +19,13 @@ if (!config.databaseUrl || !config.redisUrl) {
 
 const prisma = createPrismaClient();
 const redis = createRedisClient(config.redisUrl);
+await ensureStartupDependencies({
+  databaseCheck: () => checkPrismaReady(prisma),
+  queueCheck: async () => {
+    await redis.ping();
+  },
+});
+
 const messages = new PrismaMessageRepository(prisma);
 const metadataRetention = new PrismaMetadataRetentionRepository(prisma);
 
@@ -31,16 +41,27 @@ worker.on('completed', (job) => {
   console.log({ jobId: job.id, jobName: job.name }, 'CipherChat job completed');
 });
 
-const shutdown = async () => {
-  await worker.close();
-  await redis.quit();
-  await prisma.$disconnect();
-};
+const shutdown = createGracefulShutdown({
+  label: 'CipherChat worker',
+  close: async () => {
+    await worker.close();
+    await redis.quit();
+    await prisma.$disconnect();
+  },
+  logger: {
+    error: (error, message) => {
+      console.error({ error }, message);
+    },
+    info: (message) => {
+      console.log(message);
+    },
+  },
+});
 
 process.on('SIGINT', () => {
-  void shutdown().then(() => process.exit(0));
+  void shutdown('SIGINT');
 });
 
 process.on('SIGTERM', () => {
-  void shutdown().then(() => process.exit(0));
+  void shutdown('SIGTERM');
 });

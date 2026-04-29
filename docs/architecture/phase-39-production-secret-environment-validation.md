@@ -64,11 +64,6 @@ Recommended production rotation:
 
 `npm run validate:ci` now includes this verification gate.
 
-## Next phase
+## Follow-up
 
-Phase 40 should add production dependency startup health hardening:
-
-- startup smoke checks for PostgreSQL and Redis before accepting traffic
-- explicit readiness failure reasons without leaking credentials
-- graceful shutdown coverage for Redis, Prisma, queue, and worker processes
-- operational documentation for deploy, rollback, and smoke-test sequence
+Phase 40 added startup dependency health hardening in `docs/architecture/phase-40-startup-health-hardening.md`.

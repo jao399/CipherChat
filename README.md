@@ -683,10 +683,23 @@ CipherChat now fails fast on unsafe production API configuration:
 
 More detail: `docs/architecture/phase-39-production-secret-environment-validation.md`.
 
+## Phase 40 Startup Health Hardening
+
+CipherChat now checks configured runtime dependencies before accepting API traffic or processing worker jobs:
+
+- `apps/api/src/startup/runtimeHealth.ts` probes PostgreSQL and Redis with safe readiness reason codes.
+- `apps/api/src/startup/gracefulShutdown.ts` makes API and worker shutdown idempotent.
+- `GET /ready` reports `not_configured` or `connection_failed` without exposing URLs or credentials.
+- API and worker startup fail before listening/processing if configured dependencies are unavailable.
+- `scripts/verify-startup-health.mjs` adds a release gate.
+- `npm run validate:ci` includes `npm run verify:startup-health`.
+
+More detail: `docs/architecture/phase-40-startup-health-hardening.md`.
+
 ## Next Steps
 
-1. Add production dependency startup health hardening.
-2. Build and install an Expo development client before adding native Signal/MLS modules.
+1. Build and install an Expo Android development client, then record SQLCipher verification evidence.
+2. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
 3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
 4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
 5. Install Android platform tools and run the SQLCipher adapter in a real development client.

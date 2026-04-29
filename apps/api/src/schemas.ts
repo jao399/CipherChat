@@ -23,7 +23,7 @@ export const healthResponseSchema = {
 
 export const readinessResponseSchema = {
   type: 'object',
-  required: ['ok', 'checks'],
+  required: ['ok', 'checks', 'reasons'],
   additionalProperties: false,
   properties: {
     ok: { type: 'boolean' },
@@ -36,6 +36,14 @@ export const readinessResponseSchema = {
         database: { type: 'string' },
         queue: { type: 'string' },
         objectStorage: { type: 'string' },
+      },
+    },
+    reasons: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        database: { type: 'string' },
+        queue: { type: 'string' },
       },
     },
   },
