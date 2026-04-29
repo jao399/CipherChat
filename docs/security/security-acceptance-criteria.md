@@ -51,6 +51,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Delivery queue retention, cleanup, and Redis operational visibility tests must pass before release.
 - Internal routes must use managed secrets, rotation policy, and network restrictions where available.
 - PostgreSQL and Redis credentials must live outside source control and CI logs.
+- Device bundle publication and identity-key changes must create metadata-only audit events.
 
 ## Privacy and abuse gates
 

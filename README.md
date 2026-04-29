@@ -742,6 +742,19 @@ CipherChat now hardens the public device bundle/prekey publication path:
 
 More detail: `docs/architecture/phase-52-device-bundle-publication-auth.md`.
 
+### Phase 53 - Device Key Audit History
+
+CipherChat now records metadata-only audit events when device bundle material is published:
+
+- first device published
+- additional device added
+- device identity changed
+- existing bundle updated
+
+The audit metadata stores only device-known status, identity-change status, and one-time prekey count. It does not store public key material, prekey values, safety numbers, message content, filenames, or contact graph details.
+
+More detail: `docs/architecture/phase-53-device-key-audit-history.md`.
+
 ## Next Steps
 
 1. Build and install an Expo Android development client, then record SQLCipher verification evidence.

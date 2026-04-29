@@ -41,6 +41,25 @@ export class PrismaDeviceRepository implements DeviceRepository {
     const accountDisplayName = input.accountDisplayName ?? 'CipherChat User';
 
     return this.prisma.$transaction(async (tx) => {
+      const [existingAccount, existingDevice] = await Promise.all([
+        tx.account.findUnique({
+          where: { id: input.accountId },
+          select: {
+            _count: {
+              select: { devices: true },
+            },
+          },
+        }),
+        tx.device.findUnique({
+          where: { id: input.deviceId },
+          select: {
+            accountId: true,
+            identityKey: true,
+          },
+        }),
+      ]);
+      const identityChanged = Boolean(existingDevice && existingDevice.identityKey !== input.identityKey);
+
       await tx.account.upsert({
         where: { id: input.accountId },
         create: {
@@ -85,6 +104,20 @@ export class PrismaDeviceRepository implements DeviceRepository {
         },
       });
 
+      await tx.auditEvent.create({
+        data: {
+          accountId: input.accountId,
+          eventType: selectDeviceBundleAuditEvent(existingAccount?._count.devices ?? 0, Boolean(existingDevice), identityChanged),
+          actorId: input.deviceId,
+          targetId: input.deviceId,
+          metadata: {
+            deviceKnown: Boolean(existingDevice),
+            identityChanged,
+            oneTimePrekeyCount: input.oneTimePrekeys?.length ?? 0,
+          },
+        },
+      });
+
       return {
         accountId: input.accountId,
         deviceId: input.deviceId,
@@ -122,4 +155,12 @@ export class PrismaDeviceRepository implements DeviceRepository {
       publishedAt: device.prekeyBundle.publishedAt.toISOString(),
     };
   }
+}
+
+function selectDeviceBundleAuditEvent(accountDeviceCount: number, deviceKnown: boolean, identityChanged: boolean) {
+  if (!deviceKnown) {
+    return accountDeviceCount > 0 ? 'device_bundle.device_added' : 'device_bundle.first_device_published';
+  }
+
+  return identityChanged ? 'device_bundle.identity_changed' : 'device_bundle.updated';
 }

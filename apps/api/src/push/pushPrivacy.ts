@@ -84,9 +84,27 @@ export function findPushPayloadPrivacyViolations(value: unknown) {
 }
 
 export function assertPushPayloadPrivacy(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Push payload must be a generic wake object');
+  }
+
   const violations = findPushPayloadPrivacyViolations(value);
+  const payload = value as Partial<GenericPushPayload>;
+
+  if (typeof payload.opaqueEventId !== 'string' || payload.opaqueEventId.length === 0) {
+    violations.push('$.opaqueEventId');
+  }
+
+  if (payload.deliveryHint !== 'encrypted_envelope_available' && payload.deliveryHint !== 'sync_required') {
+    violations.push('$.deliveryHint');
+  }
+
+  if (payload.badgeCount !== undefined && (!Number.isInteger(payload.badgeCount) || payload.badgeCount < 0 || payload.badgeCount > 99)) {
+    violations.push('$.badgeCount');
+  }
+
   if (violations.length > 0) {
-    throw new Error(`Push payload contains privacy-unsafe fields: ${violations.join(', ')}`);
+    throw new Error(`Push payload contains privacy-unsafe fields: ${[...new Set(violations)].join(', ')}`);
   }
 }
 

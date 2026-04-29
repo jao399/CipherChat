@@ -45,8 +45,30 @@ describe('API configuration', () => {
         assert.match(error.message, /ALLOW_INSECURE_DEV_SIGNATURES must not be enabled/);
         assert.match(error.message, /DEVICE_SIGNATURE_VERIFIER must be set to ed25519/);
         assert.match(error.message, /CORS_ORIGIN must be a production origin/);
+        assert.match(error.message, /At least one push notification provider must be configured/);
         return true;
       },
+    );
+  });
+
+  it('fails closed when a production push provider is enabled with incomplete credentials', () => {
+    const config = readApiConfig({
+      NODE_ENV: 'production',
+      DATABASE_URL: 'postgresql://cipherchat:secret@db.internal:5432/cipherchat',
+      REDIS_URL: 'redis://redis.internal:6379',
+      INTERNAL_JOB_TOKEN: 'CipherChat_Production_Job_Token_2026!',
+      CORS_ORIGIN: 'https://app.cipherchat.example',
+      PUSH_APNS_ENABLED: 'true',
+      PUSH_APNS_TEAM_ID: 'TEAMID1234',
+      PUSH_APNS_ENVIRONMENT: 'production',
+    });
+
+    assert.throws(
+      () =>
+        validateApiConfigForRuntime(config, {
+          deviceSignatureVerifier: 'ed25519',
+        }),
+      /PUSH_APNS_KEY_ID is required when its push provider is enabled/,
     );
   });
 
@@ -57,6 +79,16 @@ describe('API configuration', () => {
       REDIS_URL: 'redis://redis.internal:6379',
       INTERNAL_JOB_TOKEN: 'CipherChat_Production_Job_Token_2026!',
       CORS_ORIGIN: 'https://app.cipherchat.example',
+      PUSH_APNS_ENABLED: 'true',
+      PUSH_APNS_TEAM_ID: 'TEAMID1234',
+      PUSH_APNS_KEY_ID: 'KEYID12345',
+      PUSH_APNS_BUNDLE_ID: 'com.cipherchat.app',
+      PUSH_APNS_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\nexample\n-----END PRIVATE KEY-----',
+      PUSH_APNS_ENVIRONMENT: 'production',
+      PUSH_FCM_ENABLED: 'true',
+      PUSH_FCM_PROJECT_ID: 'cipherchat-prod',
+      PUSH_FCM_CLIENT_EMAIL: 'firebase-adminsdk@cipherchat-prod.iam.gserviceaccount.com',
+      PUSH_FCM_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\nexample\n-----END PRIVATE KEY-----',
     });
 
     assert.doesNotThrow(() =>

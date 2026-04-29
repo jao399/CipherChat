@@ -4,6 +4,7 @@ import { readApiConfig } from './config.js';
 import { createPrismaClient } from './db/prisma.js';
 import { createJobProcessor } from './jobs/processors.js';
 import { jobQueueName } from './jobs/types.js';
+import { createConfiguredPushNotificationService } from './push/pushNotificationService.js';
 import { createRedisClient } from './redis/client.js';
 import { PrismaMessageRepository } from './repositories/prismaMessageRepository.js';
 import { PrismaMetadataRetentionRepository } from './repositories/prismaMetadataRetentionRepository.js';
@@ -28,8 +29,9 @@ await ensureStartupDependencies({
 
 const messages = new PrismaMessageRepository(prisma);
 const metadataRetention = new PrismaMetadataRetentionRepository(prisma);
+const pushNotifications = createConfiguredPushNotificationService(config.pushNotifications ?? {});
 
-const worker = new Worker(jobQueueName, createJobProcessor(messages, metadataRetention), {
+const worker = new Worker(jobQueueName, createJobProcessor(messages, metadataRetention, pushNotifications), {
   connection: redis,
 });
 

@@ -1,3 +1,5 @@
+import { assertPushNotificationConfig, type PushNotificationConfig } from './push/pushNotificationService.js';
+
 export type ApiConfig = {
   host: string;
   port: number;
@@ -8,6 +10,7 @@ export type ApiConfig = {
   internalJobToken?: string;
   rateLimitWindowMs: number;
   rateLimitMaxRequests: number;
+  pushNotifications?: PushNotificationConfig;
 };
 
 type ProductionConfigValidationInput = {
@@ -29,6 +32,14 @@ function readPositiveInteger(value: string | undefined, fallback: string, name: 
     throw new Error(`${name} must be a positive integer`);
   }
   return parsed;
+}
+
+function readEnabledFlag(value: string | undefined) {
+  return value === 'true';
+}
+
+function readApnsEnvironment(value: string | undefined) {
+  return (value ?? 'production') as 'sandbox' | 'production';
 }
 
 function isWeakSecret(value: string) {
@@ -96,12 +107,38 @@ export function validateApiConfigForRuntime(
     failures.push('CORS_ORIGIN must be a production origin, not wildcard or localhost.');
   }
 
+  try {
+    assertPushNotificationConfig(config.pushNotifications ?? {});
+  } catch (error) {
+    failures.push(error instanceof Error ? error.message : 'Invalid push notification provider configuration.');
+  }
+
   if (failures.length > 0) {
     throw new Error(`Invalid CipherChat production configuration:\n- ${failures.join('\n- ')}`);
   }
 }
 
 export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
+  const pushNotifications: PushNotificationConfig = {};
+
+  if (readEnabledFlag(env.PUSH_APNS_ENABLED)) {
+    pushNotifications.apns = {
+      teamId: env.PUSH_APNS_TEAM_ID ?? '',
+      keyId: env.PUSH_APNS_KEY_ID ?? '',
+      bundleId: env.PUSH_APNS_BUNDLE_ID ?? '',
+      privateKey: env.PUSH_APNS_PRIVATE_KEY ?? '',
+      environment: readApnsEnvironment(env.PUSH_APNS_ENVIRONMENT),
+    };
+  }
+
+  if (readEnabledFlag(env.PUSH_FCM_ENABLED)) {
+    pushNotifications.fcm = {
+      projectId: env.PUSH_FCM_PROJECT_ID ?? '',
+      clientEmail: env.PUSH_FCM_CLIENT_EMAIL ?? '',
+      privateKey: env.PUSH_FCM_PRIVATE_KEY ?? '',
+    };
+  }
+
   return {
     host: env.API_HOST ?? '127.0.0.1',
     port: readPort(env.API_PORT),
@@ -112,5 +149,6 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     internalJobToken: env.INTERNAL_JOB_TOKEN,
     rateLimitWindowMs: readPositiveInteger(env.RATE_LIMIT_WINDOW_MS, '60000', 'RATE_LIMIT_WINDOW_MS'),
     rateLimitMaxRequests: readPositiveInteger(env.RATE_LIMIT_MAX_REQUESTS, '120', 'RATE_LIMIT_MAX_REQUESTS'),
+    pushNotifications,
   };
 }

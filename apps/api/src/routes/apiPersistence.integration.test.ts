@@ -251,6 +251,7 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
       where: {
         eventType: {
           in: [
+            'device_bundle.first_device_published',
             'device_session.created',
             'encrypted_envelopes.fanout_queued',
             'encrypted_envelopes.delivered',
@@ -262,7 +263,8 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
 
     assert.equal(storedEnvelope?.deliveryState, 'ACKNOWLEDGED');
     assert.equal(storedEnvelope?.bodyCiphertext, 'encrypted-body-only');
-    assert.ok(auditEvents.length >= 4);
+    assert.ok(auditEvents.length >= 6);
+    assert.doesNotMatch(JSON.stringify(auditEvents), /identity-key|signed-prekey|one-time-prekey/i);
   });
 
   it('cleans expired metadata without touching active sessions or valid queued envelopes', async () => {
