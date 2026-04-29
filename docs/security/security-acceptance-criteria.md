@@ -5,6 +5,7 @@ These criteria are production blockers. CipherChat must not process production u
 ## Production blockers
 
 - No production plaintext message body or file content may be sent to the API.
+- Secure file upload must encrypt bytes client-side before object upload; plaintext filenames and MIME types must be encrypted before persistence.
 - Prototype crypto paths must be disabled or blocked in production mode.
 - Live sends must be blocked while the active message crypto provider is prototype-only.
 - Native encrypted local storage must be verified on Android and iOS development clients.
