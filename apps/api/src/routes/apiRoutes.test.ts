@@ -231,6 +231,9 @@ describe('device bundle route', () => {
       async getDeviceBundle() {
         return null;
       },
+      async revokeDevice() {
+        return null;
+      },
     };
     const app = await buildTestApi({ repositories: { devices } });
 
@@ -260,6 +263,9 @@ describe('device bundle route', () => {
         throw new Error('should not publish without auth');
       },
       async getDeviceBundle() {
+        return null;
+      },
+      async revokeDevice() {
         return null;
       },
     };
@@ -299,6 +305,9 @@ describe('device bundle route', () => {
       async getDeviceBundle() {
         return null;
       },
+      async revokeDevice() {
+        return null;
+      },
     };
     const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
 
@@ -333,6 +342,9 @@ describe('device bundle route', () => {
         throw new Error('should not publish from a different device');
       },
       async getDeviceBundle() {
+        return null;
+      },
+      async revokeDevice() {
         return null;
       },
     };
@@ -375,6 +387,9 @@ describe('device bundle route', () => {
           publishedAt: new Date(0).toISOString(),
         };
       },
+      async revokeDevice() {
+        return null;
+      },
     };
     const app = await buildTestApi({
       repositories: {
@@ -407,6 +422,9 @@ describe('device bundle route', () => {
       async getDeviceBundle() {
         throw new Error('should not look up without auth');
       },
+      async revokeDevice() {
+        return null;
+      },
     };
     const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
 
@@ -430,6 +448,9 @@ describe('device bundle route', () => {
       async getDeviceBundle() {
         return null;
       },
+      async revokeDevice() {
+        return null;
+      },
     };
     const app = await buildTestApi({
       repositories: {
@@ -448,6 +469,91 @@ describe('device bundle route', () => {
 
     assert.equal(response.statusCode, 404);
     assert.equal(response.json().error, 'device_bundle_not_found');
+  });
+
+  it('revokes an account device through an authenticated same-account session', async () => {
+    const revokedDevices: Array<{ accountId: string; deviceId: string; actorDeviceId: string }> = [];
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        throw new Error('should not check publication status during revocation');
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish during revocation');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+      async revokeDevice(input) {
+        revokedDevices.push(input);
+        return {
+          accountId: input.accountId,
+          deviceId: input.deviceId,
+          revoked: true,
+          revokedAt: new Date(0).toISOString(),
+        };
+      },
+    };
+    const app = await buildTestApi({ repositories: { devices, sessions: createSessionRepository() } });
+
+    const response = await app.inject({
+      method: 'DELETE',
+      url: `/v1/devices/${body.accountId}/${body.deviceId}`,
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json().revoked, true);
+    assert.deepEqual(revokedDevices, [
+      {
+        accountId: body.accountId,
+        deviceId: body.deviceId,
+        actorDeviceId: 'device_000000001',
+      },
+    ]);
+  });
+
+  it('rejects device revocation from a different account session', async () => {
+    const devices: DeviceRepository = {
+      async getDeviceBundlePublicationStatus() {
+        throw new Error('should not check publication status during forbidden revocation');
+      },
+      async publishDeviceBundle() {
+        throw new Error('should not publish during forbidden revocation');
+      },
+      async getDeviceBundle() {
+        return null;
+      },
+      async revokeDevice() {
+        throw new Error('should not revoke another account device');
+      },
+    };
+    const app = await buildTestApi({
+      repositories: {
+        devices,
+        sessions: createSessionRepository({
+          async verifyDeviceSession() {
+            return {
+              sessionId: 'session_other_account',
+              accountId: 'account_other_0001',
+              deviceId: 'device_other_00001',
+            };
+          },
+        }),
+      },
+    });
+
+    const response = await app.inject({
+      method: 'DELETE',
+      url: `/v1/devices/${body.accountId}/${body.deviceId}`,
+      headers: {
+        authorization: 'Bearer valid-session-token',
+      },
+    });
+
+    assert.equal(response.statusCode, 403);
+    assert.equal(response.json().error, 'device_revoke_forbidden');
   });
 });
 

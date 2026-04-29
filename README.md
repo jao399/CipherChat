@@ -755,12 +755,22 @@ The audit metadata stores only device-known status, identity-change status, and 
 
 More detail: `docs/architecture/phase-53-device-key-audit-history.md`.
 
+### Phase 54 - Device Revocation And Compromise Handling
+
+CipherChat now supports server-enforced account device revocation:
+
+- `DELETE /v1/devices/:accountId/:deviceId` requires an authenticated same-account device session.
+- Revocation marks the device as revoked and invalidates active sessions for that device.
+- Revoked devices are excluded from public bundle lookup and discovery.
+- A metadata-only `device.revoked` audit event is recorded without key material, message content, filenames, or contact graph details.
+
+More detail: `docs/architecture/phase-54-device-revocation-compromise-handling.md`.
+
 ## Next Steps
 
-1. Build and install an Expo Android development client, then record SQLCipher verification evidence.
-2. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
-3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
-4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Install Android platform tools and run the SQLCipher adapter in a real development client.
-6. Run the Android and iOS development-client verification checklist on installed native builds.
-7. Add key transparency or auditable key-history design before production contact trust.
+1. Add mobile UI actions for device management and revocation.
+2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
+3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
+4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
+5. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
+6. Add key transparency or auditable key-history review before production contact trust.

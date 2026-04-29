@@ -10,6 +10,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Live sends must be blocked while the active message crypto provider is prototype-only.
 - Native encrypted local storage must be verified on Android and iOS development clients.
 - Device-session auth must support revocation, expiry, token hashing at rest, and abuse monitoring.
+- Device revocation must invalidate active sessions and remove the revoked device from public key discovery.
 - Key-change warnings must block send until users review changed safety numbers.
 - External security review must be completed before production launch.
 - CI must pass `npm run validate:ci` on the release commit.
@@ -52,6 +53,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Internal routes must use managed secrets, rotation policy, and network restrictions where available.
 - PostgreSQL and Redis credentials must live outside source control and CI logs.
 - Device bundle publication and identity-key changes must create metadata-only audit events.
+- Device revocation must require same-account device authentication and create metadata-only audit events.
 
 ## Privacy and abuse gates
 

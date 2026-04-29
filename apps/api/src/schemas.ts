@@ -191,6 +191,18 @@ export const deviceSessionRevokedResponseSchema = {
   },
 } as const;
 
+export const deviceRevokedResponseSchema = {
+  type: 'object',
+  required: ['accountId', 'deviceId', 'revoked', 'revokedAt'],
+  additionalProperties: false,
+  properties: {
+    accountId: { type: 'string' },
+    deviceId: { type: 'string' },
+    revoked: { type: 'boolean' },
+    revokedAt: { type: 'string' },
+  },
+} as const;
+
 export const deviceSessionResponseSchema = {
   type: 'object',
   required: ['sessionId', 'accountId', 'deviceId', 'token', 'expiresAt'],

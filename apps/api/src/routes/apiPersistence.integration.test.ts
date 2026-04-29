@@ -244,6 +244,37 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
     assert.equal(ackResponse.statusCode, 200);
     assert.equal(ackResponse.json().deliveryState, 'ACKNOWLEDGED');
 
+    const revokeDeviceResponse = await app.inject({
+      method: 'DELETE',
+      url: `/v1/devices/${recipientAccountId}/${recipientDeviceId}`,
+      headers: {
+        authorization: `Bearer ${recipientToken}`,
+      },
+    });
+
+    assert.equal(revokeDeviceResponse.statusCode, 200);
+    assert.equal(revokeDeviceResponse.json().revoked, true);
+
+    const revokedBundleResponse = await app.inject({
+      method: 'GET',
+      url: `/v1/devices/bundles/${recipientAccountId}/${recipientDeviceId}`,
+      headers: {
+        authorization: `Bearer ${senderToken}`,
+      },
+    });
+
+    assert.equal(revokedBundleResponse.statusCode, 404);
+
+    const revokedSessionInboxResponse = await app.inject({
+      method: 'GET',
+      url: '/v1/messages/envelopes?limit=5',
+      headers: {
+        authorization: `Bearer ${recipientToken}`,
+      },
+    });
+
+    assert.equal(revokedSessionInboxResponse.statusCode, 401);
+
     const storedEnvelope = await prisma.encryptedMessageEnvelope.findUnique({
       where: { messageId: 'message_integration_0001' },
     });
@@ -256,6 +287,7 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
             'encrypted_envelopes.fanout_queued',
             'encrypted_envelopes.delivered',
             'encrypted_envelope.acknowledged',
+            'device.revoked',
           ],
         },
       },
@@ -263,7 +295,7 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
 
     assert.equal(storedEnvelope?.deliveryState, 'ACKNOWLEDGED');
     assert.equal(storedEnvelope?.bodyCiphertext, 'encrypted-body-only');
-    assert.ok(auditEvents.length >= 6);
+    assert.ok(auditEvents.length >= 7);
     assert.doesNotMatch(JSON.stringify(auditEvents), /identity-key|signed-prekey|one-time-prekey/i);
   });
 

@@ -147,10 +147,15 @@ export class PrismaSessionRepository implements SessionRepository {
         id: true,
         accountId: true,
         deviceId: true,
+        device: {
+          select: {
+            revokedAt: true,
+          },
+        },
       },
     });
 
-    if (!session) {
+    if (!session || session.device.revokedAt) {
       return null;
     }
 

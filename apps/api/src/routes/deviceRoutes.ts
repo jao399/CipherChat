@@ -5,6 +5,7 @@ import type { DeviceRepository, SessionRepository } from '../repositories/types.
 import {
   acceptedResponseSchema,
   deviceBundleBodySchema,
+  deviceRevokedResponseSchema,
   errorResponseSchema,
   publicDeviceBundleResponseSchema,
 } from '../schemas.js';
@@ -138,6 +139,66 @@ export async function registerDeviceRoutes(
       }
 
       return reply.send(bundle);
+    },
+  );
+
+  app.delete<{ Params: { accountId: string; deviceId: string } }>(
+    '/v1/devices/:accountId/:deviceId',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['accountId', 'deviceId'],
+          additionalProperties: false,
+          properties: {
+            accountId: { type: 'string', minLength: 16 },
+            deviceId: { type: 'string', minLength: 16 },
+          },
+        },
+        response: {
+          200: deviceRevokedResponseSchema,
+          401: errorResponseSchema,
+          403: errorResponseSchema,
+          404: errorResponseSchema,
+          503: errorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const session = await requireDeviceSession(request, reply, sessions);
+
+      if (!session) {
+        return reply;
+      }
+
+      if (!repository) {
+        return reply.code(503).send({
+          error: 'database_unavailable',
+          message: 'Device revocation requires DATABASE_URL and a reachable database.',
+        });
+      }
+
+      if (session.accountId !== request.params.accountId) {
+        return reply.code(403).send({
+          error: 'device_revoke_forbidden',
+          message: 'Only an authenticated device for this account can revoke account devices.',
+        });
+      }
+
+      const revoked = await repository.revokeDevice({
+        accountId: request.params.accountId,
+        deviceId: request.params.deviceId,
+        actorDeviceId: session.deviceId,
+      });
+
+      if (!revoked) {
+        return reply.code(404).send({
+          error: 'device_not_found',
+          message: 'No device was found for that account.',
+        });
+      }
+
+      return reply.send(revoked);
     },
   );
 }

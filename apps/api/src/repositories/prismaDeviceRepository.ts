@@ -155,6 +155,63 @@ export class PrismaDeviceRepository implements DeviceRepository {
       publishedAt: device.prekeyBundle.publishedAt.toISOString(),
     };
   }
+
+  async revokeDevice(input: { accountId: string; deviceId: string; actorDeviceId: string }) {
+    const revokedAt = new Date();
+
+    return this.prisma.$transaction(async (tx) => {
+      const device = await tx.device.findFirst({
+        where: {
+          id: input.deviceId,
+          accountId: input.accountId,
+        },
+        select: {
+          id: true,
+          accountId: true,
+          revokedAt: true,
+        },
+      });
+
+      if (!device) {
+        return null;
+      }
+
+      if (!device.revokedAt) {
+        await tx.device.update({
+          where: { id: input.deviceId },
+          data: { revokedAt },
+        });
+
+        await tx.deviceSession.updateMany({
+          where: {
+            accountId: input.accountId,
+            deviceId: input.deviceId,
+            revokedAt: null,
+          },
+          data: { revokedAt },
+        });
+
+        await tx.auditEvent.create({
+          data: {
+            accountId: input.accountId,
+            eventType: 'device.revoked',
+            actorId: input.actorDeviceId,
+            targetId: input.deviceId,
+            metadata: {
+              sessionsRevoked: true,
+            },
+          },
+        });
+      }
+
+      return {
+        accountId: device.accountId,
+        deviceId: device.id,
+        revoked: true,
+        revokedAt: (device.revokedAt ?? revokedAt).toISOString(),
+      };
+    });
+  }
 }
 
 function selectDeviceBundleAuditEvent(accountDeviceCount: number, deviceKnown: boolean, identityChanged: boolean) {

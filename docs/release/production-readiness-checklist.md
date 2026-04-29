@@ -44,6 +44,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Server never receives plaintext message bodies.
 - Server audit logs avoid message content, filenames, and private contact details.
 - Abuse prevention is designed without breaking message privacy.
+- Device revocation invalidates active sessions and removes revoked devices from public key discovery.
 - Rate limits and queue limits are configured per environment.
 - Account creation, session creation, discovery, and fanout abuse controls are test-covered.
 - Metadata retention cleanup is configured, tested, and scheduled.
