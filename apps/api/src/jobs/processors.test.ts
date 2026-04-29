@@ -72,6 +72,22 @@ describe('job processor', () => {
     );
   });
 
+  it('fails delivery fanout jobs when push delivery is not configured', async () => {
+    const processor = createJobProcessor(createMessageRepository());
+
+    await assert.rejects(
+      () =>
+        processor({
+          name: 'delivery.fanout',
+          data: {
+            messageIds: ['message_001'],
+            recipientDeviceCount: 1,
+          },
+        } as never),
+      /Push notification service is not configured/,
+    );
+  });
+
   it('sends only generic push wake payloads for delivery fanout jobs', async () => {
     const sentPayloads: unknown[] = [];
     const pushNotifications: PushNotificationPort = {

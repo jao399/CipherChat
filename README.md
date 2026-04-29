@@ -742,12 +742,66 @@ CipherChat now hardens the public device bundle/prekey publication path:
 
 More detail: `docs/architecture/phase-52-device-bundle-publication-auth.md`.
 
+### Phase 53 - Device Key Audit History
+
+CipherChat now records metadata-only audit events when device bundle material is published:
+
+- first device published
+- additional device added
+- device identity changed
+- existing bundle updated
+
+The audit metadata stores only device-known status, identity-change status, and one-time prekey count. It does not store public key material, prekey values, safety numbers, message content, filenames, or contact graph details.
+
+More detail: `docs/architecture/phase-53-device-key-audit-history.md`.
+
+### Phase 54 - Device Revocation And Compromise Handling
+
+CipherChat now supports server-enforced account device revocation:
+
+- `DELETE /v1/devices/:accountId/:deviceId` requires an authenticated same-account device session.
+- Revocation marks the device as revoked and invalidates active sessions for that device.
+- Revoked devices are excluded from public bundle lookup and discovery.
+- A metadata-only `device.revoked` audit event is recorded without key material, message content, filenames, or contact graph details.
+
+More detail: `docs/architecture/phase-54-device-revocation-compromise-handling.md`.
+
+### Phase 55 - Mobile Device Revocation UX
+
+CipherChat now exposes device revocation in the Expo app:
+
+- `CipherChatApiClient.revokeDevice` calls the authenticated backend revocation endpoint.
+- Mock mode removes the mock public bundle for the revoked device.
+- `BackendProvider.revokeCurrentDevice` clears the local stored session after revocation.
+- Settings includes a guarded **Revoke This Device** action.
+
+More detail: `docs/architecture/phase-55-mobile-device-revocation-ux.md`.
+
+### Phase 56 - Account Device Management
+
+CipherChat now has an authenticated account-device listing path:
+
+- `GET /v1/devices` returns device metadata for the authenticated account only.
+- The endpoint marks the current device and includes revocation status without returning public keys, prekeys, tokens, push tokens, or message metadata.
+- `DeviceManagementScreen` lets users review active/revoked devices and revoke account devices from the app.
+
+More detail: `docs/architecture/phase-56-account-device-management.md`.
+
+### Phase 57 - One-Time Prekey Claiming
+
+CipherChat now has a future-ready one-time prekey consumption path:
+
+- `POST /v1/devices/bundles/:accountId/:deviceId/claim` requires a verified device session.
+- The route returns at most one one-time prekey and removes it transactionally from the stored bundle.
+- Claims record metadata-only audit events with remaining prekey count, not key material or contact graph details.
+
+More detail: `docs/architecture/phase-57-one-time-prekey-claiming.md`.
+
 ## Next Steps
 
-1. Build and install an Expo Android development client, then record SQLCipher verification evidence.
-2. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
-3. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
-4. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-5. Install Android platform tools and run the SQLCipher adapter in a real development client.
-6. Run the Android and iOS development-client verification checklist on installed native builds.
-7. Add key transparency or auditable key-history design before production contact trust.
+1. Add prekey top-up and low-watermark handling for active devices.
+2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
+3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
+4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
+5. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
+6. Add key transparency or auditable key-history review before production contact trust.

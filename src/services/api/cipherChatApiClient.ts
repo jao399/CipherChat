@@ -1,8 +1,10 @@
 import type {
   AccountResponse,
   AccountDiscoveryResponse,
+  AccountDeviceListResponse,
   ApiReadiness,
   DeviceChallengeResponse,
+  DeviceRevocationResponse,
   DeviceSessionResponse,
   EncryptedEnvelopeFanoutRequest,
   EncryptedEnvelopeFanoutResponse,
@@ -73,6 +75,14 @@ export class CipherChatApiClient {
     );
   }
 
+  async claimDevicePrekeyBundle(input: { accountId: string; deviceId: string; token: string }) {
+    return this.request<PublicDeviceBundleResponse>(
+      `/v1/devices/bundles/${encodeURIComponent(input.accountId)}/${encodeURIComponent(input.deviceId)}/claim`,
+      { method: 'POST', body: '{}' },
+      { token: input.token },
+    );
+  }
+
   async createDeviceChallenge(input: { accountId: string; deviceId: string }) {
     return this.request<DeviceChallengeResponse>('/v1/auth/device-challenges', {
       method: 'POST',
@@ -93,6 +103,18 @@ export class CipherChatApiClient {
       { method: 'DELETE' },
       { token },
     );
+  }
+
+  async revokeDevice(input: { accountId: string; deviceId: string; token: string }) {
+    return this.request<DeviceRevocationResponse>(
+      `/v1/devices/${encodeURIComponent(input.accountId)}/${encodeURIComponent(input.deviceId)}`,
+      { method: 'DELETE' },
+      { token: input.token },
+    );
+  }
+
+  async listAccountDevices(token: string) {
+    return this.request<AccountDeviceListResponse>('/v1/devices', undefined, { token });
   }
 
   async sendEnvelope(input: EncryptedEnvelopeRequest, token: string) {

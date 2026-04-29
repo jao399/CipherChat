@@ -10,6 +10,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Live sends must be blocked while the active message crypto provider is prototype-only.
 - Native encrypted local storage must be verified on Android and iOS development clients.
 - Device-session auth must support revocation, expiry, token hashing at rest, and abuse monitoring.
+- Device revocation must invalidate active sessions and remove the revoked device from public key discovery.
 - Key-change warnings must block send until users review changed safety numbers.
 - External security review must be completed before production launch.
 - CI must pass `npm run validate:ci` on the release commit.
@@ -19,6 +20,7 @@ These criteria are production blockers. CipherChat must not process production u
 - One-to-one messaging must use a reviewed Signal-style X3DH plus Double Ratchet implementation.
 - Group messaging must use MLS or a reviewed MLS implementation strategy before production group E2EE.
 - Device identity keys, signed prekeys, one-time prekeys, and session state must have documented lifecycle rules.
+- One-time prekey claim routes must consume at most one prekey transactionally and avoid returning reusable prekey arrays for production session setup.
 - The server must only receive public key material, ciphertext, opaque headers, delivery metadata, and selected user-disclosed abuse report content.
 - No custom cryptographic primitive may be introduced without a formal design review.
 - One-to-one production sends must use the `signal-x3dh-double-ratchet-v1` provider with a reviewed Signal/libsignal-compatible adapter.
@@ -36,6 +38,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Durable outbound queue records must reject plaintext-shaped fields before persistence.
 - Device identity signing must be isolated behind a key-store/provider boundary; direct app flows must not load private key bytes.
 - Non-exportable Android Keystore and iOS Keychain options must replace the Expo SecureStore fallback before production encrypted messaging.
+- Mobile settings must expose device revocation and clear local sessions after successful revocation.
 
 ## API and infrastructure gates
 
@@ -51,6 +54,9 @@ These criteria are production blockers. CipherChat must not process production u
 - Delivery queue retention, cleanup, and Redis operational visibility tests must pass before release.
 - Internal routes must use managed secrets, rotation policy, and network restrictions where available.
 - PostgreSQL and Redis credentials must live outside source control and CI logs.
+- Device bundle publication and identity-key changes must create metadata-only audit events.
+- Device revocation must require same-account device authentication and create metadata-only audit events.
+- Account device listing must be scoped to the authenticated account and must not return key material, session tokens, push tokens, or message metadata.
 
 ## Privacy and abuse gates
 

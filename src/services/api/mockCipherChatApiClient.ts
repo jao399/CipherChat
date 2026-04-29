@@ -1,8 +1,10 @@
 import type {
   AccountDiscoveryResponse,
+  AccountDeviceListResponse,
   AccountResponse,
   ApiReadiness,
   DeviceChallengeResponse,
+  DeviceRevocationResponse,
   DeviceSessionResponse,
   EncryptedEnvelopeFanoutRequest,
   EncryptedEnvelopeFanoutResponse,
@@ -117,6 +119,15 @@ export const mockCipherChatApiClient = {
     };
   },
 
+  async claimDevicePrekeyBundle(input: { accountId: string; deviceId: string }): Promise<PublicDeviceBundleResponse> {
+    const bundle = await this.getPublicDeviceBundle(input);
+
+    return {
+      ...bundle,
+      oneTimePrekeys: bundle.oneTimePrekeys.slice(0, 1),
+    };
+  },
+
   async createDeviceChallenge(input: { accountId: string; deviceId: string }): Promise<DeviceChallengeResponse> {
     return {
       challengeId: 'mock_challenge_0001',
@@ -134,6 +145,34 @@ export const mockCipherChatApiClient = {
       deviceId: input.deviceId,
       token: 'mock-session-token',
       expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    };
+  },
+
+  async revokeDevice(input: { accountId: string; deviceId: string }): Promise<DeviceRevocationResponse> {
+    publishedBundles.delete(bundleKey(input.accountId, input.deviceId));
+
+    return {
+      accountId: input.accountId,
+      deviceId: input.deviceId,
+      revoked: true,
+      revokedAt: new Date().toISOString(),
+    };
+  },
+
+  async listAccountDevices(input: { accountId: string; deviceId: string }): Promise<AccountDeviceListResponse> {
+    return {
+      devices: [
+        {
+          accountId: input.accountId,
+          deviceId: input.deviceId,
+          deviceName: 'Prototype Device',
+          trustState: 'VERIFIED',
+          lastSeenAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isCurrentDevice: true,
+        },
+      ],
     };
   },
 

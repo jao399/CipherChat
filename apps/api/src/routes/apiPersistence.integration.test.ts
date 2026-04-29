@@ -167,6 +167,27 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
 
     const senderToken = senderSession.json().token;
     const recipientToken = recipientSession.json().token;
+
+    const claimedPrekey = await app.inject({
+      method: 'POST',
+      url: `/v1/devices/bundles/${recipientAccountId}/${recipientDeviceId}/claim`,
+      headers: {
+        authorization: `Bearer ${senderToken}`,
+      },
+    });
+    const exhaustedPrekey = await app.inject({
+      method: 'POST',
+      url: `/v1/devices/bundles/${recipientAccountId}/${recipientDeviceId}/claim`,
+      headers: {
+        authorization: `Bearer ${senderToken}`,
+      },
+    });
+
+    assert.equal(claimedPrekey.statusCode, 200);
+    assert.deepEqual(claimedPrekey.json().oneTimePrekeys, ['recipient-one-time-prekey-material-01']);
+    assert.equal(exhaustedPrekey.statusCode, 200);
+    assert.deepEqual(exhaustedPrekey.json().oneTimePrekeys, []);
+
     const sendResponse = await app.inject({
       method: 'POST',
       url: '/v1/messages/envelopes/fanout',
@@ -244,6 +265,50 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
     assert.equal(ackResponse.statusCode, 200);
     assert.equal(ackResponse.json().deliveryState, 'ACKNOWLEDGED');
 
+    const deviceListResponse = await app.inject({
+      method: 'GET',
+      url: '/v1/devices',
+      headers: {
+        authorization: `Bearer ${recipientToken}`,
+      },
+    });
+
+    assert.equal(deviceListResponse.statusCode, 200);
+    assert.equal(deviceListResponse.json().devices.length, 1);
+    assert.equal(deviceListResponse.json().devices[0].deviceId, recipientDeviceId);
+    assert.equal(deviceListResponse.json().devices[0].isCurrentDevice, true);
+
+    const revokeDeviceResponse = await app.inject({
+      method: 'DELETE',
+      url: `/v1/devices/${recipientAccountId}/${recipientDeviceId}`,
+      headers: {
+        authorization: `Bearer ${recipientToken}`,
+      },
+    });
+
+    assert.equal(revokeDeviceResponse.statusCode, 200);
+    assert.equal(revokeDeviceResponse.json().revoked, true);
+
+    const revokedBundleResponse = await app.inject({
+      method: 'GET',
+      url: `/v1/devices/bundles/${recipientAccountId}/${recipientDeviceId}`,
+      headers: {
+        authorization: `Bearer ${senderToken}`,
+      },
+    });
+
+    assert.equal(revokedBundleResponse.statusCode, 404);
+
+    const revokedSessionInboxResponse = await app.inject({
+      method: 'GET',
+      url: '/v1/messages/envelopes?limit=5',
+      headers: {
+        authorization: `Bearer ${recipientToken}`,
+      },
+    });
+
+    assert.equal(revokedSessionInboxResponse.statusCode, 401);
+
     const storedEnvelope = await prisma.encryptedMessageEnvelope.findUnique({
       where: { messageId: 'message_integration_0001' },
     });
@@ -251,10 +316,13 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
       where: {
         eventType: {
           in: [
+            'device_bundle.first_device_published',
             'device_session.created',
+            'device_bundle.one_time_prekey_claimed',
             'encrypted_envelopes.fanout_queued',
             'encrypted_envelopes.delivered',
             'encrypted_envelope.acknowledged',
+            'device.revoked',
           ],
         },
       },
@@ -262,7 +330,8 @@ describe('API persistence integration', { skip: !runIntegrationTests }, () => {
 
     assert.equal(storedEnvelope?.deliveryState, 'ACKNOWLEDGED');
     assert.equal(storedEnvelope?.bodyCiphertext, 'encrypted-body-only');
-    assert.ok(auditEvents.length >= 4);
+    assert.ok(auditEvents.length >= 8);
+    assert.doesNotMatch(JSON.stringify(auditEvents), /identity-key|signed-prekey|one-time-prekey/i);
   });
 
   it('cleans expired metadata without touching active sessions or valid queued envelopes', async () => {

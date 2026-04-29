@@ -24,6 +24,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Message encryption provider selection is explicit and test-covered.
 - No custom message cryptography is introduced.
 - One-to-one messaging uses a reviewed Signal/X3DH + Double Ratchet implementation.
+- One-time prekeys are claimed through a transactional consume-on-read path.
 - Group messaging uses MLS or a reviewed MLS implementation strategy.
 - Key verification UX handles new, trusted, changed, and revoked identities.
 - Key rotation behavior is documented and tested.
@@ -44,6 +45,8 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Server never receives plaintext message bodies.
 - Server audit logs avoid message content, filenames, and private contact details.
 - Abuse prevention is designed without breaking message privacy.
+- Device revocation invalidates active sessions and removes revoked devices from public key discovery.
+- Account device listing is scoped to authenticated account metadata only.
 - Rate limits and queue limits are configured per environment.
 - Account creation, session creation, discovery, and fanout abuse controls are test-covered.
 - Metadata retention cleanup is configured, tested, and scheduled.
@@ -52,6 +55,8 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 ## Privacy
 
 - Push notifications contain opaque event IDs only.
+- APNs/FCM provider configuration is complete and production startup fails closed without it.
+- Push provider ports are wired with background/data-only wake delivery and no alert or notification body.
 - Metadata minimization review is complete.
 - Data retention policy is implemented for server metadata cleanup.
 - Contact discovery scraping-resistance review is complete.
@@ -63,6 +68,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 
 - Production secrets are stored outside source control.
 - Production API config validation passes with strong secrets and managed dependency URLs.
+- Push credentials are stored in the deployment secret manager and rotation owners are assigned.
 - API and worker startup dependency checks pass before accepting traffic.
 - Database migrations have rollback plans.
 - Redis and queue monitoring are configured.

@@ -17,6 +17,7 @@ export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
   Conversation: { chatId: string };
   DeviceVerification: undefined;
+  DeviceManagement: undefined;
   SecureFileTransfer: undefined;
   PrivacyDashboard: undefined;
   About: undefined;
