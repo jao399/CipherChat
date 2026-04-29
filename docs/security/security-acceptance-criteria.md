@@ -11,6 +11,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Native encrypted local storage must be verified on Android and iOS development clients.
 - Device-session auth must support revocation, expiry, token hashing at rest, and abuse monitoring.
 - Key-change warnings must block send until users review changed safety numbers.
+- External security review must be completed before production launch.
 - CI must pass `npm run validate:ci` on the release commit.
 
 ## Cryptography gates
@@ -71,6 +72,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Queue operations gate output: `npm run verify:queue-operations`
 - Production config gate output: `npm run verify:production-config`
 - Startup health gate output: `npm run verify:startup-health`
+- Audit readiness gate output: `npm run verify:audit-readiness`
 - Passing CI output for `npm run validate:ci`
 - Android development-client SQLCipher verification result
 - iOS development-client SQLCipher verification result
@@ -82,3 +84,4 @@ These criteria are production blockers. CipherChat must not process production u
 - Startup health and graceful shutdown test evidence
 - Key-change warning UX test evidence
 - Production secret storage and rotation plan
+- External security review report and remediation evidence

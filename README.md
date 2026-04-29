@@ -708,6 +708,19 @@ CipherChat now has a production release-operations scaffold:
 
 More detail: `docs/architecture/phase-49-production-release-operations.md`.
 
+### Phase 50 - External Security Review And Audit Readiness
+
+CipherChat now has an external audit-readiness package:
+
+- `docs/security/external-audit-readiness.md` defines scope, blockers, review tracks, and deliverables.
+- `docs/security/audit-evidence-manifest.md` lists commands, documents, implementation evidence, and runtime evidence to attach before launch.
+- `scripts/verify-audit-readiness.mjs` adds a release gate.
+- `npm run validate:ci` includes `npm run verify:audit-readiness`.
+
+This does not mark CipherChat production-ready. Real Signal/libsignal crypto, MLS strategy review, stronger native key handling, iOS SQLCipher runtime evidence, key-change warning enforcement, and external finding remediation remain production blockers.
+
+More detail: `docs/architecture/phase-50-external-security-review-audit-readiness.md`.
+
 ## Next Steps
 
 1. Build and install an Expo Android development client, then record SQLCipher verification evidence.
