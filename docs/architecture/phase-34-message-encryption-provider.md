@@ -24,17 +24,18 @@ The previous live-send gate correctly blocked prototype crypto, but the prototyp
 - `mockReady`
 - `prepareOutboundFanout`
 
-The active providers are:
+The provider ids are:
 
 - `prototype-sha256-envelope-v1`: mock-ready, not production-ready
-- `signal-double-ratchet-pending`: production contract placeholder, not operational yet
+- `signal-double-ratchet-pending`: legacy production contract placeholder, not operational
+- `signal-x3dh-double-ratchet-v1`: active Signal-style integration boundary, blocked until a reviewed adapter is installed
 
 ## Runtime selection
 
 Provider selection is handled by `selectMessageEncryptionProvider`:
 
 - mock mode defaults to `prototype-sha256-envelope-v1`
-- live mode defaults to `signal-double-ratchet-pending`
+- live mode defaults to `signal-x3dh-double-ratchet-v1`
 - `EXPO_PUBLIC_CIPHERCHAT_MESSAGE_CRYPTO_PROVIDER` can explicitly request either provider for controlled testing
 
 Live mode remains blocked because the selected provider is not production-ready.

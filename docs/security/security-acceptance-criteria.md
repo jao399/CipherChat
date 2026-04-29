@@ -19,6 +19,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Device identity keys, signed prekeys, one-time prekeys, and session state must have documented lifecycle rules.
 - The server must only receive public key material, ciphertext, opaque headers, delivery metadata, and selected user-disclosed abuse report content.
 - No custom cryptographic primitive may be introduced without a formal design review.
+- One-to-one production sends must use the `signal-x3dh-double-ratchet-v1` provider with a reviewed Signal/libsignal-compatible adapter.
 - A reviewed production provider must replace `prototype-sha256-envelope-v1` before live sends are enabled.
 - Message encryption provider selection must remain explicit and test-covered.
 - Test vectors and interoperability tests must cover key agreement, message ratcheting, replay handling, and key rotation.

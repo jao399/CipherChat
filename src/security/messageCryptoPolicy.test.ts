@@ -24,14 +24,14 @@ describe('message crypto production gate', () => {
   it('documents the live provider contract as not production ready', () => {
     const readiness = getMessageCryptoReadiness('live');
 
-    assert.equal(readiness.provider, 'signal-double-ratchet-pending');
+    assert.equal(readiness.provider, 'signal-x3dh-double-ratchet-v1');
     assert.equal(readiness.productionReady, false);
     assert.match(readiness.detail, /Signal\/X3DH/);
   });
 
   it('can permit live sends once a reviewed provider is wired later', () => {
     const futureProvider: MessageCryptoReadiness = {
-      provider: 'signal-double-ratchet-pending',
+      provider: 'signal-x3dh-double-ratchet-v1',
       label: 'Reviewed Signal provider',
       detail: 'Future production provider placeholder for policy tests.',
       productionReady: true,

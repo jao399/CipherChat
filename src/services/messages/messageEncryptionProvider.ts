@@ -1,8 +1,12 @@
 import type { BackendMode } from '../../config/api';
 import type { EncryptedEnvelopeFanoutRequest } from '../api/types';
 import type { RemoteIdentityTrustRecord } from '../../types';
+import { signalOneToOneMessageEncryptionProvider } from './signalOneToOneCryptoProvider';
 
-export type MessageCryptoProviderId = 'prototype-sha256-envelope-v1' | 'signal-double-ratchet-pending';
+export type MessageCryptoProviderId =
+  | 'prototype-sha256-envelope-v1'
+  | 'signal-double-ratchet-pending'
+  | 'signal-x3dh-double-ratchet-v1';
 
 export type PrepareMessageFanoutInput = {
   conversationId: string;
@@ -37,7 +41,7 @@ export const prototypeMessageEncryptionProvider: MessageEncryptionProvider = {
 export const pendingSignalMessageEncryptionProvider: MessageEncryptionProvider = {
   id: 'signal-double-ratchet-pending',
   label: 'Signal provider pending',
-  detail: 'Production provider contract reserved for reviewed Signal/X3DH + Double Ratchet encryption.',
+  detail: 'Legacy production provider placeholder. Use signal-x3dh-double-ratchet-v1 for the active integration boundary.',
   productionReady: false,
   mockReady: false,
   async prepareOutboundFanout() {
@@ -49,7 +53,11 @@ export function readConfiguredMessageCryptoProviderId(): MessageCryptoProviderId
   const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
   const configured = env?.EXPO_PUBLIC_CIPHERCHAT_MESSAGE_CRYPTO_PROVIDER;
 
-  if (configured === 'prototype-sha256-envelope-v1' || configured === 'signal-double-ratchet-pending') {
+  if (
+    configured === 'prototype-sha256-envelope-v1' ||
+    configured === 'signal-double-ratchet-pending' ||
+    configured === 'signal-x3dh-double-ratchet-v1'
+  ) {
     return configured;
   }
 
@@ -68,5 +76,11 @@ export function selectMessageEncryptionProvider(
     return pendingSignalMessageEncryptionProvider;
   }
 
-  return mode === 'mock' ? prototypeMessageEncryptionProvider : pendingSignalMessageEncryptionProvider;
+  if (requestedProviderId === 'signal-x3dh-double-ratchet-v1') {
+    return signalOneToOneMessageEncryptionProvider;
+  }
+
+  return mode === 'mock' ? prototypeMessageEncryptionProvider : signalOneToOneMessageEncryptionProvider;
 }
+
+export { createSignalOneToOneMessageEncryptionProvider, signalOneToOneMessageEncryptionProvider } from './signalOneToOneCryptoProvider';
