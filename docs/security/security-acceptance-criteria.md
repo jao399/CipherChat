@@ -21,6 +21,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Group messaging must use MLS or a reviewed MLS implementation strategy before production group E2EE.
 - Device identity keys, signed prekeys, one-time prekeys, and session state must have documented lifecycle rules.
 - Production Signal adapters must use the `signal-x3dh-v1` prekey bundle contract and reject prototype placeholder prekeys.
+- Production Signal adapter registration must be explicit, startup-checked, and backed by release evidence for the installed native adapter.
 - One-time prekey claim routes must consume at most one prekey transactionally and avoid returning reusable prekey arrays for production session setup.
 - Prekey inventory status must expose counts and thresholds only, never key material or message/contact metadata.
 - Prekey top-up routes must accept only client-generated public one-time prekeys from the authenticated current device and must not log or return prekey values.

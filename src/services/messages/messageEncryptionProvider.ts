@@ -1,7 +1,11 @@
 import type { BackendMode } from '../../config/api';
 import type { EncryptedEnvelopeFanoutRequest } from '../api/types';
 import type { RemoteIdentityTrustRecord } from '../../types';
-import { signalOneToOneMessageEncryptionProvider } from './signalOneToOneCryptoProvider';
+import { getRegisteredSignalOneToOneCryptoAdapter } from './signalAdapterRegistry';
+import {
+  createSignalOneToOneMessageEncryptionProvider,
+  signalOneToOneMessageEncryptionProvider,
+} from './signalOneToOneCryptoProvider';
 
 export type MessageCryptoProviderId =
   | 'prototype-sha256-envelope-v1'
@@ -77,10 +81,20 @@ export function selectMessageEncryptionProvider(
   }
 
   if (requestedProviderId === 'signal-x3dh-double-ratchet-v1') {
-    return signalOneToOneMessageEncryptionProvider;
+    return getSignalOneToOneMessageEncryptionProvider();
   }
 
-  return mode === 'mock' ? prototypeMessageEncryptionProvider : signalOneToOneMessageEncryptionProvider;
+  return mode === 'mock' ? prototypeMessageEncryptionProvider : getSignalOneToOneMessageEncryptionProvider();
 }
 
+export function getSignalOneToOneMessageEncryptionProvider() {
+  const adapter = getRegisteredSignalOneToOneCryptoAdapter();
+  return adapter ? createSignalOneToOneMessageEncryptionProvider(adapter) : signalOneToOneMessageEncryptionProvider;
+}
+
+export {
+  clearRegisteredSignalOneToOneCryptoAdapter,
+  getRegisteredSignalOneToOneCryptoAdapter,
+  registerSignalOneToOneCryptoAdapter,
+} from './signalAdapterRegistry';
 export { createSignalOneToOneMessageEncryptionProvider, signalOneToOneMessageEncryptionProvider } from './signalOneToOneCryptoProvider';

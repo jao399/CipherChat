@@ -842,9 +842,20 @@ CipherChat now has a stricter production prekey contract for future Signal/libsi
 
 More detail: `docs/architecture/phase-61-signal-x3dh-prekey-contract.md`.
 
+### Phase 62 - Signal Adapter Registry
+
+CipherChat now has a runtime registry for the future reviewed native Signal/libsignal adapter:
+
+- A `SignalOneToOneCryptoAdapter` can be registered, read, and cleared.
+- Live provider selection uses the registered adapter when present.
+- Without a registered adapter, live mode remains gated and non-production-ready.
+- Registered adapters still must declare the `signal-x3dh-v1` prekey bundle format before production readiness is reported.
+
+More detail: `docs/architecture/phase-62-signal-adapter-registry.md`.
+
 ## Next Steps
 
-1. Install and review a real libsignal-compatible native adapter for Signal identity/prekey generation and X3DH session setup.
+1. Add native Signal adapter startup readiness reporting for development and release builds.
 2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
 3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
 4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
