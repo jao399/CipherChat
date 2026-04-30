@@ -883,6 +883,13 @@ CipherChat now has a deterministic startup boundary for future native Signal ada
 
 More detail: `docs/architecture/phase-65-signal-adapter-bootstrap.md`.
 
+### Phase 66 - Signal Adapter Bootstrap Gate
+
+CipherChat now verifies the Signal adapter bootstrap boundary in CI:
+
+- `npm run verify:signal-adapter-readiness` checks bootstrap implementation, tests, and docs.
+- The gate now covers both readiness reporting and startup registration behavior.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.

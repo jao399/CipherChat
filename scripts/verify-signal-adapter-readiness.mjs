@@ -30,6 +30,23 @@ const checks = [
     ],
   },
   {
+    path: 'src/services/messages/signalAdapterBootstrap.ts',
+    markers: [
+      'bootstrapSignalOneToOneAdapter',
+      'clearRegisteredSignalOneToOneCryptoAdapter',
+      'registerSignalOneToOneCryptoAdapter',
+      'eligibleForRegistration',
+    ],
+  },
+  {
+    path: 'src/services/messages/signalAdapterBootstrap.test.ts',
+    markers: [
+      'leaves the registry empty when no native adapter is provided',
+      'refuses to register an adapter that is not production-ready',
+      'registers an eligible reviewed signal-x3dh-v1 adapter',
+    ],
+  },
+  {
     path: 'src/security/messageCryptoPolicy.ts',
     markers: [
       'signalAdapterInstalled',
@@ -44,6 +61,14 @@ const checks = [
       'missing adapters',
       'incompatible',
       'eligible reviewed adapters',
+    ],
+  },
+  {
+    path: 'docs/architecture/phase-65-signal-adapter-bootstrap.md',
+    markers: [
+      'Phase 65 - Signal Adapter Bootstrap',
+      'Ineligible adapters are not registered',
+      'bootstrapSignalOneToOneAdapter',
     ],
   },
 ];
