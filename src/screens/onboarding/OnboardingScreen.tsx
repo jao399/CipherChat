@@ -31,7 +31,12 @@ import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
-const welcomeHero = require('../../assets/images/welcome-hero.png');
+const onboardingArtworkBySlideId: Record<string, number> = {
+  privacy: require('../../assets/images/welcome-hero.png'),
+  devices: require('../../assets/images/Second page.png'),
+  files: require('../../assets/images/third page.png'),
+  control: require('../../assets/images/tutorial-final-background.png'),
+};
 
 export function OnboardingScreen({ navigation }: Props) {
   const [index, setIndex] = useState(0);
@@ -147,16 +152,17 @@ export function OnboardingScreen({ navigation }: Props) {
 }
 
 function OnboardingSlideView({ slide, width }: { slide: OnboardingSlide; width: number }) {
+  const artwork = onboardingArtworkBySlideId[slide.id] ?? onboardingArtworkBySlideId.privacy;
+
   return (
     <View style={[styles.slide, { width }]}>
       <View style={styles.heroFrame}>
-        <Image source={welcomeHero} resizeMode="contain" style={styles.heroArtwork} />
+        <Image source={artwork} resizeMode="cover" style={styles.heroArtwork} />
         <LinearGradient
-          colors={['rgba(5,5,9,0.00)', 'rgba(5,5,9,0.06)', 'rgba(5,5,9,0.70)']}
+          colors={['rgba(5,5,9,0.00)', 'rgba(5,5,9,0.08)', 'rgba(5,5,9,0.76)']}
           locations={[0, 0.58, 1]}
           style={StyleSheet.absoluteFill}
         />
-        <View pointerEvents="none" style={styles.heroArc} />
         <View style={styles.floatingIcon}>
           <Ionicons name={slide.icon as keyof typeof Ionicons.glyphMap} size={22} color={colors.primaryBright} />
         </View>
@@ -265,22 +271,12 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   heroArtwork: {
-    ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
-  },
-  heroArc: {
     position: 'absolute',
-    top: 64,
-    width: 210,
-    height: 210,
-    borderRadius: 105,
-    borderWidth: 1,
-    borderColor: 'rgba(168,85,247,0.42)',
-    shadowColor: colors.primaryBright,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.75,
-    shadowRadius: 18,
+    top: -128,
+    left: 0,
+    right: 0,
+    width: '100%',
+    height: 620,
   },
   floatingIcon: {
     position: 'absolute',
