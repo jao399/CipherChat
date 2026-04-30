@@ -97,6 +97,14 @@ export {
   type SignalAdapterBootstrapResult,
 } from './signalAdapterBootstrap';
 export {
+  createSignalPrekeyGenerationProvider,
+  signalPrekeyGenerationProvider,
+  type SignalGeneratedDevicePrekeyBundle,
+  type SignalPrekeyGenerationAdapter,
+  type SignalPrekeyGenerationInput,
+  type SignalPrekeyGenerationProvider,
+} from './signalPrekeyGenerationProvider';
+export {
   evaluateSignalAdapterReadiness,
   type SignalAdapterReadiness,
 } from './signalAdapterReadiness';

@@ -890,6 +890,17 @@ CipherChat now verifies the Signal adapter bootstrap boundary in CI:
 - `npm run verify:signal-adapter-readiness` checks bootstrap implementation, tests, and docs.
 - The gate now covers both readiness reporting and startup registration behavior.
 
+### Phase 67 - Signal Prekey Generation Contract
+
+CipherChat now has a native-adapter contract for future Signal/libsignal prekey generation:
+
+- `SignalPrekeyGenerationAdapter` defines the future adapter boundary for identity keys, signed prekeys, signatures, and one-time prekeys.
+- `createSignalPrekeyGenerationProvider` stays blocked until a reviewed production-ready `signal-x3dh-v1` adapter is installed.
+- Adapter output is validated before it can be used.
+- Tests cover blocked default behavior, valid adapter output, and malformed output rejection.
+
+More detail: `docs/architecture/phase-67-signal-prekey-generation-contract.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.
