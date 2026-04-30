@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   FlatList,
   NativeScrollEvent,
@@ -21,6 +21,11 @@ import { ONBOARDING_STORAGE_KEY } from '../../constants/storage';
 import { onboardingSlides } from '../../data/mockData';
 import { colors, gradients, radii, spacing, typography } from '../../theme';
 import type { OnboardingSlide } from '../../types';
+import {
+  getNextOnboardingIndex,
+  getOnboardingCtaLabel,
+  isFinalOnboardingSlide,
+} from '../../utils/onboardingNavigation';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
@@ -28,8 +33,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 export function OnboardingScreen({ navigation }: Props) {
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<OnboardingSlide>>(null);
-  const { width: windowWidth } = useWindowDimensions();
-  const slideWidth = Math.min(windowWidth, 480);
+  const { width: slideWidth } = useWindowDimensions();
+  const isLastSlide = isFinalOnboardingSlide(index, onboardingSlides.length);
+  const ctaLabel = getOnboardingCtaLabel(index, onboardingSlides.length);
 
   const finish = async () => {
     await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
@@ -41,15 +47,22 @@ export function OnboardingScreen({ navigation }: Props) {
       void finish();
       return;
     }
-    const nextIndex = index + 1;
+    const nextIndex = getNextOnboardingIndex(index, onboardingSlides.length);
     setIndex(nextIndex);
-    listRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+    listRef.current?.scrollToOffset({ offset: slideWidth * nextIndex, animated: true });
   };
 
   const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / slideWidth);
-    setIndex(nextIndex);
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / Math.max(1, slideWidth));
+    setIndex(Math.min(onboardingSlides.length - 1, Math.max(0, nextIndex)));
   };
+
+  const keyExtractor = useCallback((item: OnboardingSlide) => item.id, []);
+
+  const renderSlide = useCallback(
+    ({ item }: { item: OnboardingSlide }) => <OnboardingSlideView slide={item} width={slideWidth} />,
+    [slideWidth],
+  );
 
   return (
     <ScreenContainer padded={false}>
@@ -74,10 +87,12 @@ export function OnboardingScreen({ navigation }: Props) {
       <FlatList
         ref={listRef}
         data={onboardingSlides}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <OnboardingSlideView slide={item} width={slideWidth} />}
+        keyExtractor={keyExtractor}
+        renderItem={renderSlide}
         horizontal
         pagingEnabled
+        bounces={false}
+        decelerationRate="fast"
         getItemLayout={(_, itemIndex) => ({
           length: slideWidth,
           offset: slideWidth * itemIndex,
@@ -95,16 +110,20 @@ export function OnboardingScreen({ navigation }: Props) {
       <View style={styles.footer}>
         <View style={styles.dots}>
           {onboardingSlides.map((slide, dotIndex) => (
-            <View key={slide.id} style={[styles.dot, dotIndex === index && styles.activeDot]} />
+            <View
+              key={slide.id}
+              testID={`onboarding-dot-${dotIndex}`}
+              style={[styles.dot, dotIndex === index && styles.activeDot]}
+            />
           ))}
         </View>
         <GlowButton
-          accessibilityLabel={index === onboardingSlides.length - 1 ? 'Finish onboarding' : 'Next onboarding slide'}
-          testID={index === onboardingSlides.length - 1 ? 'onboarding-get-started' : 'onboarding-next'}
+          accessibilityLabel={isLastSlide ? 'Finish onboarding' : 'Next onboarding slide'}
+          testID={isLastSlide ? 'onboarding-get-started' : 'onboarding-next'}
           onPress={next}
-          icon={index === onboardingSlides.length - 1 ? 'arrow-forward' : 'chevron-forward'}
+          icon={isLastSlide ? 'arrow-forward' : 'chevron-forward'}
         >
-          {index === onboardingSlides.length - 1 ? 'GET STARTED' : 'NEXT'}
+          {ctaLabel}
         </GlowButton>
       </View>
     </ScreenContainer>
