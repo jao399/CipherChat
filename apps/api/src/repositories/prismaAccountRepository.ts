@@ -86,17 +86,22 @@ export class PrismaAccountRepository implements AccountRepository {
       username: account.username ?? undefined,
       devices: account.devices
         .filter((device) => device.prekeyBundle)
-        .map((device) => ({
-          deviceId: device.id,
-          deviceName: device.displayName,
-          identityKey: device.identityKey,
-          signedPrekey: device.prekeyBundle?.signedPrekey ?? '',
-          signedPrekeySignature: device.prekeyBundle?.signedPrekeySignature ?? '',
-          oneTimePrekeys: Array.isArray(device.prekeyBundle?.oneTimePrekeys)
-            ? device.prekeyBundle.oneTimePrekeys.filter((item): item is string => typeof item === 'string')
-            : [],
-          publishedAt: device.prekeyBundle?.publishedAt.toISOString() ?? device.updatedAt.toISOString(),
-        })),
+        .map((device) => {
+          const publicSignalIdentityKey = device.prekeyBundle?.signalIdentityKey ?? device.identityKey;
+
+          return {
+            deviceId: device.id,
+            deviceName: device.displayName,
+            identityKey: publicSignalIdentityKey,
+            signalIdentityKey: publicSignalIdentityKey,
+            signedPrekey: device.prekeyBundle?.signedPrekey ?? '',
+            signedPrekeySignature: device.prekeyBundle?.signedPrekeySignature ?? '',
+            oneTimePrekeys: Array.isArray(device.prekeyBundle?.oneTimePrekeys)
+              ? device.prekeyBundle.oneTimePrekeys.filter((item): item is string => typeof item === 'string')
+              : [],
+            publishedAt: device.prekeyBundle?.publishedAt.toISOString() ?? device.updatedAt.toISOString(),
+          };
+        }),
     }));
   }
 }

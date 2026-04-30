@@ -192,7 +192,9 @@ describe('device bundle route', () => {
     accountDisplayName: 'Eleanor',
     deviceId: 'device_000000001',
     deviceName: 'Pixel Test Device',
+    authIdentityKey: 'ed25519-spki-auth-identity-key-material-0001',
     identityKey: 'identity-key-material-ciphertext-0001',
+    signalIdentityKey: 'identity-key-material-ciphertext-0001',
     signedPrekey: 'signed-prekey-material-ciphertext-01',
     signedPrekeySignature: 'signed-prekey-signature-ciphertext',
     oneTimePrekeys: ['one-time-prekey-0001'],
@@ -260,6 +262,8 @@ describe('device bundle route', () => {
     assert.equal(response.json().bundleId, 'bundle_000000001');
     assert.equal(publishedBundles.length, 1);
     assert.equal(publishedBundles[0]?.identityKey, body.identityKey);
+    assert.equal(publishedBundles[0]?.authIdentityKey, body.authIdentityKey);
+    assert.equal(publishedBundles[0]?.signalIdentityKey, body.signalIdentityKey);
   });
 
   it('requires an account device session before adding another device bundle to an existing account', async () => {
@@ -429,6 +433,7 @@ describe('device bundle route', () => {
           deviceId,
           deviceName: 'Pixel Test Device',
           identityKey: body.identityKey,
+          signalIdentityKey: body.signalIdentityKey,
           signedPrekey: body.signedPrekey,
           signedPrekeySignature: body.signedPrekeySignature,
           oneTimePrekeys: body.oneTimePrekeys,
@@ -468,6 +473,7 @@ describe('device bundle route', () => {
 
     assert.equal(response.statusCode, 200);
     assert.equal(response.json().identityKey, body.identityKey);
+    assert.equal(response.json().signalIdentityKey, body.signalIdentityKey);
     assert.equal(response.json().oneTimePrekeys.length, 1);
   });
 
@@ -491,6 +497,7 @@ describe('device bundle route', () => {
           deviceId,
           deviceName: 'Pixel Test Device',
           identityKey: body.identityKey,
+          signalIdentityKey: body.signalIdentityKey,
           signedPrekey: body.signedPrekey,
           signedPrekeySignature: body.signedPrekeySignature,
           oneTimePrekeys: ['one-time-prekey-0001'],
@@ -912,6 +919,7 @@ describe('device bundle route', () => {
           deviceId,
           deviceName: 'Recipient Device',
           identityKey: 'recipient-identity-key',
+          signalIdentityKey: 'recipient-identity-key',
           signedPrekey: 'recipient-signed-prekey',
           signedPrekeySignature: 'recipient-signed-prekey-signature',
           oneTimePrekeys: [],
@@ -1610,6 +1618,7 @@ describe('account route', () => {
                 deviceId: 'device_maya_000001',
                 deviceName: 'Maya Pixel',
                 identityKey: 'identity-key-material-ciphertext-0001',
+                signalIdentityKey: 'identity-key-material-ciphertext-0001',
                 signedPrekey: 'signed-prekey-material-ciphertext-01',
                 signedPrekeySignature: 'signed-prekey-signature-ciphertext',
                 oneTimePrekeys: ['one-time-prekey-0001'],

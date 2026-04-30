@@ -18,6 +18,8 @@ type DeviceBundleBody = {
   accountId: string;
   deviceId: string;
   deviceName: string;
+  authIdentityKey?: string;
+  signalIdentityKey?: string;
   identityKey: string;
   signedPrekey: string;
   signedPrekeySignature: string;

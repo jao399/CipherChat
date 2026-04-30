@@ -912,6 +912,17 @@ CipherChat now routes live device-bundle publication through the Signal prekey g
 
 More detail: `docs/architecture/phase-68-live-prekey-publication-boundary.md`.
 
+### Phase 69 - Auth And Signal Identity Split
+
+CipherChat now separates device authentication identity from Signal/X3DH messaging identity:
+
+- `authIdentityKey` is used for device-session challenge verification.
+- `signalIdentityKey` is stored with the public prekey bundle for future X3DH session setup.
+- Public bundle lookup, prekey claim, and contact discovery expose `signalIdentityKey`, while `identityKey` remains a backward-compatible alias for the public messaging identity.
+- Prototype clients that only send `identityKey` still work, but live-capable clients can now publish distinct authentication and Signal identities.
+
+More detail: `docs/architecture/phase-69-auth-signal-identity-split.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.

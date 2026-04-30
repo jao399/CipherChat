@@ -54,6 +54,8 @@ export function createDeviceBundlePublicationProvider(
         accountDisplayName: identity.accountDisplayName,
         deviceId: identity.deviceId,
         deviceName: identity.deviceName,
+        authIdentityKey: identity.identityKey,
+        signalIdentityKey: generated.identityKey,
         identityKey: generated.identityKey,
         signedPrekey: generated.signedPrekey,
         signedPrekeySignature: generated.signedPrekeySignature,

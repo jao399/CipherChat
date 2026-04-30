@@ -40,6 +40,8 @@ export class PrismaDeviceRepository implements DeviceRepository {
 
   async publishDeviceBundle(input: PublishDeviceBundleInput) {
     const accountDisplayName = input.accountDisplayName ?? 'CipherChat User';
+    const authIdentityKey = input.authIdentityKey ?? input.identityKey;
+    const signalIdentityKey = input.signalIdentityKey ?? input.identityKey;
 
     return this.prisma.$transaction(async (tx) => {
       const [existingAccount, existingDevice] = await Promise.all([
@@ -56,10 +58,19 @@ export class PrismaDeviceRepository implements DeviceRepository {
           select: {
             accountId: true,
             identityKey: true,
+            prekeyBundle: {
+              select: {
+                signalIdentityKey: true,
+              },
+            },
           },
         }),
       ]);
-      const identityChanged = Boolean(existingDevice && existingDevice.identityKey !== input.identityKey);
+      const identityChanged = Boolean(existingDevice && existingDevice.identityKey !== authIdentityKey);
+      const signalIdentityChanged = Boolean(
+        existingDevice?.prekeyBundle &&
+          (existingDevice.prekeyBundle.signalIdentityKey ?? existingDevice.identityKey) !== signalIdentityKey,
+      );
 
       await tx.account.upsert({
         where: { id: input.accountId },
@@ -78,12 +89,12 @@ export class PrismaDeviceRepository implements DeviceRepository {
           id: input.deviceId,
           accountId: input.accountId,
           displayName: input.deviceName,
-          identityKey: input.identityKey,
+          identityKey: authIdentityKey,
           lastSeenAt: new Date(),
         },
         update: {
           displayName: input.deviceName,
-          identityKey: input.identityKey,
+          identityKey: authIdentityKey,
           lastSeenAt: new Date(),
           revokedAt: null,
         },
@@ -93,11 +104,13 @@ export class PrismaDeviceRepository implements DeviceRepository {
         where: { deviceId: input.deviceId },
         create: {
           deviceId: input.deviceId,
+          signalIdentityKey,
           signedPrekey: input.signedPrekey,
           signedPrekeySignature: input.signedPrekeySignature,
           oneTimePrekeys: input.oneTimePrekeys ?? [],
         },
         update: {
+          signalIdentityKey,
           signedPrekey: input.signedPrekey,
           signedPrekeySignature: input.signedPrekeySignature,
           oneTimePrekeys: input.oneTimePrekeys ?? [],
@@ -114,6 +127,7 @@ export class PrismaDeviceRepository implements DeviceRepository {
           metadata: {
             deviceKnown: Boolean(existingDevice),
             identityChanged,
+            signalIdentityChanged,
             oneTimePrekeyCount: input.oneTimePrekeys?.length ?? 0,
           },
         },
@@ -144,12 +158,15 @@ export class PrismaDeviceRepository implements DeviceRepository {
       return null;
     }
 
+    const publicSignalIdentityKey = device.prekeyBundle.signalIdentityKey ?? device.identityKey;
+
     return {
       accountId: device.accountId,
       accountDisplayName: device.account.displayName,
       deviceId: device.id,
       deviceName: device.displayName,
-      identityKey: device.identityKey,
+      identityKey: publicSignalIdentityKey,
+      signalIdentityKey: publicSignalIdentityKey,
       signedPrekey: device.prekeyBundle.signedPrekey,
       signedPrekeySignature: device.prekeyBundle.signedPrekeySignature,
       oneTimePrekeys: readOneTimePrekeys(device.prekeyBundle.oneTimePrekeys),
@@ -198,12 +215,15 @@ export class PrismaDeviceRepository implements DeviceRepository {
         });
       }
 
+      const publicSignalIdentityKey = device.prekeyBundle.signalIdentityKey ?? device.identityKey;
+
       return {
         accountId: device.accountId,
         accountDisplayName: device.account.displayName,
         deviceId: device.id,
         deviceName: device.displayName,
-        identityKey: device.identityKey,
+        identityKey: publicSignalIdentityKey,
+        signalIdentityKey: publicSignalIdentityKey,
         signedPrekey: device.prekeyBundle.signedPrekey,
         signedPrekeySignature: device.prekeyBundle.signedPrekeySignature,
         oneTimePrekeys: claimedOneTimePrekey ? [claimedOneTimePrekey] : [],

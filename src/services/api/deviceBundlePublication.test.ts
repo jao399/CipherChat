@@ -115,7 +115,9 @@ describe('device bundle publication provider', () => {
 
     assert.equal(bundle.accountId, identity.accountId);
     assert.equal(bundle.deviceId, identity.deviceId);
+    assert.equal(bundle.authIdentityKey, identity.identityKey);
     assert.equal(bundle.identityKey, key('identity'));
+    assert.equal(bundle.signalIdentityKey, key('identity'));
     assert.equal(bundle.signedPrekey, key('signed-prekey'));
     assert.equal(bundle.oneTimePrekeys?.length, 3);
     assert.ok(bundle.oneTimePrekeys?.every((prekey) => prekey.startsWith('signal-x3dh-v1:one-time-prekey:')));
