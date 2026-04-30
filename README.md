@@ -923,6 +923,18 @@ CipherChat now separates device authentication identity from Signal/X3DH messagi
 
 More detail: `docs/architecture/phase-69-auth-signal-identity-split.md`.
 
+### Phase 70 - Prekey Bundle Format Policy
+
+CipherChat now records and validates public prekey bundle format metadata:
+
+- Stored prekey bundles have a `format` field.
+- Prototype bundles default to `prototype-v1`.
+- Declared `signal-x3dh-v1` bundles must match the expected public Signal key/signature string shapes before storage.
+- Public bundle lookup, prekey claim, and discovery return `prekeyBundleFormat`.
+- Current-device prekey top-up validates incoming one-time prekeys against the stored format.
+
+More detail: `docs/architecture/phase-70-prekey-bundle-format-policy.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.

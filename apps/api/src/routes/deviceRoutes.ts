@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 
 import { requireDeviceSession } from '../auth/deviceAuth.js';
 import type { DeviceRepository, SessionRepository } from '../repositories/types.js';
+import { PrekeyBundleFormatPolicyError } from '../security/prekeyBundleFormatPolicy.js';
 import {
   acceptedResponseSchema,
   accountDeviceListResponseSchema,
@@ -20,6 +21,7 @@ type DeviceBundleBody = {
   deviceName: string;
   authIdentityKey?: string;
   signalIdentityKey?: string;
+  prekeyBundleFormat?: string;
   identityKey: string;
   signedPrekey: string;
   signedPrekeySignature: string;
@@ -44,6 +46,7 @@ export async function registerDeviceRoutes(
           202: {
             ...acceptedResponseSchema,
           },
+          400: errorResponseSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
           503: errorResponseSchema,
@@ -92,7 +95,20 @@ export async function registerDeviceRoutes(
         }
       }
 
-      const published = await repository.publishDeviceBundle(request.body);
+      let published;
+
+      try {
+        published = await repository.publishDeviceBundle(request.body);
+      } catch (error) {
+        if (error instanceof PrekeyBundleFormatPolicyError) {
+          return reply.code(400).send({
+            error: 'invalid_prekey_bundle_format',
+            message: error.message,
+          });
+        }
+
+        throw error;
+      }
 
       return reply.code(202).send({
         accepted: true,
@@ -265,6 +281,7 @@ export async function registerDeviceRoutes(
       schema: {
         response: {
           200: devicePrekeyStatusResponseSchema,
+          400: errorResponseSchema,
           401: errorResponseSchema,
           404: errorResponseSchema,
           503: errorResponseSchema,
@@ -328,11 +345,24 @@ export async function registerDeviceRoutes(
         });
       }
 
-      const status = await repository.topUpDevicePrekeys({
-        accountId: session.accountId,
-        deviceId: session.deviceId,
-        oneTimePrekeys: request.body.oneTimePrekeys,
-      });
+      let status;
+
+      try {
+        status = await repository.topUpDevicePrekeys({
+          accountId: session.accountId,
+          deviceId: session.deviceId,
+          oneTimePrekeys: request.body.oneTimePrekeys,
+        });
+      } catch (error) {
+        if (error instanceof PrekeyBundleFormatPolicyError) {
+          return reply.code(400).send({
+            error: 'invalid_prekey_bundle_format',
+            message: error.message,
+          });
+        }
+
+        throw error;
+      }
 
       if (!status) {
         return reply.code(404).send({

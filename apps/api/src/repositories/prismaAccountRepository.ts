@@ -94,6 +94,7 @@ export class PrismaAccountRepository implements AccountRepository {
             deviceName: device.displayName,
             identityKey: publicSignalIdentityKey,
             signalIdentityKey: publicSignalIdentityKey,
+            prekeyBundleFormat: device.prekeyBundle?.format ?? 'prototype-v1',
             signedPrekey: device.prekeyBundle?.signedPrekey ?? '',
             signedPrekeySignature: device.prekeyBundle?.signedPrekeySignature ?? '',
             oneTimePrekeys: Array.isArray(device.prekeyBundle?.oneTimePrekeys)

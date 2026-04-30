@@ -56,6 +56,7 @@ export function createDeviceBundlePublicationProvider(
         deviceName: identity.deviceName,
         authIdentityKey: identity.identityKey,
         signalIdentityKey: generated.identityKey,
+        prekeyBundleFormat: generated.format,
         identityKey: generated.identityKey,
         signedPrekey: generated.signedPrekey,
         signedPrekeySignature: generated.signedPrekeySignature,

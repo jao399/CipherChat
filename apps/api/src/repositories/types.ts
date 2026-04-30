@@ -5,6 +5,7 @@ export type PublishDeviceBundleInput = {
   deviceName: string;
   authIdentityKey?: string;
   signalIdentityKey?: string;
+  prekeyBundleFormat?: string;
   identityKey: string;
   signedPrekey: string;
   signedPrekeySignature: string;
@@ -30,6 +31,7 @@ export type PublicDeviceBundle = {
   deviceId: string;
   deviceName: string;
   signalIdentityKey?: string;
+  prekeyBundleFormat?: string;
   identityKey: string;
   signedPrekey: string;
   signedPrekeySignature: string;
@@ -94,6 +96,7 @@ export type AccountDiscoveryDevice = {
   deviceId: string;
   deviceName: string;
   signalIdentityKey?: string;
+  prekeyBundleFormat?: string;
   identityKey: string;
   signedPrekey: string;
   signedPrekeySignature: string;

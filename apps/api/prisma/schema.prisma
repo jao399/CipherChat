@@ -90,6 +90,7 @@ model DeviceSession {
 model PrekeyBundle {
   id                    String   @id @default(uuid())
   deviceId              String   @unique
+  format                String   @default("prototype-v1")
   signalIdentityKey     String?
   signedPrekey          String
   signedPrekeySignature String

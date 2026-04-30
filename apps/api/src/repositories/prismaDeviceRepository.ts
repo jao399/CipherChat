@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 
 import { prekeyInventoryPolicy } from '../security/prekeyPolicy.js';
+import { assertPublicPrekeyBundleFormat } from '../security/prekeyBundleFormatPolicy.js';
 import type { DeviceRepository, PublishDeviceBundleInput } from './types.js';
 
 function readOneTimePrekeys(value: unknown) {
@@ -42,6 +43,13 @@ export class PrismaDeviceRepository implements DeviceRepository {
     const accountDisplayName = input.accountDisplayName ?? 'CipherChat User';
     const authIdentityKey = input.authIdentityKey ?? input.identityKey;
     const signalIdentityKey = input.signalIdentityKey ?? input.identityKey;
+    const prekeyBundleFormat = assertPublicPrekeyBundleFormat({
+      format: input.prekeyBundleFormat,
+      identityKey: signalIdentityKey,
+      signedPrekey: input.signedPrekey,
+      signedPrekeySignature: input.signedPrekeySignature,
+      oneTimePrekeys: input.oneTimePrekeys,
+    });
 
     return this.prisma.$transaction(async (tx) => {
       const [existingAccount, existingDevice] = await Promise.all([
@@ -106,11 +114,13 @@ export class PrismaDeviceRepository implements DeviceRepository {
           deviceId: input.deviceId,
           signalIdentityKey,
           signedPrekey: input.signedPrekey,
+          format: prekeyBundleFormat,
           signedPrekeySignature: input.signedPrekeySignature,
           oneTimePrekeys: input.oneTimePrekeys ?? [],
         },
         update: {
           signalIdentityKey,
+          format: prekeyBundleFormat,
           signedPrekey: input.signedPrekey,
           signedPrekeySignature: input.signedPrekeySignature,
           oneTimePrekeys: input.oneTimePrekeys ?? [],
@@ -128,6 +138,7 @@ export class PrismaDeviceRepository implements DeviceRepository {
             deviceKnown: Boolean(existingDevice),
             identityChanged,
             signalIdentityChanged,
+            prekeyBundleFormat,
             oneTimePrekeyCount: input.oneTimePrekeys?.length ?? 0,
           },
         },
@@ -167,6 +178,7 @@ export class PrismaDeviceRepository implements DeviceRepository {
       deviceName: device.displayName,
       identityKey: publicSignalIdentityKey,
       signalIdentityKey: publicSignalIdentityKey,
+      prekeyBundleFormat: device.prekeyBundle.format,
       signedPrekey: device.prekeyBundle.signedPrekey,
       signedPrekeySignature: device.prekeyBundle.signedPrekeySignature,
       oneTimePrekeys: readOneTimePrekeys(device.prekeyBundle.oneTimePrekeys),
@@ -224,6 +236,7 @@ export class PrismaDeviceRepository implements DeviceRepository {
         deviceName: device.displayName,
         identityKey: publicSignalIdentityKey,
         signalIdentityKey: publicSignalIdentityKey,
+        prekeyBundleFormat: device.prekeyBundle.format,
         signedPrekey: device.prekeyBundle.signedPrekey,
         signedPrekeySignature: device.prekeyBundle.signedPrekeySignature,
         oneTimePrekeys: claimedOneTimePrekey ? [claimedOneTimePrekey] : [],
@@ -279,6 +292,15 @@ export class PrismaDeviceRepository implements DeviceRepository {
 
       const existing = readOneTimePrekeys(device.prekeyBundle.oneTimePrekeys);
       const incoming = input.oneTimePrekeys.filter((prekey) => !existing.includes(prekey));
+
+      assertPublicPrekeyBundleFormat({
+        format: device.prekeyBundle.format,
+        identityKey: device.prekeyBundle.signalIdentityKey ?? device.identityKey,
+        signedPrekey: device.prekeyBundle.signedPrekey,
+        signedPrekeySignature: device.prekeyBundle.signedPrekeySignature,
+        oneTimePrekeys: incoming,
+      });
+
       const nextPrekeys = [...existing, ...incoming];
 
       await tx.prekeyBundle.update({
