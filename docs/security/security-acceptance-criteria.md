@@ -96,6 +96,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Queue operations and Redis stats test evidence
 - Production secret and environment validation test evidence
 - Startup health and graceful shutdown test evidence
+- Signal adapter readiness gate output: `npm run verify:signal-adapter-readiness`
 - Key-change warning UX test evidence
 - Production secret storage and rotation plan
 - External security review report and remediation evidence

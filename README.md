@@ -864,6 +864,14 @@ CipherChat now reports native Signal adapter readiness explicitly:
 
 More detail: `docs/architecture/phase-63-signal-adapter-readiness.md`.
 
+### Phase 64 - Signal Adapter Readiness CI Gate
+
+CipherChat now keeps the Signal adapter readiness boundary under CI:
+
+- `npm run verify:signal-adapter-readiness` checks registry, readiness, policy, tests, and documentation markers.
+- `npm run validate:ci` includes the new gate.
+- Security acceptance criteria and production readiness docs list the gate as release evidence.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.

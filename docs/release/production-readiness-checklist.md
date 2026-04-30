@@ -11,6 +11,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Release smoke workflow passes before promoting a backend build.
 - `npm run release:smoke` passes against the deployed API.
 - `npm run verify:dev-build-config` passes.
+- `npm run verify:signal-adapter-readiness` passes.
 - Android development client validates SQLCipher adapter status.
 - iOS development client validates SQLCipher adapter status.
 - Release builds are generated and smoke-tested.
