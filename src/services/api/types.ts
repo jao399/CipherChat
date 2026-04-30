@@ -197,5 +197,8 @@ export type BackendStatus = {
   messageCryptoProvider?: string;
   messageCryptoReady: boolean;
   messageCryptoSummary: string;
+  signalAdapterInstalled?: boolean;
+  signalAdapterEligible?: boolean;
+  signalAdapterSummary?: string;
   remoteTrustSyncing?: boolean;
 };

@@ -1,5 +1,6 @@
 import type { BackendMode } from '../config/api';
 import {
+  evaluateSignalAdapterReadiness,
   selectMessageEncryptionProvider,
   type MessageCryptoProviderId,
   type MessageEncryptionProvider,
@@ -13,15 +14,26 @@ export type MessageCryptoReadiness = {
   detail: string;
   productionReady: boolean;
   mockReady: boolean;
+  signalAdapterInstalled: boolean;
+  signalAdapterEligible: boolean;
+  signalAdapterSummary: string;
 };
 
 function readinessFromProvider(provider: MessageEncryptionProvider): MessageCryptoReadiness {
+  const signalAdapterReadiness = evaluateSignalAdapterReadiness();
+
   return {
     provider: provider.id,
     label: provider.label,
-    detail: provider.detail,
+    detail:
+      provider.id === 'signal-x3dh-double-ratchet-v1'
+        ? `${provider.detail} ${signalAdapterReadiness.summary}`
+        : provider.detail,
     productionReady: provider.productionReady,
     mockReady: provider.mockReady,
+    signalAdapterInstalled: signalAdapterReadiness.installed,
+    signalAdapterEligible: signalAdapterReadiness.eligibleForRegistration,
+    signalAdapterSummary: signalAdapterReadiness.summary,
   };
 }
 

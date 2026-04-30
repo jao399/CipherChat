@@ -93,6 +93,10 @@ export function getSignalOneToOneMessageEncryptionProvider() {
 }
 
 export {
+  evaluateSignalAdapterReadiness,
+  type SignalAdapterReadiness,
+} from './signalAdapterReadiness';
+export {
   clearRegisteredSignalOneToOneCryptoAdapter,
   getRegisteredSignalOneToOneCryptoAdapter,
   registerSignalOneToOneCryptoAdapter,

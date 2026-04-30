@@ -315,6 +315,12 @@ export function SettingsScreen() {
           subtitle={status.messageCryptoSummary}
           testID="settings-message-crypto"
         />
+        <SettingRow
+          icon={status.signalAdapterEligible ? 'hardware-chip' : 'construct'}
+          title="Signal Adapter"
+          subtitle={status.signalAdapterSummary ?? 'Native adapter readiness has not been checked yet'}
+          testID="settings-signal-adapter"
+        />
       </View>
 
       {__DEV__ ? (

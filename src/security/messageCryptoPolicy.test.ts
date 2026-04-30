@@ -44,6 +44,9 @@ describe('message crypto production gate', () => {
       detail: 'Future production provider placeholder for policy tests.',
       productionReady: true,
       mockReady: true,
+      signalAdapterInstalled: true,
+      signalAdapterEligible: true,
+      signalAdapterSummary: 'Reviewed adapter is registered.',
     };
 
     assert.equal(canSendWithMessageCrypto('live', futureProvider), true);

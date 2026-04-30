@@ -853,9 +853,20 @@ CipherChat now has a runtime registry for the future reviewed native Signal/libs
 
 More detail: `docs/architecture/phase-62-signal-adapter-registry.md`.
 
+### Phase 63 - Signal Adapter Readiness
+
+CipherChat now reports native Signal adapter readiness explicitly:
+
+- `evaluateSignalAdapterReadiness` reports missing, incompatible, not-ready, and eligible adapter states.
+- Message crypto readiness includes Signal adapter installation and eligibility metadata.
+- Settings shows a Signal Adapter row for development and release verification.
+- Tests cover missing adapters, incompatible prekey formats, and eligible reviewed adapters.
+
+More detail: `docs/architecture/phase-63-signal-adapter-readiness.md`.
+
 ## Next Steps
 
-1. Add native Signal adapter startup readiness reporting for development and release builds.
+1. Install and review a real native Signal/libsignal adapter behind the registry.
 2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
 3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
 4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
