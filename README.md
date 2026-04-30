@@ -872,6 +872,17 @@ CipherChat now keeps the Signal adapter readiness boundary under CI:
 - `npm run validate:ci` includes the new gate.
 - Security acceptance criteria and production readiness docs list the gate as release evidence.
 
+### Phase 65 - Signal Adapter Bootstrap
+
+CipherChat now has a deterministic startup boundary for future native Signal adapter registration:
+
+- `bootstrapSignalOneToOneAdapter` clears stale registration state before evaluating a candidate adapter.
+- Ineligible adapters are not registered.
+- Eligible `signal-x3dh-v1` production-ready adapters are registered for live provider selection.
+- Tests cover no adapter, non-production-ready adapter, and eligible adapter paths.
+
+More detail: `docs/architecture/phase-65-signal-adapter-bootstrap.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.

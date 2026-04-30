@@ -93,6 +93,10 @@ export function getSignalOneToOneMessageEncryptionProvider() {
 }
 
 export {
+  bootstrapSignalOneToOneAdapter,
+  type SignalAdapterBootstrapResult,
+} from './signalAdapterBootstrap';
+export {
   evaluateSignalAdapterReadiness,
   type SignalAdapterReadiness,
 } from './signalAdapterReadiness';
