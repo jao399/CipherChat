@@ -901,6 +901,17 @@ CipherChat now has a native-adapter contract for future Signal/libsignal prekey 
 
 More detail: `docs/architecture/phase-67-signal-prekey-generation-contract.md`.
 
+### Phase 68 - Live Prekey Publication Boundary
+
+CipherChat now routes live device-bundle publication through the Signal prekey generation boundary:
+
+- Mock mode keeps prototype prekeys for the UI/demo flow.
+- Live mode must generate `signal-x3dh-v1` public identity, signed prekey, signature, and one-time prekeys through a reviewed production-ready adapter.
+- Live prekey top-up uses the same Signal boundary instead of prototype one-time prekey strings.
+- Tests cover mock isolation, live fail-closed behavior, live bundle publication, and live top-up generation.
+
+More detail: `docs/architecture/phase-68-live-prekey-publication-boundary.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.

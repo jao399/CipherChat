@@ -27,6 +27,7 @@ import {
 import { remoteIdentityTrust } from '../../data/mockData';
 import { CipherChatApiClient } from './cipherChatApiClient';
 import { getStoredApiSession, setStoredApiSession, clearStoredApiSession, type StoredApiSession } from './apiSessionStore';
+import { createDeviceBundlePublicationProvider } from './deviceBundlePublication';
 import { mockCipherChatApiClient } from './mockCipherChatApiClient';
 import type {
   AccountDiscoveryResult,
@@ -139,6 +140,13 @@ export function BackendProvider({ children }: PropsWithChildren) {
   const [initializing, setInitializing] = useState(true);
 
   const liveClient = useMemo(() => new CipherChatApiClient(baseUrl), [baseUrl]);
+  const deviceBundlePublicationProvider = useMemo(
+    () =>
+      createDeviceBundlePublicationProvider({
+        prototypeIdentityProvider: prototypeDeviceIdentityProvider,
+      }),
+    [],
+  );
   const messageEncryptionProvider = useMemo(() => selectMessageEncryptionProvider(mode), [mode]);
   const messageCryptoReadiness = useMemo(
     () => getMessageCryptoReadiness(mode, messageEncryptionProvider),
@@ -251,7 +259,10 @@ export function BackendProvider({ children }: PropsWithChildren) {
       accountId: deviceIdentity.accountId,
       deviceId: deviceIdentity.deviceId,
     };
-    const bundle = prototypeDeviceIdentityProvider.createDeviceBundle(deviceIdentity);
+    const bundle = await deviceBundlePublicationProvider.createPublishableDeviceBundle({
+      mode,
+      identity: deviceIdentity,
+    });
     const nextTrustStatus = await getIdentityTrustStatus(deviceIdentity);
 
     setIdentity(deviceIdentity);
@@ -294,7 +305,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
     setTrustStatus(await markIdentityTrusted(deviceIdentity));
     await refreshStatus();
     return stored;
-  }, [liveClient, mode, refreshStatus]);
+  }, [deviceBundlePublicationProvider, liveClient, mode, refreshStatus]);
 
   const trustCurrentDeviceIdentity = useCallback(async () => {
     const deviceIdentity = await prototypeDeviceIdentityProvider.getOrCreateIdentity();
@@ -444,7 +455,12 @@ export function BackendProvider({ children }: PropsWithChildren) {
         return currentStatus;
       }
 
-      const oneTimePrekeys = await prototypeDeviceIdentityProvider.generateOneTimePrekeys(topUpCount);
+      const deviceIdentity = identity ?? (await prototypeDeviceIdentityProvider.getOrCreateIdentity());
+      const oneTimePrekeys = await deviceBundlePublicationProvider.generateTopUpOneTimePrekeys({
+        mode,
+        identity: deviceIdentity,
+        count: topUpCount,
+      });
       const status =
         mode === 'mock'
           ? await mockCipherChatApiClient.topUpDevicePrekeys({
@@ -458,7 +474,7 @@ export function BackendProvider({ children }: PropsWithChildren) {
       setSummary(`Published ${topUpCount} public one-time prekeys from this device.`);
       return status;
     },
-    [devicePrekeyStatus, liveClient, mode, refreshDevicePrekeyStatus, session],
+    [deviceBundlePublicationProvider, devicePrekeyStatus, identity, liveClient, mode, refreshDevicePrekeyStatus, session],
   );
 
   const addDiscoveredContact = useCallback(
