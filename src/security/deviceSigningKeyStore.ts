@@ -1,10 +1,14 @@
 import { ed25519 } from '@noble/curves/ed25519.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 const DEVICE_IDENTITY_PRIVATE_KEY = 'cipherchat.device-identity-ed25519-private-key-v1';
 const LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY = 'cipherchat.device-identity-private-seed-v1';
 const DEVICE_IDENTITY_KEYCHAIN_SERVICE = 'cipherchat.device-identity';
+const WEB_DEVICE_IDENTITY_PRIVATE_KEY = `${DEVICE_IDENTITY_PRIVATE_KEY}.web-fallback`;
+const WEB_LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY = `${LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY}.web-fallback`;
 
 export type DeviceSigningKeyProtection = {
   strategy: 'expo-secure-store-os-backed-ed25519-v1';
@@ -63,12 +67,39 @@ const secureStoreOptions: SecureStore.SecureStoreOptions = {
 };
 
 async function storePrivateKey(privateKey: Uint8Array) {
+  if (Platform.OS === 'web') {
+    await AsyncStorage.setItem(WEB_DEVICE_IDENTITY_PRIVATE_KEY, bytesToHex(privateKey));
+    return;
+  }
+
   await SecureStore.setItemAsync(DEVICE_IDENTITY_PRIVATE_KEY, bytesToHex(privateKey), secureStoreOptions);
 }
 
 async function loadPrivateKey() {
-  const stored = await SecureStore.getItemAsync(DEVICE_IDENTITY_PRIVATE_KEY, secureStoreOptions);
+  const stored = Platform.OS === 'web'
+    ? await AsyncStorage.getItem(WEB_DEVICE_IDENTITY_PRIVATE_KEY)
+    : await SecureStore.getItemAsync(DEVICE_IDENTITY_PRIVATE_KEY, secureStoreOptions);
   return stored ? hexToBytes(stored) : null;
+}
+
+async function deletePrivateKey() {
+  if (Platform.OS === 'web') {
+    await AsyncStorage.removeItem(WEB_DEVICE_IDENTITY_PRIVATE_KEY);
+    return;
+  }
+
+  await SecureStore.deleteItemAsync(DEVICE_IDENTITY_PRIVATE_KEY, secureStoreOptions);
+}
+
+async function deleteLegacyPrivateSeed() {
+  if (Platform.OS === 'web') {
+    await AsyncStorage.removeItem(WEB_LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY);
+    return;
+  }
+
+  await SecureStore.deleteItemAsync(LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY, {
+    keychainService: 'cipherchat',
+  });
 }
 
 function publicKeyResult(privateKey: Uint8Array): DeviceSigningPublicKey {
@@ -101,9 +132,7 @@ export const expoSecureStoreDeviceSigningKeyStore: DeviceSigningKeyStore = {
   async rotateKeyPair() {
     const privateKey = Crypto.getRandomBytes(32);
     await storePrivateKey(privateKey);
-    await SecureStore.deleteItemAsync(LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY, {
-      keychainService: 'cipherchat',
-    });
+    await deleteLegacyPrivateSeed();
     return publicKeyResult(privateKey);
   },
 
@@ -118,9 +147,7 @@ export const expoSecureStoreDeviceSigningKeyStore: DeviceSigningKeyStore = {
   },
 
   async clear() {
-    await SecureStore.deleteItemAsync(DEVICE_IDENTITY_PRIVATE_KEY, secureStoreOptions);
-    await SecureStore.deleteItemAsync(LEGACY_DEVICE_IDENTITY_PRIVATE_SEED_KEY, {
-      keychainService: 'cipherchat',
-    });
+    await deletePrivateKey();
+    await deleteLegacyPrivateSeed();
   },
 };
