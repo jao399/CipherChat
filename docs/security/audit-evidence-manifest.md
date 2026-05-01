@@ -14,6 +14,7 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Production config gate | `npm run verify:production-config` |
 | Startup health gate | `npm run verify:startup-health` |
 | Release operations gate | `npm run verify:release-operations` |
+| Release evidence placeholder gate | `npm run verify:release-evidence` |
 | Audit readiness gate | `npm run verify:audit-readiness` |
 | Release smoke test | `npm run release:smoke` |
 | High-severity dependency audit | `npm audit --omit=dev --audit-level=high` |
@@ -28,6 +29,8 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Local secure storage | `docs/architecture/adr/0003-local-secure-storage.md` |
 | Push and metadata | `docs/architecture/adr/0005-push-and-metadata.md` |
 | Release operations | `docs/architecture/phase-49-production-release-operations.md` |
+| Secure file crypto boundary | `docs/architecture/phase-71-file-crypto-boundary.md` |
+| Push metadata boundary | `docs/architecture/phase-72-push-metadata-boundary.md` |
 
 ## Implementation evidence
 
@@ -39,15 +42,15 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Graceful shutdown | `apps/api/src/startup/gracefulShutdown.ts` |
 | Message crypto gate | `src/security/messageCryptoPolicy.ts`, `src/services/messages/messageEncryptionProvider.ts` |
 | Signal provider boundary | `src/services/messages/signalOneToOneCryptoProvider.ts` |
-| Secure file transfer boundary | `src/services/files/secureFileTransferProvider.ts` |
-| Push privacy boundary | `apps/api/src/push/pushPrivacy.ts`, `apps/api/src/push/pushNotificationService.ts` |
-| Encrypted local database | `src/services/local/opSqliteEncryptedDatabase.ts` |
+| Secure file transfer boundary | `src/security/fileCryptoPolicy.ts`, `src/services/files/fileEncryptionProvider.ts`, `src/services/files/secureFileTransferProvider.ts` |
+| Push privacy boundary | `src/services/notifications/pushNotificationPolicy.ts`, `apps/api/src/push/pushPrivacy.ts`, `apps/api/src/push/pushNotificationService.ts` |
+| Encrypted local database | `src/services/local/opSQLiteEncryptedLocalDatabase.ts` |
 | Prototype migration harness | `src/services/local/prototypeStoreMigration.ts` |
 
 ## Runtime evidence to attach before launch
 
-- Android development-client SQLCipher screenshot or logs showing encrypted database availability.
-- iOS development-client SQLCipher screenshot or logs showing encrypted database availability.
+- Android development-client SQLCipher evidence from `docs/release/android-sqlcipher-evidence.md`, plus release-candidate screenshot or logs for the exact build being reviewed.
+- iOS development-client SQLCipher evidence from `docs/release/ios-sqlcipher-evidence.md`, plus screenshot or logs showing encrypted database availability.
 - Release smoke workflow run URL.
 - Container image digest promoted to staging or production.
 - External security review report and remediation tracking link.

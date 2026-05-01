@@ -1,45 +1,26 @@
 import type {
-  AccountId,
-  Base64String,
   EncryptedFileDescriptor,
-  FileId,
-} from '../../security';
+} from '../../security/cryptoContracts';
 import type {
   EncryptedUploadSession,
   FileServicePort,
-} from '../ports';
+} from '../ports/fileService';
+import {
+  assertFileEncryptionAdapterReady,
+  type DecryptedFilePayload,
+  type EncryptedFilePayload,
+  type FileEncryptionAdapter,
+  type PlainFileInput,
+} from './fileEncryptionProvider';
 
-export type PlainFileInput = {
-  ownerAccountId: AccountId;
-  name: string;
-  mimeType: string;
-  bytes: Uint8Array;
-  expiresAt?: string;
+export type {
+  DecryptedFilePayload,
+  EncryptedFilePayload,
+  FileEncryptionAdapter,
+  PlainFileInput,
 };
 
-export type EncryptedFilePayload = {
-  ciphertext: Uint8Array;
-  encryptedName: Base64String;
-  encryptedMimeType: Base64String;
-  contentDigest: Base64String;
-  algorithm: EncryptedFileDescriptor['algorithm'];
-};
-
-export type DecryptedFilePayload = {
-  name: string;
-  mimeType: string;
-  bytes: Uint8Array;
-};
-
-export type FileCryptoAdapter = {
-  id: string;
-  productionReady: boolean;
-  encryptFile(input: PlainFileInput): Promise<EncryptedFilePayload>;
-  decryptFile(input: {
-    descriptor: EncryptedFileDescriptor;
-    ciphertext: Uint8Array;
-  }): Promise<DecryptedFilePayload>;
-};
+export type FileCryptoAdapter = FileEncryptionAdapter;
 
 export type EncryptedObjectTransferAdapter = {
   uploadEncryptedBytes(session: EncryptedUploadSession, ciphertext: Uint8Array): Promise<{ objectRef: string }>;
@@ -58,12 +39,6 @@ export type SecureFileTransferProviderOptions = {
   fileService: FileServicePort;
   objectTransfer: EncryptedObjectTransferAdapter;
 };
-
-function assertProductionFileCrypto(adapter: FileCryptoAdapter | undefined): asserts adapter is FileCryptoAdapter {
-  if (!adapter?.productionReady) {
-    throw new Error('Secure file transfer requires a production-ready client-side file crypto adapter.');
-  }
-}
 
 function assertFileInput(input: PlainFileInput) {
   if (!input.name.trim()) {
@@ -86,7 +61,7 @@ export function createSecureFileTransferProvider({
 
     async uploadEncryptedFile(input) {
       assertFileInput(input);
-      assertProductionFileCrypto(cryptoAdapter);
+      assertFileEncryptionAdapterReady(cryptoAdapter);
 
       const encrypted = await cryptoAdapter.encryptFile(input);
       const session = await fileService.createEncryptedUploadSession({
@@ -112,7 +87,7 @@ export function createSecureFileTransferProvider({
     },
 
     async downloadEncryptedFile(descriptor) {
-      assertProductionFileCrypto(cryptoAdapter);
+      assertFileEncryptionAdapterReady(cryptoAdapter);
 
       const ciphertext = await objectTransfer.downloadEncryptedBytes(descriptor);
       return cryptoAdapter.decryptFile({

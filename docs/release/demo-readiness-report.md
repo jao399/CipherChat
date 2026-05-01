@@ -1,0 +1,150 @@
+# CipherChat Demo Readiness Report
+
+Date: 2026-05-01
+
+## Status
+
+CipherChat is demo-ready as a polished Expo prototype in mock mode. It presents the secure messaging product flow, device verification UX, trust-state handling, device management, prekey inventory, encrypted database boundary checks, secure file transfer surface, and local/API readiness controls.
+
+CipherChat is not production-ready encrypted messaging software. Live production message send/receive remains fail-closed until a reviewed Signal/libsignal-compatible native adapter is installed and wired through the existing adapter boundary.
+
+## What Works Now
+
+- Splash -> onboarding -> welcome/auth -> device verification -> main tabs flow.
+- Sign in and sign up both route through device verification before the main app.
+- Main tabs render: Chats, Calls, Files, Contacts, Settings.
+- Mock mode supports a smooth demo conversation flow for trusted contacts.
+- New or changed contact keys show clear warnings and block sends until trusted.
+- Outbound retry re-checks trust before resending queued envelopes.
+- Contacts can discover, add, sync, and trust public device bundles in mock/live metadata flows.
+- Device management shows active devices, revocation controls, and prekey inventory/top-up.
+- Settings shows backend mode, backend readiness, device identity, trust state, crypto provider, Signal adapter readiness, encrypted database status, device management, prekey inventory, and dev-only migration controls.
+- API routes and tests cover account creation, device sessions, bundle publication/lookup, contact discovery, envelope fanout, inbox polling, ack, prekey claim/top-up, device revocation, and device listing.
+- Production API config fails fast for missing persistence, Redis, strong internal token, production CORS origin, and Ed25519 verifier settings.
+- Phase 71 secure file crypto boundary is in place; production file transfer stays blocked without a reviewed adapter.
+- Phase 72 push metadata boundary is in place; generic wake/sync payloads are allowed and sensitive fields are rejected.
+- Release evidence placeholders and `npm run verify:release-evidence` track Android/iOS SQLCipher evidence without faking runtime proof.
+
+## How To Run Mobile Mock Mode
+
+Mock mode is the default mobile mode.
+
+```powershell
+npm install
+npm start
+```
+
+Then open the app in an Expo development client or run a platform target:
+
+```powershell
+npm run android
+```
+
+Use the app flow:
+
+1. Splash opens automatically.
+2. Complete or skip onboarding.
+3. Choose sign up or sign in.
+4. Trust/continue through device verification.
+5. Use Chats, Calls, Files, Contacts, and Settings.
+
+## How To Run API Live Mode Locally
+
+Start PostgreSQL and Redis:
+
+```powershell
+docker compose up -d postgres redis
+```
+
+Apply Prisma migrations:
+
+```powershell
+npm run prisma:migrate:deploy
+```
+
+Start the API with local development environment values:
+
+```powershell
+$env:DATABASE_URL="postgresql://cipherchat:cipherchat@localhost:5432/cipherchat?schema=public"
+$env:REDIS_URL="redis://localhost:6379"
+$env:API_HOST="127.0.0.1"
+$env:API_PORT="4000"
+$env:CORS_ORIGIN="http://localhost:8081"
+$env:INTERNAL_JOB_TOKEN="local-demo-internal-token"
+npm run api:dev
+```
+
+Optional worker:
+
+```powershell
+$env:DATABASE_URL="postgresql://cipherchat:cipherchat@localhost:5432/cipherchat?schema=public"
+$env:REDIS_URL="redis://localhost:6379"
+$env:INTERNAL_JOB_TOKEN="local-demo-internal-token"
+npm run api:worker
+```
+
+Health checks:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:4000/health
+Invoke-RestMethod http://127.0.0.1:4000/ready
+```
+
+In the app, open Settings and switch Backend Mode to live. Live mode supports backend protocol metadata flows, but production message encryption remains blocked without the reviewed Signal adapter.
+
+## Required Validation Commands
+
+```powershell
+npm run typecheck
+npm test
+npm run verify:release-evidence
+npm run validate:ci
+npx expo-doctor
+```
+
+Baseline and final validation on 2026-05-01:
+
+- `npm install`: passed; npm reported 11 moderate transitive advisories.
+- `npm run typecheck`: passed.
+- `npm test`: passed.
+- `npm run verify:release-evidence`: passed placeholder checks; Android release-candidate refresh and iOS runtime SQLCipher evidence remain marked blocking.
+- `npm run validate:ci`: passed, including Prisma validation, integration tests, release/security verification scripts, Expo Doctor, and high-severity audit gate.
+- `npx expo-doctor`: passed, 18/18 checks.
+
+The remaining npm audit output is moderate severity in Expo transitive dependencies (`postcss`, `uuid` paths). `npm audit fix --force` suggests a breaking Expo downgrade, so this was not applied during the demo polish pass.
+
+## Screens And Features Completed
+
+- Splash and animated onboarding with existing tutorial artwork.
+- Welcome/auth screens with device verification in the entry flow.
+- Chats list, encrypted inbox status, trust warnings, mock composer, outbound queue, and retry controls.
+- Calls tab as a clearly labeled prototype UI surface.
+- Files tab and secure file transfer preview with production file-crypto gates described honestly.
+- Contacts discovery, public key sync, safety number review, and trust actions.
+- Settings readiness dashboard and dev-only prototype store migration controls.
+- Privacy dashboard and device management.
+- API health/readiness, persistence-backed sessions/devices/messages/prekeys, and metadata retention jobs.
+
+## Security Limitations
+
+- Signal/libsignal production crypto is not implemented.
+- `prototype-sha256-envelope-v1` is a mock/demo envelope provider only and is not real production encryption.
+- Live production message sending and inbound plaintext processing must remain blocked until a reviewed Signal/X3DH + Double Ratchet provider is installed.
+- Secure file transfer production upload is blocked until a reviewed client-side file crypto adapter exists.
+- The Phase 71 file crypto boundary is policy and adapter shape only; no production file encryption adapter is installed.
+- The Phase 72 push metadata boundary allows generic notifications only; production APNs/FCM wiring and provider evidence remain incomplete.
+- Calls are a UI prototype; production encrypted voice/video transport is not implemented.
+- Android SQLCipher runtime availability has Phase 41 evidence but needs release-candidate refresh; iOS SQLCipher runtime availability still requires macOS/Xcode development-client verification.
+- OS-backed non-exportable signing keys require native provider evidence before production launch.
+- External security review and remediation evidence remain required before production launch.
+
+## Remaining Production Blockers
+
+- Install and review a native Signal/libsignal-compatible one-to-one crypto adapter.
+- Provide production Signal prekey generation and storage using non-exportable native key material.
+- Refresh Android SQLCipher evidence for the release-candidate build and complete iOS SQLCipher runtime evidence on macOS/Xcode.
+- Complete production secure file encryption adapter and file handling review.
+- Complete push notification provider configuration with generic wake-only payloads.
+- Attach real SQLCipher release evidence to `docs/release/android-sqlcipher-evidence.md` and `docs/release/ios-sqlcipher-evidence.md`.
+- Complete external security audit and attach remediation evidence.
+- Resolve or accept with documented risk any remaining dependency advisories before a real release.

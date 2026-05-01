@@ -12,10 +12,10 @@ import type { RootStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<RootStackParamList, 'SecureFileTransfer'>;
 
 const checkpoints = [
-  ['End-to-end Encrypted', 'File is encrypted on your device'],
-  ['Secure Transfer', 'Transferred directly to recipient'],
-  ['File Protection', 'Blocked from screenshots'],
-  ['Auto-Delete', 'File will be removed after view'],
+  ['Crypto Boundary', 'Production upload waits for a reviewed file crypto adapter'],
+  ['Opaque Transfer', 'Backend receives encrypted bytes and metadata only'],
+  ['File Protection', 'Screenshot and preview policy remain release blockers'],
+  ['Auto-Delete', 'Expiry controls are modeled for the demo'],
 ];
 
 export function SecureFileTransferScreen({ navigation }: Props) {
@@ -60,11 +60,11 @@ export function SecureFileTransferScreen({ navigation }: Props) {
         ))}
       </DarkCard>
       <SecureButton
-        accessibilityLabel="Send file securely"
+        accessibilityLabel="Preview secure file send"
         testID="secure-transfer-send"
         onPress={() => navigation.goBack()}
       >
-        SEND SECURELY
+        PREVIEW SECURE SEND
       </SecureButton>
     </ScreenContainer>
   );

@@ -24,7 +24,7 @@ export function FilesScreen() {
 
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
-      <ScreenHeader title="Secure Files" subtitle="Encrypted transfers and vault items">
+      <ScreenHeader title="Secure Files" subtitle="Demo file transfer controls">
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Open secure file transfer"
@@ -53,7 +53,7 @@ export function FilesScreen() {
         ))}
       </View>
 
-      <SectionHeader title="Recent Files" action="Local only" />
+      <SectionHeader title="Recent Files" action="Prototype only" />
       <View style={styles.list}>
         {secureFiles.map((file) => (
           <TouchableOpacity

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import type { AccountId, EncryptedFileDescriptor, FileId } from '../../security';
-import type { EncryptedUploadSession, FileServicePort } from '../ports';
+import type { AccountId, EncryptedFileDescriptor, FileId } from '../../security/cryptoContracts';
+import type { EncryptedUploadSession, FileServicePort } from '../ports/fileService';
 import {
   createSecureFileTransferProvider,
   type EncryptedObjectTransferAdapter,
@@ -52,7 +52,11 @@ function createObjectTransfer(): { transfer: EncryptedObjectTransferAdapter; upl
 
 const cryptoAdapter: FileCryptoAdapter = {
   id: 'test-file-crypto',
+  algorithm: 'AES-256-GCM',
+  encryptsFileBytes: true,
+  encryptsMetadata: true,
   productionReady: true,
+  reviewedImplementation: true,
   async encryptFile(input) {
     return {
       algorithm: 'AES-256-GCM',
@@ -87,7 +91,31 @@ describe('secure file transfer provider', () => {
         name: 'Quarterly_Report.pdf',
         ownerAccountId,
       }),
-      /production-ready client-side file crypto adapter/,
+      /Secure file transfer remains gated/,
+    );
+  });
+
+  it('blocks adapters that do not encrypt file metadata', async () => {
+    const { service } = createFileService();
+    const { transfer } = createObjectTransfer();
+    const provider = createSecureFileTransferProvider({
+      cryptoAdapter: {
+        ...cryptoAdapter,
+        encryptsMetadata: false,
+        id: 'metadata-leaking-file-crypto',
+      },
+      fileService: service,
+      objectTransfer: transfer,
+    });
+
+    await assert.rejects(
+      provider.uploadEncryptedFile({
+        bytes: new Uint8Array([1]),
+        mimeType: 'application/pdf',
+        name: 'Quarterly_Report.pdf',
+        ownerAccountId,
+      }),
+      /filenames and MIME types/,
     );
   });
 

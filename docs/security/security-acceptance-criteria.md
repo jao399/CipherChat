@@ -6,6 +6,7 @@ These criteria are production blockers. CipherChat must not process production u
 
 - No production plaintext message body or file content may be sent to the API.
 - Secure file upload must encrypt bytes client-side before object upload; plaintext filenames and MIME types must be encrypted before persistence.
+- Secure file upload must remain blocked unless a reviewed production-ready file crypto adapter is registered.
 - Prototype crypto paths must be disabled or blocked in production mode.
 - Live sends must be blocked while the active message crypto provider is prototype-only.
 - Native encrypted local storage must be verified on Android and iOS development clients.
@@ -30,6 +31,7 @@ These criteria are production blockers. CipherChat must not process production u
 - One-to-one production sends must use the `signal-x3dh-double-ratchet-v1` provider with a reviewed Signal/libsignal-compatible adapter.
 - A reviewed production provider must replace `prototype-sha256-envelope-v1` before live sends are enabled.
 - Message encryption provider selection must remain explicit and test-covered.
+- File encryption provider selection must remain explicit and test-covered; no custom file cryptography may be introduced without formal review.
 - Test vectors and interoperability tests must cover key agreement, message ratcheting, replay handling, and key rotation.
 
 ## Mobile security gates
@@ -72,6 +74,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Production API startup must fail when required persistence, queue, signature-verifier, CORS, or internal-token configuration is unsafe.
 - Startup and readiness health checks must expose safe reason codes without leaking connection strings or credentials.
 - Push notifications must use generic payloads with no message content, sender names, group names, filenames, or plaintext previews.
+- Push notification payloads must reject conversation identifiers, account identifiers, safety numbers, tokens, and decrypted identifiers.
 - Abuse reports must disclose only user-selected message content or metadata.
 - Audit events must avoid plaintext content, file names, private contact graph details, and private keys.
 
@@ -85,6 +88,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Queue operations gate output: `npm run verify:queue-operations`
 - Production config gate output: `npm run verify:production-config`
 - Startup health gate output: `npm run verify:startup-health`
+- Release evidence placeholder gate output: `npm run verify:release-evidence`
 - Audit readiness gate output: `npm run verify:audit-readiness`
 - Key-change send blocking test output: `npm run app:test`
 - Passing CI output for `npm run validate:ci`

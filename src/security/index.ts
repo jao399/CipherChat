@@ -71,6 +71,12 @@ export {
   type MessageCryptoReadiness,
 } from './messageCryptoPolicy';
 export {
+  assertFileCryptoReadyForProduction,
+  evaluateFileCryptoReadiness,
+  type FileCryptoReadiness,
+  type FileCryptoReadinessInput,
+} from './fileCryptoPolicy';
+export {
   assertRecipientTrustedForSend,
   evaluateRecipientTrustForSend,
   type RecipientTrustDecision,

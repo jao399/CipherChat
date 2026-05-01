@@ -35,6 +35,7 @@ export function SettingsScreen() {
     rotateDeviceIdentity,
     inboundEnvelopeStatus,
     pollInboundEnvelopes,
+    devicePrekeyStatus,
   } = useBackend();
   const [readReceipts, setReadReceipts] = useState(false);
   const [appLock, setAppLock] = useState(true);
@@ -133,6 +134,20 @@ export function SettingsScreen() {
     new: 'New - not trusted yet',
     trusted: 'Trusted',
   }[status.identityTrustState ?? 'new'];
+  const backendModeSubtitle =
+    status.mode === 'live'
+      ? `Live metadata API - ${status.baseUrl}`
+      : 'Mock demo mode - UI data stays local';
+  const backendReadinessSubtitle = `${status.ready ? 'Ready' : 'Unavailable'} - ${status.summary}`;
+  const trustStateSubtitle =
+    status.identityTrustState === 'trusted'
+      ? 'Current device safety number is trusted'
+      : status.identityTrustState === 'changed'
+        ? 'Device identity changed; review before trusting'
+        : 'New device identity needs local review';
+  const prekeyInventorySubtitle = devicePrekeyStatus
+    ? `${devicePrekeyStatus.oneTimePrekeyCount} one-time prekeys; ${devicePrekeyStatus.needsTopUp ? 'top-up recommended' : 'inventory healthy'}`
+    : 'Open Device Management after verification to refresh';
   const inboxSubtitle = inboundEnvelopeStatus.lastError
     ? inboundEnvelopeStatus.lastError
     : inboundEnvelopeStatus.lastPolledAt
@@ -244,16 +259,16 @@ export function SettingsScreen() {
       <View style={styles.group}>
         <SettingRow
           icon="server"
-          title="Live API Mode"
-          subtitle={status.mode === 'live' ? status.baseUrl : 'Mock mode keeps the UI fully offline'}
+          title="Backend Mode"
+          subtitle={backendModeSubtitle}
           testID="settings-live-api-mode"
           value={status.mode === 'live'}
           onValueChange={toggleLiveApi}
         />
         <SettingRow
           icon={status.ready ? 'cloud-done' : 'cloud-offline'}
-          title="Backend Status"
-          subtitle={`${status.ready ? 'Ready' : 'Unavailable'} - ${status.summary}`}
+          title="Backend Readiness"
+          subtitle={backendReadinessSubtitle}
           testID="settings-backend-status"
           onPress={refreshStatus}
         />
@@ -270,6 +285,13 @@ export function SettingsScreen() {
           subtitle={status.identityFingerprint ? `${trustLabel} - ${status.identityFingerprint}` : 'Preparing local identity'}
           testID="settings-device-identity"
           onPress={rotateIdentity}
+        />
+        <SettingRow
+          icon={status.identityTrustState === 'trusted' ? 'shield-checkmark' : 'warning'}
+          title="Trust State"
+          subtitle={trustStateSubtitle}
+          testID="settings-trust-state"
+          onPress={() => navigation.navigate('DeviceVerification')}
         />
         <SettingRow
           icon={revokingDevice ? 'sync' : 'trash'}
@@ -300,7 +322,7 @@ export function SettingsScreen() {
         />
         <SettingRow
           icon="server"
-          title="Encrypted Local Database"
+          title="Encrypted Database Status"
           subtitle={
             checkingEncryptedDatabase
               ? 'Checking SQLCipher adapter...'
@@ -308,6 +330,12 @@ export function SettingsScreen() {
           }
           testID="settings-encrypted-local-database"
           onPress={checkEncryptedDatabase}
+        />
+        <SettingRow
+          icon="hardware-chip"
+          title="Device Crypto Provider"
+          subtitle={status.cryptoProvider ?? 'Prototype identity provider is preparing'}
+          testID="settings-device-crypto-provider"
         />
         <SettingRow
           icon={status.messageCryptoReady ? 'shield-checkmark' : 'warning'}
@@ -320,6 +348,13 @@ export function SettingsScreen() {
           title="Signal Adapter"
           subtitle={status.signalAdapterSummary ?? 'Native adapter readiness has not been checked yet'}
           testID="settings-signal-adapter"
+        />
+        <SettingRow
+          icon={devicePrekeyStatus?.needsTopUp ? 'warning' : 'key'}
+          title="Prekey Inventory"
+          subtitle={prekeyInventorySubtitle}
+          testID="settings-prekey-inventory"
+          onPress={() => navigation.navigate('DeviceManagement')}
         />
       </View>
 

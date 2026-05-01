@@ -48,6 +48,15 @@ const checks = [
     ],
   },
   {
+    path: 'docs/release/production-blocker-burndown.md',
+    markers: [
+      'Still Blocking Production Launch',
+      'Reviewed Signal/libsignal one-to-one adapter',
+      'Moderate Expo transitive advisories',
+      'Non-Negotiable Guardrails',
+    ],
+  },
+  {
     path: 'README.md',
     markers: [
       'Phase 50 - External Security Review And Audit Readiness',

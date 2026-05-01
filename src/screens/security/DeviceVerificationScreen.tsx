@@ -74,7 +74,7 @@ export function DeviceVerificationScreen({ navigation }: Props) {
       <View style={styles.note}>
         <Ionicons name="information-circle-outline" size={22} color={colors.textSecondary} />
         <Text style={styles.noteText}>
-          This ensures end-to-end encryption and verifies your devices.
+          This records local device trust for the demo. Production message E2EE still requires a reviewed Signal adapter.
         </Text>
       </View>
       <Text style={styles.backendNote}>

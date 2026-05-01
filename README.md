@@ -935,11 +935,34 @@ CipherChat now records and validates public prekey bundle format metadata:
 
 More detail: `docs/architecture/phase-70-prekey-bundle-format-policy.md`.
 
+### Phase 71 - File Crypto Boundary
+
+CipherChat now has a production-safe secure file crypto boundary:
+
+- `FileEncryptionAdapter` defines the future reviewed adapter contract for file bytes and encrypted metadata.
+- Production secure file transfer stays blocked without a reviewed production-ready adapter.
+- The secure file transfer UI remains demo/prototype-only until that adapter exists.
+- Tests cover default blocking and metadata-encryption requirements.
+
+More detail: `docs/architecture/phase-71-file-crypto-boundary.md`.
+
+### Phase 72 - Push Metadata Boundary
+
+CipherChat now has a generic push notification metadata policy:
+
+- Push payloads may contain only an opaque event ID, generic delivery hint, and bounded badge count.
+- Message plaintext, previews, sender names, filenames, conversation identifiers, account identifiers, safety numbers, and tokens are blocked.
+- Tests cover allowed generic payloads and blocked sensitive shapes.
+
+More detail: `docs/architecture/phase-72-push-metadata-boundary.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.
-2. Build and install an Expo Android development client, then record SQLCipher verification evidence.
+2. Refresh Android SQLCipher evidence for the exact release-candidate build.
 3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
 4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
-5. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-6. Add key transparency or auditable key-history review before production contact trust.
+5. Install and review a real production file encryption adapter behind the Phase 71 boundary.
+6. Complete production APNs/FCM wiring with generic wake-only payload evidence.
+7. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
+8. Add key transparency or auditable key-history review before production contact trust.

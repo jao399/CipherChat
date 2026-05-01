@@ -11,8 +11,13 @@ import { colors, radii, spacing, typography } from '../../theme';
 export function CallsScreen() {
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
-      <ScreenHeader title="Secure Calls" subtitle="Encrypted voice and video history">
-        <TouchableOpacity style={styles.iconButton}>
+      <ScreenHeader title="Secure Calls" subtitle="Private call UI prototype">
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Start a secure call demo"
+          testID="calls-start-demo"
+          style={styles.iconButton}
+        >
           <Ionicons name="call" size={20} color={colors.text} />
         </TouchableOpacity>
       </ScreenHeader>
@@ -22,8 +27,8 @@ export function CallsScreen() {
           <Ionicons name="videocam" size={25} color={colors.security} />
         </View>
         <View style={styles.activeText}>
-          <Text style={styles.activeTitle}>Secure room ready</Text>
-          <Text style={styles.activeSubtitle}>Start a protected call with verified contacts.</Text>
+          <Text style={styles.activeTitle}>Call demo ready</Text>
+          <Text style={styles.activeSubtitle}>Voice/video transport is a prototype surface, not production E2EE.</Text>
         </View>
       </DarkCard>
 

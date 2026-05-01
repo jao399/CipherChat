@@ -109,6 +109,8 @@ export function ContactsScreen() {
       <View style={styles.search}>
         <Ionicons name="at" size={18} color={colors.muted} />
         <TextInput
+          accessibilityLabel="Search contacts by username or key"
+          testID="contacts-search"
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={() => void runDiscovery()}
@@ -181,8 +183,17 @@ export function ContactsScreen() {
         <Text style={styles.profileText}>Share this code to let trusted contacts verify your identity key.</Text>
         <QRCard />
         <View style={styles.profileActions}>
-          <GlowButton icon="share-social">Share Profile</GlowButton>
-          <SecondaryButton onPress={() => navigation.navigate('DeviceVerification')} icon="scan">Verify Device</SecondaryButton>
+          <GlowButton accessibilityLabel="Share prototype profile" testID="contacts-share-profile" icon="share-social">
+            Share Profile
+          </GlowButton>
+          <SecondaryButton
+            accessibilityLabel="Verify this device"
+            testID="contacts-verify-device"
+            onPress={() => navigation.navigate('DeviceVerification')}
+            icon="scan"
+          >
+            Verify Device
+          </SecondaryButton>
         </View>
       </DarkCard>
 

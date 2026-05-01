@@ -14,7 +14,7 @@ export const onboardingSlides: OnboardingSlide[] = [
   {
     id: 'privacy',
     title: 'Your privacy comes first',
-    text: 'Messages, files, and conversations are protected with end-to-end encryption.',
+    text: 'Demo messaging uses local trust controls while production E2EE stays gated behind a reviewed Signal adapter.',
     icon: 'shield-checkmark',
   },
   {
@@ -26,7 +26,7 @@ export const onboardingSlides: OnboardingSlide[] = [
   {
     id: 'files',
     title: 'Send securely',
-    text: 'Share files, images, and documents with strong protection and privacy controls.',
+    text: 'Preview secure file workflows with clear production gates for real client-side file encryption.',
     icon: 'document-lock',
   },
   {
@@ -306,7 +306,7 @@ export const privacyMetrics: PrivacyMetric[] = [
     id: 'account',
     title: 'Account Security',
     value: 'Secure',
-    detail: 'All systems secure',
+    detail: 'Demo controls enabled',
     icon: 'shield-checkmark',
     accent: colors.security,
   },
@@ -330,7 +330,7 @@ export const privacyMetrics: PrivacyMetric[] = [
     id: 'storage',
     title: 'Data & Storage',
     value: 'Local',
-    detail: 'Encrypted on this device',
+    detail: 'Encrypted DB boundary visible',
     icon: 'file-tray-full',
     accent: colors.security,
   },

@@ -29,7 +29,7 @@ export function SignInScreen({ navigation }: Props) {
         <GlowButton
           accessibilityLabel="Sign in securely"
           testID="signin-submit"
-          onPress={() => navigation.replace('MainTabs')}
+          onPress={() => navigation.replace('DeviceVerification')}
           icon="lock-closed"
         >
           Sign In Securely
@@ -38,8 +38,10 @@ export function SignInScreen({ navigation }: Props) {
           Use Biometric Sign In
         </SecondaryButton>
         <View style={styles.note}>
-          <SecureBadge label="End-to-end encrypted" />
-          <Text style={styles.noteText}>All data is end-to-end encrypted.</Text>
+          <SecureBadge label="Prototype gated" />
+          <Text style={styles.noteText}>
+            Production message encryption is blocked until a reviewed Signal adapter is installed.
+          </Text>
         </View>
       </GlassCard>
       <TouchableOpacity

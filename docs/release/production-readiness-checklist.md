@@ -12,7 +12,8 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - `npm run release:smoke` passes against the deployed API.
 - `npm run verify:dev-build-config` passes.
 - `npm run verify:signal-adapter-readiness` passes.
-- Android development client validates SQLCipher adapter status.
+- `npm run verify:release-evidence` passes and linked runtime evidence is no longer marked blocking.
+- Android development client validates SQLCipher adapter status; Phase 41 evidence exists and must be refreshed for the release-candidate build.
 - iOS development client validates SQLCipher adapter status.
 - Release builds are generated and smoke-tested.
 
@@ -27,6 +28,8 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - One-to-one messaging uses a reviewed Signal/X3DH + Double Ratchet implementation.
 - Signal one-to-one adapters declare and validate the `signal-x3dh-v1` prekey bundle contract.
 - Signal one-to-one adapter registration is backed by startup readiness evidence for the installed native adapter.
+- File encryption provider selection is explicit and test-covered.
+- Secure file transfer uses a reviewed production-ready file crypto adapter that encrypts file bytes, filenames, and MIME types before upload.
 - One-time prekeys are claimed through a transactional consume-on-read path.
 - Current-device prekey inventory reports counts and low-watermark status without returning key material.
 - Current-device prekey top-up accepts client-generated public prekeys only and never logs or returns prekey values.
@@ -61,6 +64,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 ## Privacy
 
 - Push notifications contain opaque event IDs only.
+- Push notification payloads are checked against the generic metadata policy and reject message plaintext, sender names, filenames, conversation identifiers, account identifiers, safety numbers, and tokens.
 - APNs/FCM provider configuration is complete and production startup fails closed without it.
 - Push provider ports are wired with background/data-only wake delivery and no alert or notification body.
 - Metadata minimization review is complete.

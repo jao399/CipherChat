@@ -35,8 +35,22 @@ const worker = new Worker(jobQueueName, createJobProcessor(messages, metadataRet
   connection: redis,
 });
 
+function safeErrorSummary(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: 'Worker operation failed',
+    };
+  }
+
+  return {
+    name: 'UnknownError',
+    message: 'Worker operation failed',
+  };
+}
+
 worker.on('failed', (job, error) => {
-  console.error({ jobId: job?.id, jobName: job?.name, error }, 'CipherChat job failed');
+  console.error({ jobId: job?.id, jobName: job?.name, error: safeErrorSummary(error) }, 'CipherChat job failed');
 });
 
 worker.on('completed', (job) => {
@@ -52,7 +66,7 @@ const shutdown = createGracefulShutdown({
   },
   logger: {
     error: (error, message) => {
-      console.error({ error }, message);
+      console.error({ error: safeErrorSummary(error) }, message);
     },
     info: (message) => {
       console.log(message);
