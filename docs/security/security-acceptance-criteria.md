@@ -33,6 +33,8 @@ These criteria are production blockers. CipherChat must not process production u
 - A reviewed production provider must replace `prototype-sha256-envelope-v1` before live sends are enabled.
 - Message encryption provider selection must remain explicit and test-covered.
 - File encryption provider selection must remain explicit and test-covered; no custom file cryptography may be introduced without formal review.
+- Production file encryption must satisfy the Phase 79 plan before secure file upload can be enabled for real users.
+- Production file encryption must use reviewed authenticated encryption, per-file random keys, encrypted metadata, and per-recipient file key wrapping.
 - Test vectors and interoperability tests must cover key agreement, message ratcheting, replay handling, and key rotation.
 
 ## Mobile security gates
@@ -81,6 +83,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Production APNs/FCM provider readiness must remain blocked until provider configuration, generic payload enforcement, provider log review, and release smoke evidence are attached.
 - Abuse reports must disclose only user-selected message content or metadata.
 - Audit events must avoid plaintext content, file names, private contact graph details, and private keys.
+- Dependency advisories must not be hidden or suppressed; moderate Expo transitive advisories require documented triage before release.
 
 ## Evidence required before release
 
@@ -95,12 +98,15 @@ These criteria are production blockers. CipherChat must not process production u
 - Release evidence placeholder gate output: `npm run verify:release-evidence`
 - SQLCipher evidence helper output: `npm run collect:sqlcipher-evidence`
 - Signal integration plan gate output: `npm run verify:signal-integration-plan`
+- File crypto plan gate output: `npm run verify:file-crypto-plan`
 - Audit readiness gate output: `npm run verify:audit-readiness`
+- External review package gate output: `npm run verify:external-review-package`
 - Key-change send blocking test output: `npm run app:test`
 - Passing CI output for `npm run validate:ci`
 - Android release-candidate SQLCipher verification result
 - iOS development-client or preview-build SQLCipher verification result
 - APNs/FCM provider readiness and generic payload evidence
+- Production file encryption adapter review and runtime evidence
 - Cryptography design review and implementation evidence
 - Account/session abuse-control test evidence
 - Metadata retention cleanup test evidence
@@ -112,3 +118,4 @@ These criteria are production blockers. CipherChat must not process production u
 - Key-change warning UX test evidence
 - Production secret storage and rotation plan
 - External security review report and remediation evidence
+- Dependency advisory triage output: `npm audit --audit-level=moderate`

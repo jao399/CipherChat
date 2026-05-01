@@ -1022,12 +1022,36 @@ CipherChat now has a production APNs/FCM provider evidence boundary:
 
 More detail: `docs/architecture/phase-78-push-provider-evidence-boundary.md`.
 
+### Phase 79 - Production File Encryption Adapter Plan
+
+CipherChat now has a precise plan and documentation gate for a future reviewed production file encryption adapter:
+
+- `docs/architecture/phase-79-production-file-encryption-adapter-plan.md` defines authenticated encryption, per-file random keys, per-recipient key wrapping, encrypted thumbnails/metadata, chunking, integrity, native dependency, abuse, and readiness requirements.
+- `npm run verify:file-crypto-plan` checks the plan and existing file crypto boundary markers.
+- Settings shows File Crypto Provider readiness and reports the missing reviewed adapter.
+- This phase does not install or certify production file encryption. Production secure file transfer remains blocked.
+
+More detail: `docs/architecture/phase-79-production-file-encryption-adapter-plan.md`.
+
+### Phase 80 - External Review Package And Dependency Advisory Triage
+
+CipherChat now has a dedicated external review request package and dependency advisory triage:
+
+- `docs/security/external-review-request-package.md` packages review scope, out-of-scope areas, blockers, evidence docs, and required reviewer deliverables.
+- `docs/security/dependency-advisory-triage.md` records the current moderate Expo transitive advisories and why forced breaking fixes are not applied without a validated Expo upgrade.
+- `npm run verify:external-review-package` checks the review package and advisory triage docs.
+- This phase does not complete external review and does not suppress dependency advisories.
+
+More detail: `docs/security/external-review-request-package.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.
 2. Run the Phase 77 iOS SQLCipher verification path where macOS/Xcode or EAS iOS device tooling is available.
 3. Re-run Android SQLCipher release-candidate evidence for every future APK.
 4. Install and review a native non-exportable signing key provider behind the Phase 74 boundary.
-5. Install and review a real production file encryption adapter behind the Phase 71 boundary.
+5. Install and review a real production file encryption adapter that satisfies the Phase 79 plan.
 6. Complete production APNs/FCM wiring with generic wake-only payload evidence, provider log review, and release smoke proof.
-7. Add MLS and key transparency or auditable key-history review before production group/contact trust.
+7. Complete external security review using the Phase 80 package and remediate findings.
+8. Resolve the tracked moderate Expo transitive advisories through a validated Expo-compatible update.
+9. Add MLS and key transparency or auditable key-history review before production group/contact trust.

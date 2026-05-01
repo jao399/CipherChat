@@ -31,6 +31,8 @@ CipherChat is not production-ready encrypted messaging software. Live production
 - Phase 76 documents the Signal/libsignal integration plan and adds a documentation gate without claiming production Signal support.
 - Phase 77 documents the repeatable iOS SQLCipher runtime evidence workflow while keeping iOS evidence blocking until a real iOS run passes.
 - Phase 78 adds APNs/FCM provider readiness reporting and Settings visibility while keeping production push evidence blocked.
+- Phase 79 documents the production file encryption adapter plan and adds a CI documentation gate while keeping file transfer production-blocked.
+- Phase 80 adds an external review request package and dependency advisory triage without suppressing the existing moderate Expo transitive advisories.
 
 ## How To Run Mobile Mock Mode
 
@@ -117,8 +119,11 @@ Baseline and final validation on 2026-05-01:
 - `npm test`: passed; app tests 68/68 and API tests 78/78.
 - `npm run verify:release-evidence`: passed evidence document checks; Android release-candidate SQLCipher evidence is complete for the Phase 75 APK and iOS runtime SQLCipher evidence remains marked blocking.
 - `npm run collect:sqlcipher-evidence`: prints static config, Android/iOS evidence status, and manual iOS/Android runtime steps without faking iOS proof.
+- `npm run verify:file-crypto-plan`: passes documentation and boundary checks for the Phase 79 production file encryption adapter plan.
+- `npm run verify:external-review-package`: passes external review package and dependency triage document checks.
 - `npm run validate:ci`: passed, including Prisma validation, integration tests, release/security verification scripts, Expo Doctor, and high-severity audit gate.
 - `npx expo-doctor`: passed, 18/18 checks.
+- `npm audit --audit-level=moderate`: reports the known moderate Expo transitive advisories and remains tracked as a production blocker.
 
 The remaining npm audit output is moderate severity in Expo transitive dependencies (`postcss`, `uuid` paths). `npm audit fix --force` suggests a breaking Expo downgrade, so this was not applied during the demo polish pass.
 
@@ -133,6 +138,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Settings readiness dashboard and dev-only prototype store migration controls.
 - Development Evidence and Release Evidence sections with SQLCipher Runtime Check for installed development and release-candidate clients.
 - Settings shows push provider readiness, generic push payload policy status, and missing APNs/FCM evidence.
+- Settings shows file crypto provider readiness and clearly reports the missing reviewed production adapter.
 - Privacy dashboard and device management.
 - API health/readiness, persistence-backed sessions/devices/messages/prekeys, and metadata retention jobs.
 
@@ -143,6 +149,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Live production message sending and inbound plaintext processing must remain blocked until a reviewed Signal/X3DH + Double Ratchet provider is installed.
 - Secure file transfer production upload is blocked until a reviewed client-side file crypto adapter exists.
 - The Phase 71 file crypto boundary is policy and adapter shape only; no production file encryption adapter is installed.
+- The Phase 79 production file encryption plan is documentation and a gate only; it does not install or certify a production adapter.
 - The Phase 72 push metadata boundary allows generic notifications only; production APNs/FCM wiring and provider evidence remain incomplete.
 - The Phase 78 push provider evidence boundary reports APNs/FCM as not configured by default; no provider evidence is complete.
 - Calls are a UI prototype; production encrypted voice/video transport is not implemented.

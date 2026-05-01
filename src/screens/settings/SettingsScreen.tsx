@@ -27,6 +27,7 @@ import {
   evaluateNativeSigningKeyProviderReadiness,
   secureStorePrototypeSigningKeyProviderReadiness,
 } from '../../security/nativeSigningKeyProvider';
+import { evaluateFileCryptoReadiness } from '../../security/fileCryptoPolicy';
 import {
   evaluatePushProviderReadiness,
   missingProductionPushProviderEvidence,
@@ -73,6 +74,7 @@ export function SettingsScreen() {
   const nativeSigningReadiness = evaluateNativeSigningKeyProviderReadiness(
     secureStorePrototypeSigningKeyProviderReadiness,
   );
+  const fileCryptoReadiness = evaluateFileCryptoReadiness();
   const pushProviderReadiness = evaluatePushProviderReadiness(missingProductionPushProviderEvidence);
   const sqlCipherVerificationSubtitle = sqlCipherVerificationResult
     ? sqlCipherVerificationResult.passed
@@ -400,6 +402,12 @@ export function SettingsScreen() {
           title="Signal Adapter"
           subtitle={status.signalAdapterSummary ?? 'Native adapter readiness has not been checked yet'}
           testID="settings-signal-adapter"
+        />
+        <SettingRow
+          icon={fileCryptoReadiness.eligibleForProduction ? 'lock-closed' : 'warning'}
+          title="File Crypto Provider"
+          subtitle={fileCryptoReadiness.summary}
+          testID="settings-file-crypto-provider"
         />
         <SettingRow
           icon={pushProviderReadiness.productionReady ? 'notifications' : 'notifications-off'}

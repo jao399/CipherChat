@@ -23,6 +23,8 @@ This burndown tracks what can be closed inside this repository versus what still
 | Signal/libsignal integration plan | Reduced | `docs/architecture/phase-76-signal-libsignal-integration-plan.md` defines required native adapter, X3DH, Double Ratchet, storage, migration, and readiness criteria while keeping live sends fail-closed. |
 | iOS SQLCipher evidence workflow | Reduced | `docs/release/ios-sqlcipher-evidence.md` and `npm run collect:sqlcipher-evidence` now document EAS, simulator, real-device, and macOS/Xcode verification paths without marking iOS complete. |
 | Push provider evidence boundary | Reduced | `src/services/notifications/pushProviderReadiness.ts` and `docs/architecture/phase-78-push-provider-evidence-boundary.md` keep APNs/FCM production evidence blocked until provider configuration, log review, and smoke evidence exist. |
+| Production file encryption adapter plan | Reduced | `docs/architecture/phase-79-production-file-encryption-adapter-plan.md` and `npm run verify:file-crypto-plan` define required adapter criteria without installing or certifying a production adapter. |
+| External review package and dependency triage | Reduced | `docs/security/external-review-request-package.md`, `docs/security/dependency-advisory-triage.md`, and `npm run verify:external-review-package` prepare review materials and keep moderate advisories visible. |
 
 ## Still Blocking Production Launch
 
@@ -32,10 +34,10 @@ This burndown tracks what can be closed inside this repository versus what still
 | Production Signal prekey generation | Live bundle publication correctly blocks without a production-ready Signal prekey generator. | Implement `SignalPrekeyGenerationAdapter` using the same reviewed native adapter and non-exportable key storage where available. |
 | iOS SQLCipher runtime evidence | Current workspace is Windows; iOS runtime evidence requires macOS/Xcode or an installed EAS iOS build. Phase 77 documents the exact path, but no iOS proof is attached. | Build/install the iOS development client or preview build, run Settings > Development Evidence or Release Evidence > SQLCipher Runtime Check, and update `docs/release/ios-sqlcipher-evidence.md`. |
 | Non-exportable device signing keys | Phase 74 defines the provider boundary, but the current SecureStore fallback is still JavaScript-readable inside the signing store and not production non-exportable evidence. BlueStacks runtime testing is useful development evidence only and does not prove Android Keystore non-exportability. | Implement and review native Android Keystore/iOS Keychain or Secure Enclave signing providers, then attach runtime evidence from appropriate production targets. |
-| Production secure file crypto | Phase 71 defines the adapter and policy boundary, but no reviewed implementation is installed. | Implement a reviewed client-side file crypto adapter, add large-file and metadata-minimization tests, and complete file handling review. |
+| Production secure file crypto | Phase 71 defines the adapter and policy boundary and Phase 79 defines the implementation plan, but no reviewed implementation is installed. | Implement a reviewed client-side file crypto adapter, add large-file, key-wrapping, chunk integrity, and metadata-minimization tests, and complete file handling review. |
 | Push provider production wiring | Phase 78 defines provider readiness evidence, but production APNs/FCM credentials, provider ports, provider log review, and release smoke evidence are not configured here. | Configure provider ports in deployment secrets, run release smoke checks, and confirm generic wake-only payloads in provider logs without sensitive fields. |
 | External security review | Required before any production user data. | Provide this repository, CI outputs, native runtime evidence, adapter internals, and remediation tracking to an external reviewer. |
-| Moderate Expo transitive advisories | `postcss` and `uuid` advisories are under Expo tooling. The safe fix is an Expo-compatible upstream update, not a blind forced override. | Track Expo SDK patch availability; avoid `npm audit fix --force` unless an Expo upgrade plan has been tested. |
+| Moderate Expo transitive advisories | `postcss` and `uuid` advisories are under Expo tooling. Phase 80 documents triage and the safe fix is an Expo-compatible upstream update, not a blind forced override. | Track Expo SDK patch availability; avoid `npm audit fix --force` unless an Expo upgrade plan has been tested and Android/iOS SQLCipher evidence is refreshed. |
 
 ## Commands That Must Stay Green
 
@@ -44,8 +46,11 @@ npm run typecheck
 npm test
 npm run validate:ci
 npm run verify:signal-integration-plan
+npm run verify:file-crypto-plan
 npm run verify:release-evidence
 npm run collect:sqlcipher-evidence
+npm run verify:external-review-package
+npm audit --audit-level=moderate
 npx expo-doctor
 ```
 

@@ -12,6 +12,7 @@ In scope:
 - Encrypted local database and prototype AsyncStorage migration controls.
 - Node API authentication, encrypted envelope delivery, queue fanout, metadata retention, and abuse controls.
 - Push notification privacy boundary.
+- Secure file encryption boundary and Phase 79 production adapter plan.
 - Release operations, CI, Docker image, health checks, and smoke tests.
 
 Out of scope until implemented:
@@ -20,6 +21,7 @@ Out of scope until implemented:
 - MLS group messaging internals.
 - Production APNs/FCM provider credentials and cloud platform configuration.
 - Final backup, recovery, account deletion, and privacy-policy implementation.
+- Final production file encryption adapter internals until an adapter is installed.
 
 ## Critical blockers
 
@@ -29,12 +31,15 @@ Out of scope until implemented:
 - iOS SQLCipher runtime verification must be completed on macOS/Xcode.
 - Key-change warning UX must block sends until changed safety numbers are reviewed.
 - External security review must verify the live crypto provider, local storage, API authorization, metadata minimization, and release process.
+- Production file encryption must remain blocked until the Phase 79 criteria are implemented and reviewed.
 
 ## Reviewer entry points
 
 - Threat model: `CipherChat-threat-model.md`
 - Security acceptance criteria: `docs/security/security-acceptance-criteria.md`
 - Evidence manifest: `docs/security/audit-evidence-manifest.md`
+- External review request package: `docs/security/external-review-request-package.md`
+- Dependency advisory triage: `docs/security/dependency-advisory-triage.md`
 - Backend boundaries: `docs/architecture/backend-boundaries.md`
 - Security model: `docs/architecture/security-model.md`
 - Release checklist: `docs/release/production-readiness-checklist.md`
@@ -53,6 +58,7 @@ Out of scope until implemented:
 - Verify live send and receive paths fail closed unless a reviewed provider is installed.
 - Verify no custom cryptographic protocol is introduced for production messaging.
 - Verify future provider tests include X3DH, Double Ratchet, replay handling, skipped-message keys, key rotation, and interoperability vectors.
+- Verify file encryption uses reviewed authenticated encryption, per-file keys, encrypted metadata, per-recipient key wrapping, and native runtime evidence before production file transfer is enabled.
 
 ### API and infrastructure
 
@@ -87,3 +93,4 @@ The external reviewer should produce:
 - Mobile storage and key-management review notes for Android and iOS.
 - API authorization and metadata-minimization review notes.
 - Release-blocker signoff or explicit launch-blocking issues.
+- Dependency advisory disposition for unresolved Expo transitive advisories.
