@@ -1,10 +1,10 @@
 # CipherChat Public Demo Screenshots
 
-This folder is for public GitHub demo screenshots only. The committed images are public-safe BlueStacks captures from the CipherChat mock/demo flow.
+This folder contains public GitHub demo screenshots. The committed images are public-safe BlueStacks captures from the CipherChat mock/demo flow.
 
-Use mock/demo data only. Do not add screenshots containing secrets, tokens, emails, private chats, real user data, API URLs with secrets, database information, personal information, push tokens, keys, certificates, or production infrastructure details.
+Screenshot data policy: mock/demo data only. Screenshots containing secrets, tokens, emails, private chats, real user data, API URLs with secrets, database information, personal information, push tokens, keys, certificates, or production infrastructure details are out of scope for this folder.
 
-Screenshots outside `screenshots/` should be treated as risky and reviewed before public release.
+Screenshots outside `screenshots/` are considered risky until reviewed before public release.
 
 Committed screenshot sequence:
 
@@ -20,4 +20,4 @@ Committed screenshot sequence:
 - `10-settings-readiness.png`
 - `11-sqlcipher-runtime-check.png`
 
-Only replace or add screenshots after confirming they are public-safe and contain mock/demo data only.
+Future screenshot updates should preserve the same public-safe mock/demo data boundary.

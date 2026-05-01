@@ -46,7 +46,7 @@ git ls-files | Select-String -Pattern '(^|/)(\.env[^/]*|.*\.(apk|aab|jks|keystor
 
 Tracked Prisma migration SQL files are expected source files and are explicitly allowed by `.gitignore`.
 
-## Files That Must Never Be Committed
+## Files Excluded From Public Commits
 
 - `.env` and `.env.*` files with real values
 - APK, AAB, IPA, and native build artifacts
@@ -57,12 +57,12 @@ Tracked Prisma migration SQL files are expected source files and are explicitly 
 - database dumps, logs, screenshots with private data, and production infrastructure details
 - real user data, private chats, emails, access tokens, safety numbers, or decrypted identifiers
 
-## Screenshots Safety Rules
+## Screenshots Safety Policy
 
 - Public-safe demo screenshots are allowed only inside `screenshots/`.
-- Use mock/demo data only.
-- Do not commit screenshots containing secrets, private chats, real accounts, tokens, API keys, emails, database information, personal data, or production infrastructure.
-- Screenshots outside `screenshots/` must be reviewed before public release.
+- Screenshot content is limited to mock/demo data.
+- Screenshots containing secrets, private chats, real accounts, tokens, API keys, emails, database information, personal data, or production infrastructure are excluded from public commits.
+- Screenshots outside `screenshots/` are considered risky until reviewed before public release.
 
 ## Final GitHub Description
 
