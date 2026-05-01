@@ -9,6 +9,8 @@ Author: **Amgad Hussein Alzomi**
 Status: **demo-ready and portfolio-ready**.  
 Production status: **blocked by design until reviewed cryptography, native evidence, push evidence, dependency triage, and external audit are complete**.
 
+Current phase: **Phase 82 - public GitHub screenshot gallery**.
+
 ## Badges
 
 ![Expo](https://img.shields.io/badge/Expo-55-000020?style=for-the-badge&logo=expo)
@@ -60,25 +62,23 @@ What makes it security-focused:
 
 ## Screenshots
 
-Public-safe screenshots belong in [screenshots/](screenshots/README.md).
+Public-safe mock/demo screenshots are stored in [screenshots/](screenshots/README.md). They use prototype data only and do not represent production encrypted messaging readiness.
 
-No screenshots are committed yet. Add only mock/demo screenshots that contain no secrets, tokens, emails, private chats, real user data, production URLs, database details, or personal information.
+| Splash | Onboarding | Sign In |
+| --- | --- | --- |
+| ![CipherChat splash](screenshots/01-splash.png) | ![CipherChat onboarding](screenshots/02-onboarding.png) | ![CipherChat sign in](screenshots/03-sign-in.png) |
 
-Recommended screenshot sequence:
+| Device Verification | Chats | Conversation |
+| --- | --- | --- |
+| ![Device verification](screenshots/04-device-verification.png) | ![CipherChat chats](screenshots/05-chats.png) | ![CipherChat conversation](screenshots/06-conversation.png) |
 
-| Order | Screen |
+| Contacts | Secure File Transfer | Privacy Dashboard |
+| --- | --- | --- |
+| ![Contacts trust state](screenshots/07-contacts-trust-state.png) | ![Secure file transfer prototype](screenshots/08-secure-file-transfer.png) | ![Privacy dashboard](screenshots/09-privacy-dashboard.png) |
+
+| Settings Readiness | SQLCipher Runtime Check |
 | --- | --- |
-| 01 | Splash |
-| 02 | Onboarding |
-| 03 | Sign In |
-| 04 | Device Verification |
-| 05 | Chats |
-| 06 | Conversation |
-| 07 | Contacts Trust State |
-| 08 | Secure File Transfer |
-| 09 | Privacy Dashboard |
-| 10 | Settings Readiness |
-| 11 | SQLCipher Runtime Check |
+| ![Settings readiness dashboard](screenshots/10-settings-readiness.png) | ![SQLCipher runtime check passed](screenshots/11-sqlcipher-runtime-check.png) |
 
 ## Key Features
 

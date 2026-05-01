@@ -116,7 +116,7 @@ export const messages: Message[] = [
     chatId: 'eleanor',
     sender: 'system',
     kind: 'text',
-    text: 'Messages in this chat are protected by end-to-end encryption.',
+    text: 'Prototype secure messaging demo. Production E2EE requires a reviewed Signal adapter.',
     time: '9:38 AM',
   },
   {
