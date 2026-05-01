@@ -33,6 +33,7 @@ CipherChat is not production-ready encrypted messaging software. Live production
 - Phase 78 adds APNs/FCM provider readiness reporting and Settings visibility while keeping production push evidence blocked.
 - Phase 79 documents the production file encryption adapter plan and adds a CI documentation gate while keeping file transfer production-blocked.
 - Phase 80 adds an external review request package and dependency advisory triage without suppressing the existing moderate Expo transitive advisories.
+- Phase 81 packages the project for GitHub, CV, portfolio, and demos with a concise README, case study, final demo script, and final project status document.
 
 ## How To Run Mobile Mock Mode
 
@@ -116,7 +117,7 @@ Baseline and final validation on 2026-05-01:
 
 - `npm install`: passed; npm reported 11 moderate transitive advisories.
 - `npm run typecheck`: passed.
-- `npm test`: passed; app tests 68/68 and API tests 78/78.
+- `npm test`: passed; app tests 72/72 and API tests 78/78.
 - `npm run verify:release-evidence`: passed evidence document checks; Android release-candidate SQLCipher evidence is complete for the Phase 75 APK and iOS runtime SQLCipher evidence remains marked blocking.
 - `npm run collect:sqlcipher-evidence`: prints static config, Android/iOS evidence status, and manual iOS/Android runtime steps without faking iOS proof.
 - `npm run verify:file-crypto-plan`: passes documentation and boundary checks for the Phase 79 production file encryption adapter plan.
@@ -141,6 +142,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Settings shows file crypto provider readiness and clearly reports the missing reviewed production adapter.
 - Privacy dashboard and device management.
 - API health/readiness, persistence-backed sessions/devices/messages/prekeys, and metadata retention jobs.
+- Portfolio and presentation docs: `docs/portfolio/cipherchat-case-study.md`, `docs/release/demo-script.md`, and `docs/release/final-project-status.md`.
 
 ## Security Limitations
 
