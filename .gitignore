@@ -6,15 +6,21 @@ node_modules/
 # Expo
 .expo/
 dist/
+build/
+coverage/
 web-build/
 expo-env.d.ts
 
 # Native
 .kotlin/
 *.orig.*
+*.apk
+*.aab
 *.jks
+*.keystore
 *.p8
 *.p12
+*.cer
 *.key
 *.mobileprovision
 
@@ -26,6 +32,9 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 *.log
+*.dump
+*.sql
+!apps/api/prisma/migrations/**/*.sql
 artifacts/
 
 # macOS
@@ -33,7 +42,17 @@ artifacts/
 *.pem
 
 # local env files
+.env
+.env.*
 .env*.local
+!.env.example
+!**/.env.example
+
+# screenshots
+# Public-safe demo screenshots are allowed only in screenshots/.
+# Review screenshots outside screenshots/ before public release.
+# Never commit screenshots containing secrets, private chats, real accounts,
+# tokens, API keys, emails, personal data, or production infrastructure.
 
 # typescript
 *.tsbuildinfo
