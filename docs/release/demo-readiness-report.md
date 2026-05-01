@@ -25,6 +25,7 @@ CipherChat is not production-ready encrypted messaging software. Live production
 - Phase 72 push metadata boundary is in place; generic wake/sync payloads are allowed and sensitive fields are rejected.
 - Release evidence placeholders and `npm run verify:release-evidence` track Android/iOS SQLCipher evidence without faking runtime proof.
 - Phase 73 adds a dev-only SQLCipher runtime check in Settings and `npm run collect:sqlcipher-evidence` for manual evidence collection steps.
+- Phase 73 BlueStacks Android development runtime verification passed: the debug development APK installed, the current Expo bundle loaded, and Settings > Development Evidence > SQLCipher Runtime Check reported a pass.
 - Phase 74 adds a native non-exportable signing key provider boundary while keeping SecureStore marked as prototype-only.
 
 ## How To Run Mobile Mock Mode
@@ -140,6 +141,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - The Phase 72 push metadata boundary allows generic notifications only; production APNs/FCM wiring and provider evidence remain incomplete.
 - Calls are a UI prototype; production encrypted voice/video transport is not implemented.
 - Android SQLCipher runtime availability has Phase 41 evidence but needs release-candidate refresh; iOS SQLCipher runtime availability still requires macOS/Xcode development-client verification.
+- BlueStacks passed the Phase 73 Android development SQLCipher probe, but BlueStacks is not final production evidence for non-exportable native signing keys and does not close release-candidate Android SQLCipher evidence by itself.
 - OS-backed non-exportable signing keys require the Phase 74 native provider plus runtime/review evidence before production launch.
 - External security review and remediation evidence remain required before production launch.
 

@@ -53,9 +53,9 @@ This manifest lists the evidence an external reviewer should request or reproduc
 
 ## Runtime evidence to attach before launch
 
-- Android development-client SQLCipher evidence from `docs/release/android-sqlcipher-evidence.md`, plus release-candidate screenshot or logs for the exact build being reviewed.
+- Android development-client SQLCipher evidence from `docs/release/android-sqlcipher-evidence.md`, including the Phase 73 BlueStacks development runtime pass, plus release-candidate screenshot or logs for the exact build being reviewed.
 - iOS development-client SQLCipher evidence from `docs/release/ios-sqlcipher-evidence.md`, plus screenshot or logs showing encrypted database availability.
-- Native signing key provider review and runtime evidence showing non-exportable private key behavior and public-key-only export.
+- Native signing key provider review and runtime evidence showing non-exportable private key behavior and public-key-only export. BlueStacks can support Android development checks, but it is not final production evidence for non-exportable key storage by itself.
 - Release smoke workflow run URL.
 - Container image digest promoted to staging or production.
 - External security review report and remediation tracking link.

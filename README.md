@@ -963,7 +963,8 @@ CipherChat now has a repeatable SQLCipher runtime evidence workflow:
 - Settings includes a dev-only `SQLCipher Runtime Check`.
 - The check opens the encrypted database, applies schema v1, writes/reads/deletes a harmless test record, and requires `encrypted=true`.
 - `npm run collect:sqlcipher-evidence` reports static config and manual Android/iOS evidence steps without faking runtime results.
-- Android and iOS runtime evidence remain production blockers until captured from installed development clients.
+- BlueStacks Android development runtime verification passed in Phase 73: the debug development APK installed, the Expo development bundle loaded, and the in-app SQLCipher check passed.
+- Android release-candidate evidence and iOS runtime evidence remain production blockers until captured from the exact builds under review.
 
 More detail: `docs/architecture/phase-73-runtime-sqlcipher-evidence-workflow.md`.
 

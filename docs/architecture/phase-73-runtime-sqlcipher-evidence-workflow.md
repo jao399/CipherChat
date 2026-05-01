@@ -8,6 +8,7 @@ Phase 73 makes SQLCipher runtime verification easier to repeat without pretendin
 - Settings now includes a development-only `SQLCipher Runtime Check` action.
 - `scripts/collect-sqlcipher-evidence.mjs` summarizes static project configuration and prints manual Android/iOS runtime evidence steps.
 - Release evidence documents now point reviewers to the in-app verification action.
+- Android development runtime verification now includes a BlueStacks workflow for teams that have BlueStacks available instead of a standard Android emulator.
 
 ## Runtime Check
 
@@ -22,7 +23,21 @@ The in-app check:
 
 The record contains only a fixed non-sensitive marker. It does not contain message text, file content, filenames, contact graph data, private keys, tokens, safety numbers, or decrypted identifiers.
 
+## BlueStacks Android Workflow
+
+BlueStacks can be used for Android development runtime evidence, but it is not final production evidence for device-bound key storage or release-candidate signing. The documented workflow is:
+
+1. Enable Android Debug Bridge / ADB in BlueStacks Settings > Advanced.
+2. Detect the target with `C:\Program Files\BlueStacks_nxt\HD-Adb.exe devices -l`.
+3. Install the Expo development APK with `HD-Adb.exe -s <serial> install -r -t android\app\build\outputs\apk\debug\app-debug.apk`.
+4. Start Metro with `npx expo start --dev-client --host lan --port 8083`.
+5. Reverse the Metro port with `HD-Adb.exe -s <serial> reverse tcp:8083 tcp:8083`.
+6. Open the development client deep link.
+7. Navigate to Settings > Development Evidence > SQLCipher Runtime Check.
+8. Record the pass/fail result without sensitive app data.
+
+Phase 73 observed BlueStacks as `emulator-5554`, installed the development APK successfully, loaded the current Expo development bundle, and received `SQLCipher check passed` from the in-app probe.
+
 ## Production Status
 
-Android and iOS runtime evidence remain blocking until screenshots or logs are captured from installed development clients for the exact build under review. CI checks placeholders and configuration only.
-
+BlueStacks development runtime evidence is now captured for Android. Android release-candidate evidence and iOS runtime evidence remain blocking until screenshots or logs are captured from installed clients for the exact build under review. CI checks placeholders and configuration only.
