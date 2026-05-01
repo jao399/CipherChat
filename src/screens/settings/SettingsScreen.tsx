@@ -18,9 +18,15 @@ import {
   getEncryptedDatabaseReadiness,
   migratePrototypeStoresToEncryptedDatabase,
   opSQLiteEncryptedLocalDatabase,
+  runSqlCipherRuntimeVerification,
   type PrototypeStoreMigrationResult,
+  type SqlCipherRuntimeVerificationResult,
 } from '../../services/local';
 import type { EncryptedLocalDatabaseStatus } from '../../services/ports';
+import {
+  evaluateNativeSigningKeyProviderReadiness,
+  secureStorePrototypeSigningKeyProviderReadiness,
+} from '../../security/nativeSigningKeyProvider';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -44,6 +50,9 @@ export function SettingsScreen() {
   const [revokingDevice, setRevokingDevice] = useState(false);
   const [checkingEncryptedDatabase, setCheckingEncryptedDatabase] = useState(false);
   const [encryptedDatabaseStatus, setEncryptedDatabaseStatus] = useState<EncryptedLocalDatabaseStatus | null>(null);
+  const [checkingSqlCipherRuntime, setCheckingSqlCipherRuntime] = useState(false);
+  const [sqlCipherVerificationResult, setSqlCipherVerificationResult] =
+    useState<SqlCipherRuntimeVerificationResult | null>(null);
   const [checkingMigrationReadiness, setCheckingMigrationReadiness] = useState(false);
   const [runningMigration, setRunningMigration] = useState(false);
   const [migrationPreview, setMigrationPreview] = useState<PrototypeStoreMigrationResult['migratedCounts'] | null>(null);
@@ -54,6 +63,14 @@ export function SettingsScreen() {
       ? `Available - schema v${encryptedDatabaseStatus.schemaVersion}`
       : encryptedDatabaseStatus.lastError ?? 'Unavailable until development build is installed'
     : `Schema v${encryptedDatabase.schemaVersion} planned`;
+  const nativeSigningReadiness = evaluateNativeSigningKeyProviderReadiness(
+    secureStorePrototypeSigningKeyProviderReadiness,
+  );
+  const sqlCipherVerificationSubtitle = sqlCipherVerificationResult
+    ? sqlCipherVerificationResult.passed
+      ? `Passed at ${sqlCipherVerificationResult.checkedAt}; encrypted=${String(sqlCipherVerificationResult.status.encrypted)}`
+      : sqlCipherVerificationResult.summary
+    : 'Runtime evidence check writes and deletes a harmless test record';
 
   const resetOnboarding = async () => {
     await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
@@ -126,6 +143,27 @@ export function SettingsScreen() {
       setEncryptedDatabaseStatus(nextStatus);
     } finally {
       setCheckingEncryptedDatabase(false);
+    }
+  };
+
+  const runSqlCipherEvidenceCheck = async () => {
+    setCheckingSqlCipherRuntime(true);
+
+    try {
+      const result = await runSqlCipherRuntimeVerification(opSQLiteEncryptedLocalDatabase);
+      setSqlCipherVerificationResult(result);
+      setEncryptedDatabaseStatus(result.status);
+      Alert.alert(
+        result.passed ? 'SQLCipher check passed' : 'SQLCipher check blocked',
+        result.summary,
+      );
+    } catch (error) {
+      Alert.alert(
+        'SQLCipher check failed',
+        error instanceof Error ? error.message : 'CipherChat could not run SQLCipher runtime verification.',
+      );
+    } finally {
+      setCheckingSqlCipherRuntime(false);
     }
   };
 
@@ -338,6 +376,12 @@ export function SettingsScreen() {
           testID="settings-device-crypto-provider"
         />
         <SettingRow
+          icon={nativeSigningReadiness.eligibleForProduction ? 'shield-checkmark' : 'warning'}
+          title="Native Signing Key Provider"
+          subtitle={nativeSigningReadiness.summary}
+          testID="settings-native-signing-key-provider"
+        />
+        <SettingRow
           icon={status.messageCryptoReady ? 'shield-checkmark' : 'warning'}
           title="Message Crypto"
           subtitle={status.messageCryptoSummary}
@@ -360,6 +404,17 @@ export function SettingsScreen() {
 
       {__DEV__ ? (
         <>
+          <SectionHeader title="Development Evidence" />
+          <View style={styles.group}>
+            <SettingRow
+              icon={checkingSqlCipherRuntime ? 'sync' : 'shield-checkmark'}
+              title="SQLCipher Runtime Check"
+              subtitle={checkingSqlCipherRuntime ? 'Opening encrypted DB and round-tripping test record...' : sqlCipherVerificationSubtitle}
+              testID="settings-sqlcipher-runtime-check"
+              onPress={runSqlCipherEvidenceCheck}
+            />
+          </View>
+
           <SectionHeader title="Development Migration" />
           <View style={styles.group}>
             <SettingRow

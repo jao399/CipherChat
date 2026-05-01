@@ -44,6 +44,8 @@ These criteria are production blockers. CipherChat must not process production u
 - Durable outbound queue records must reject plaintext-shaped fields before persistence.
 - Device identity signing must be isolated behind a key-store/provider boundary; direct app flows must not load private key bytes.
 - Non-exportable Android Keystore and iOS Keychain options must replace the Expo SecureStore fallback before production encrypted messaging.
+- SecureStore-held device signing keys must not satisfy production non-exportable-key requirements.
+- Native device signing providers must sign challenges without exposing private key bytes to JavaScript and must provide review/runtime evidence.
 - Mobile settings must expose device revocation and clear local sessions after successful revocation.
 
 ## API and infrastructure gates
@@ -89,6 +91,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Production config gate output: `npm run verify:production-config`
 - Startup health gate output: `npm run verify:startup-health`
 - Release evidence placeholder gate output: `npm run verify:release-evidence`
+- SQLCipher evidence helper output: `npm run collect:sqlcipher-evidence`
 - Audit readiness gate output: `npm run verify:audit-readiness`
 - Key-change send blocking test output: `npm run app:test`
 - Passing CI output for `npm run validate:ci`
@@ -101,6 +104,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Production secret and environment validation test evidence
 - Startup health and graceful shutdown test evidence
 - Signal adapter readiness gate output: `npm run verify:signal-adapter-readiness`
+- Native signing key provider readiness test evidence
 - Key-change warning UX test evidence
 - Production secret storage and rotation plan
 - External security review report and remediation evidence

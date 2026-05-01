@@ -18,6 +18,7 @@ export {
   collectPrototypeStoreMigrationItems,
   migratePrototypeStoresToEncryptedDatabase,
 } from './prototypeStoreMigration';
+export { runSqlCipherRuntimeVerification } from './sqlCipherRuntimeVerification';
 export type {
   EncryptedLocalColumnDefinition,
   EncryptedLocalColumnType,
@@ -36,4 +37,9 @@ export type {
   PrototypeStoreMigrationReaders,
   PrototypeStoreMigrationResult,
 } from './prototypeStoreMigration';
+export type {
+  SqlCipherRuntimeVerificationResult,
+  SqlCipherRuntimeVerificationStep,
+  SqlCipherRuntimeVerificationStepId,
+} from './sqlCipherRuntimeVerification';
 export { bytesToHex, hexToBytes } from './secureStoreEncoding';

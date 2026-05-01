@@ -77,6 +77,16 @@ export {
   type FileCryptoReadinessInput,
 } from './fileCryptoPolicy';
 export {
+  assertNativeSigningKeyProviderReadyForProduction,
+  blockedNativeSigningKeyProvider,
+  evaluateNativeSigningKeyProviderReadiness,
+  secureStorePrototypeSigningKeyProviderReadiness,
+  type NativeSigningKeyEvidence,
+  type NativeSigningKeyProvider,
+  type NativeSigningKeyProviderReadiness,
+  type NativeSigningKeyProviderReadinessInput,
+} from './nativeSigningKeyProvider';
+export {
   assertRecipientTrustedForSend,
   evaluateRecipientTrustForSend,
   type RecipientTrustDecision,

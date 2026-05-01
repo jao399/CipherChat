@@ -24,6 +24,8 @@ CipherChat is not production-ready encrypted messaging software. Live production
 - Phase 71 secure file crypto boundary is in place; production file transfer stays blocked without a reviewed adapter.
 - Phase 72 push metadata boundary is in place; generic wake/sync payloads are allowed and sensitive fields are rejected.
 - Release evidence placeholders and `npm run verify:release-evidence` track Android/iOS SQLCipher evidence without faking runtime proof.
+- Phase 73 adds a dev-only SQLCipher runtime check in Settings and `npm run collect:sqlcipher-evidence` for manual evidence collection steps.
+- Phase 74 adds a native non-exportable signing key provider boundary while keeping SecureStore marked as prototype-only.
 
 ## How To Run Mobile Mock Mode
 
@@ -98,6 +100,7 @@ In the app, open Settings and switch Backend Mode to live. Live mode supports ba
 npm run typecheck
 npm test
 npm run verify:release-evidence
+npm run collect:sqlcipher-evidence
 npm run validate:ci
 npx expo-doctor
 ```
@@ -106,8 +109,9 @@ Baseline and final validation on 2026-05-01:
 
 - `npm install`: passed; npm reported 11 moderate transitive advisories.
 - `npm run typecheck`: passed.
-- `npm test`: passed.
+- `npm test`: passed; app tests 68/68 and API tests 78/78.
 - `npm run verify:release-evidence`: passed placeholder checks; Android release-candidate refresh and iOS runtime SQLCipher evidence remain marked blocking.
+- `npm run collect:sqlcipher-evidence`: prints static config and manual runtime steps only; device/emulator runtime proof remains manual.
 - `npm run validate:ci`: passed, including Prisma validation, integration tests, release/security verification scripts, Expo Doctor, and high-severity audit gate.
 - `npx expo-doctor`: passed, 18/18 checks.
 
@@ -122,6 +126,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Files tab and secure file transfer preview with production file-crypto gates described honestly.
 - Contacts discovery, public key sync, safety number review, and trust actions.
 - Settings readiness dashboard and dev-only prototype store migration controls.
+- Development Evidence section with SQLCipher Runtime Check for installed development clients.
 - Privacy dashboard and device management.
 - API health/readiness, persistence-backed sessions/devices/messages/prekeys, and metadata retention jobs.
 
@@ -135,7 +140,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - The Phase 72 push metadata boundary allows generic notifications only; production APNs/FCM wiring and provider evidence remain incomplete.
 - Calls are a UI prototype; production encrypted voice/video transport is not implemented.
 - Android SQLCipher runtime availability has Phase 41 evidence but needs release-candidate refresh; iOS SQLCipher runtime availability still requires macOS/Xcode development-client verification.
-- OS-backed non-exportable signing keys require native provider evidence before production launch.
+- OS-backed non-exportable signing keys require the Phase 74 native provider plus runtime/review evidence before production launch.
 - External security review and remediation evidence remain required before production launch.
 
 ## Remaining Production Blockers
@@ -143,6 +148,8 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Install and review a native Signal/libsignal-compatible one-to-one crypto adapter.
 - Provide production Signal prekey generation and storage using non-exportable native key material.
 - Refresh Android SQLCipher evidence for the release-candidate build and complete iOS SQLCipher runtime evidence on macOS/Xcode.
+- Run Settings > Development Evidence > SQLCipher Runtime Check on installed Android/iOS development clients and attach proof.
+- Install and review a native non-exportable signing key provider behind the Phase 74 boundary.
 - Complete production secure file encryption adapter and file handling review.
 - Complete push notification provider configuration with generic wake-only payloads.
 - Attach real SQLCipher release evidence to `docs/release/android-sqlcipher-evidence.md` and `docs/release/ios-sqlcipher-evidence.md`.

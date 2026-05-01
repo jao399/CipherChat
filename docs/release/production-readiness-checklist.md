@@ -13,6 +13,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - `npm run verify:dev-build-config` passes.
 - `npm run verify:signal-adapter-readiness` passes.
 - `npm run verify:release-evidence` passes and linked runtime evidence is no longer marked blocking.
+- `npm run collect:sqlcipher-evidence` output is attached with matching Android/iOS runtime screenshots or logs.
 - Android development client validates SQLCipher adapter status; Phase 41 evidence exists and must be refreshed for the release-candidate build.
 - iOS development client validates SQLCipher adapter status.
 - Release builds are generated and smoke-tested.
@@ -46,6 +47,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Plaintext message cache is blocked unless encrypted database is active.
 - Outbound queue persistence rejects plaintext-shaped fields.
 - Device identity private keys move toward non-exportable Keychain/Keystore usage where possible.
+- Native signing key provider readiness reports reviewed implementation evidence, runtime evidence, non-exportable private keys, public-key-only export behavior, rotation support, and revocation support.
 
 ## Server Security
 

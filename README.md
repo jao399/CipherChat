@@ -956,12 +956,34 @@ CipherChat now has a generic push notification metadata policy:
 
 More detail: `docs/architecture/phase-72-push-metadata-boundary.md`.
 
+### Phase 73 - Runtime SQLCipher Evidence Workflow
+
+CipherChat now has a repeatable SQLCipher runtime evidence workflow:
+
+- Settings includes a dev-only `SQLCipher Runtime Check`.
+- The check opens the encrypted database, applies schema v1, writes/reads/deletes a harmless test record, and requires `encrypted=true`.
+- `npm run collect:sqlcipher-evidence` reports static config and manual Android/iOS evidence steps without faking runtime results.
+- Android and iOS runtime evidence remain production blockers until captured from installed development clients.
+
+More detail: `docs/architecture/phase-73-runtime-sqlcipher-evidence-workflow.md`.
+
+### Phase 74 - Native Signing Key Boundary
+
+CipherChat now has a native non-exportable device signing key boundary:
+
+- `NativeSigningKeyProvider` defines the future Android Keystore/iOS Keychain or Secure Enclave provider contract.
+- The default native provider is blocked and reports missing reviewed implementation/runtime evidence.
+- SecureStore-held prototype Ed25519 keys are explicitly not production non-exportable evidence.
+- Settings shows native signing key provider readiness.
+
+More detail: `docs/architecture/phase-74-native-signing-key-boundary.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.
 2. Refresh Android SQLCipher evidence for the exact release-candidate build.
 3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
-4. Replace exportable SecureStore-held private signing keys with non-exportable OS-backed keys where possible.
+4. Install and review a native non-exportable signing key provider behind the Phase 74 boundary.
 5. Install and review a real production file encryption adapter behind the Phase 71 boundary.
 6. Complete production APNs/FCM wiring with generic wake-only payload evidence.
 7. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.

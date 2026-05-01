@@ -11,11 +11,12 @@ No iOS SQLCipher runtime evidence is available from this Windows workspace. iOS 
 ## Required Release Evidence
 
 - Build and install the iOS Expo development client for the release-candidate configuration.
-- Open CipherChat and confirm the encrypted database boundary reports SQLCipher availability and `encrypted=true`.
+- Run `npm run collect:sqlcipher-evidence` to capture static project configuration and manual runtime steps.
+- Open CipherChat and go to Settings > Development Evidence > SQLCipher Runtime Check.
+- Confirm the runtime check opens the encrypted database, applies schema v1, writes/reads/deletes the harmless verification record, and reports `encrypted=true`.
 - Capture simulator or device logs or screenshots showing the adapter status without message content, filenames, contact graph data, private keys, tokens, safety numbers, or decrypted identifiers.
 - Attach the evidence to this document or the external audit packet.
 
 ## Production Status
 
 This remains blocking for production. Demo and mock mode remain usable, and production claims must not say iOS encrypted storage has been verified until this evidence exists.
-
