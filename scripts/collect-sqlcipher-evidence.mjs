@@ -32,6 +32,26 @@ const opSQLiteConfig = packageJson['op-sqlite'] ?? {};
 const developmentProfile = easJson.build?.development ?? {};
 const previewProfile = easJson.build?.preview ?? {};
 
+async function readEvidenceStatus(relativePath) {
+  try {
+    const content = await readFile(path.join(root, relativePath), 'utf8');
+    return {
+      blocking: content.match(/Blocking status:\s*(.+)/)?.[1]?.trim() ?? 'unknown',
+      evidence: content.match(/Evidence status:\s*(.+)/)?.[1]?.trim() ?? 'unknown',
+    };
+  } catch {
+    return {
+      blocking: 'missing-evidence-document',
+      evidence: 'missing',
+    };
+  }
+}
+
+const [androidEvidence, iosEvidence] = await Promise.all([
+  readEvidenceStatus('docs/release/android-sqlcipher-evidence.md'),
+  readEvidenceStatus('docs/release/ios-sqlcipher-evidence.md'),
+]);
+
 console.log('CipherChat SQLCipher runtime evidence helper');
 info('host', `${os.platform()} ${os.release()} ${os.arch()}`);
 
@@ -79,6 +99,22 @@ if (expoConfig.ios?.bundleIdentifier) {
   pass('iOS bundle identifier', expoConfig.ios.bundleIdentifier);
 }
 
+if (developmentProfile.ios?.simulator === true) {
+  pass('EAS iOS development target', 'development profile builds an iOS simulator client');
+} else {
+  needsEvidence('EAS iOS development target', 'development profile should declare ios.simulator=true for simulator evidence');
+}
+
+if (previewProfile.env?.EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE === 'true') {
+  pass('EAS preview iOS evidence flag', 'preview profile exposes Settings > Release Evidence');
+} else {
+  needsEvidence('EAS preview iOS evidence flag', 'preview profile must expose Release Evidence for iOS release-candidate checks');
+}
+
+console.log('\nRecorded runtime evidence status');
+info('Android SQLCipher evidence', `evidence=${androidEvidence.evidence}; blocking=${androidEvidence.blocking}`);
+needsEvidence('iOS SQLCipher evidence', `evidence=${iosEvidence.evidence}; blocking=${iosEvidence.blocking}`);
+
 console.log('\nManual runtime evidence steps');
 console.log('1. Build and install the Expo development client or release-candidate APK for the target config.');
 console.log('2. For Android release-candidate evidence, prefer the EAS preview APK profile or an equivalent local release build with EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE=true.');
@@ -88,6 +124,24 @@ console.log('5. Run the check and capture the pass/fail result.');
 console.log('6. The check must report encrypted=true and schema v1 after writing, reading, and deleting a harmless deviceMetadata record.');
 console.log('7. Attach screenshot/log output to docs/release/android-sqlcipher-evidence.md or docs/release/ios-sqlcipher-evidence.md.');
 console.log('8. Do not capture message content, filenames, contact graph data, private keys, tokens, safety numbers, or decrypted identifiers.');
+
+console.log('\niOS next commands');
+console.log('Simulator development-client path on macOS/Xcode:');
+console.log('  npx eas build --profile development --platform ios --local');
+console.log('  npx expo start --dev-client');
+console.log('  xcrun simctl install booted <path-to-CipherChat.app>');
+console.log('  xcrun simctl launch booted com.amgadalzomi.cipherchat');
+console.log('Device/internal release-candidate path with EAS:');
+console.log('  npx eas build --profile preview --platform ios');
+console.log('  Install the resulting internal build on an enrolled iOS device.');
+console.log('Then open CipherChat, complete the demo entry flow, open Settings > Release Evidence, run SQLCipher Runtime Check, and attach the pass/fail screenshot or logs to docs/release/ios-sqlcipher-evidence.md.');
+
+if (os.platform() === 'win32') {
+  needsEvidence(
+    'iOS runtime host',
+    'Current host is Windows. iOS runtime proof remains blocked until macOS/Xcode or an installed EAS iOS build is available.',
+  );
+}
 
 info(
   'runtime verification',

@@ -36,6 +36,7 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Runtime SQLCipher evidence workflow | `docs/architecture/phase-73-runtime-sqlcipher-evidence-workflow.md` |
 | Native signing key boundary | `docs/architecture/phase-74-native-signing-key-boundary.md` |
 | Signal/libsignal integration plan | `docs/architecture/phase-76-signal-libsignal-integration-plan.md` |
+| Push provider evidence boundary | `docs/architecture/phase-78-push-provider-evidence-boundary.md` |
 
 ## Implementation evidence
 
@@ -49,15 +50,16 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Signal provider boundary | `src/services/messages/signalOneToOneCryptoProvider.ts`, `docs/architecture/phase-76-signal-libsignal-integration-plan.md` |
 | Native signing key boundary | `src/security/nativeSigningKeyProvider.ts`, `src/security/deviceSigningKeyStore.ts` |
 | Secure file transfer boundary | `src/security/fileCryptoPolicy.ts`, `src/services/files/fileEncryptionProvider.ts`, `src/services/files/secureFileTransferProvider.ts` |
-| Push privacy boundary | `src/services/notifications/pushNotificationPolicy.ts`, `apps/api/src/push/pushPrivacy.ts`, `apps/api/src/push/pushNotificationService.ts` |
+| Push privacy boundary | `src/services/notifications/pushNotificationPolicy.ts`, `src/services/notifications/pushProviderReadiness.ts`, `apps/api/src/push/pushPrivacy.ts`, `apps/api/src/push/pushNotificationService.ts` |
 | Encrypted local database | `src/services/local/opSQLiteEncryptedLocalDatabase.ts`, `src/services/local/sqlCipherRuntimeVerification.ts` |
 | Prototype migration harness | `src/services/local/prototypeStoreMigration.ts` |
 
 ## Runtime evidence to attach before launch
 
 - Android SQLCipher evidence from `docs/release/android-sqlcipher-evidence.md`, including the Phase 73 BlueStacks development runtime pass and Phase 75 BlueStacks release-candidate APK pass for the current APK. Future Android release-candidate APKs require the same probe.
-- iOS development-client SQLCipher evidence from `docs/release/ios-sqlcipher-evidence.md`, plus screenshot or logs showing encrypted database availability.
+- iOS development-client or preview-build SQLCipher evidence from `docs/release/ios-sqlcipher-evidence.md`, plus screenshot or logs showing encrypted database availability. Phase 77 documents the path, but no iOS runtime evidence is attached yet.
 - Signal/libsignal adapter evidence showing the Phase 76 production readiness criteria are satisfied; the plan alone is not production crypto evidence.
+- APNs/FCM provider evidence showing configured provider ports, generic wake-only payloads, provider log review, and release smoke results. The Phase 78 boundary alone is not provider evidence.
 - Native signing key provider review and runtime evidence showing non-exportable private key behavior and public-key-only export. BlueStacks can support Android development checks, but it is not final production evidence for non-exportable key storage by itself.
 - Release smoke workflow run URL.
 - Container image digest promoted to staging or production.

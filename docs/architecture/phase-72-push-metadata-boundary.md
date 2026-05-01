@@ -31,5 +31,4 @@ Push payloads must not include:
 
 ## Production Policy
 
-Production APNs/FCM wiring must use this generic wake/sync policy and provider logs must be reviewed to confirm no sensitive metadata is emitted. Push production wiring remains blocked until credentials, provider ports, release smoke checks, and privacy evidence are complete.
-
+Production APNs/FCM wiring must use this generic wake/sync policy and provider logs must be reviewed to confirm no sensitive metadata is emitted. Phase 78 adds provider readiness reporting, but push production wiring remains blocked until credentials, provider ports, release smoke checks, and privacy evidence are complete.

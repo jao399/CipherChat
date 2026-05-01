@@ -52,11 +52,15 @@ describe('push notification metadata policy', () => {
     const violations = findPushNotificationPolicyViolations({
       ...safePayload,
       data: {
+        contactId: 'contact_1',
+        fcmToken: 'fcm-token',
         senderAccountId: 'account_1',
         token: 'push-token',
       },
     });
 
+    assert(violations.some((violation) => violation.includes('data.contactId')));
+    assert(violations.some((violation) => violation.includes('data.fcmToken')));
     assert(violations.some((violation) => violation.includes('data.senderAccountId')));
     assert(violations.some((violation) => violation.includes('data.token')));
     assert(violations.some((violation) => violation.includes('payload.data')));
@@ -73,4 +77,3 @@ describe('push notification metadata policy', () => {
     assert(violations.some((violation) => violation.includes('badgeCount')));
   });
 });
-

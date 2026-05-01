@@ -9,7 +9,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Secure file upload must remain blocked unless a reviewed production-ready file crypto adapter is registered.
 - Prototype crypto paths must be disabled or blocked in production mode.
 - Live sends must be blocked while the active message crypto provider is prototype-only.
-- Native encrypted local storage must be verified on Android and iOS development clients.
+- Native encrypted local storage must be verified on Android and iOS development clients or release-candidate builds.
 - Device-session auth must support revocation, expiry, token hashing at rest, and abuse monitoring.
 - Device revocation must invalidate active sessions and remove the revoked device from public key discovery.
 - Key-change warnings must block send until users review changed safety numbers.
@@ -39,7 +39,7 @@ These criteria are production blockers. CipherChat must not process production u
 
 - Session tokens must remain in OS secure storage, not AsyncStorage.
 - Device private key material must remain out of AsyncStorage and logs.
-- SQLCipher or equivalent encrypted local database must report `encrypted=true` in installed Android and iOS development clients.
+- SQLCipher or equivalent encrypted local database must report `encrypted=true` in installed Android and iOS development clients or release-candidate builds.
 - Prototype AsyncStorage metadata migration must preserve source data until verified rollback exists.
 - Production builds must block plaintext message persistence unless encrypted storage is active.
 - Durable outbound queue records must reject plaintext-shaped fields before persistence.
@@ -77,7 +77,8 @@ These criteria are production blockers. CipherChat must not process production u
 - Production API startup must fail when required persistence, queue, signature-verifier, CORS, or internal-token configuration is unsafe.
 - Startup and readiness health checks must expose safe reason codes without leaking connection strings or credentials.
 - Push notifications must use generic payloads with no message content, sender names, group names, filenames, or plaintext previews.
-- Push notification payloads must reject conversation identifiers, account identifiers, safety numbers, tokens, and decrypted identifiers.
+- Push notification payloads must reject conversation identifiers, account/contact graph identifiers, safety numbers, tokens, push tokens, provider registration tokens, and decrypted identifiers.
+- Production APNs/FCM provider readiness must remain blocked until provider configuration, generic payload enforcement, provider log review, and release smoke evidence are attached.
 - Abuse reports must disclose only user-selected message content or metadata.
 - Audit events must avoid plaintext content, file names, private contact graph details, and private keys.
 
@@ -98,7 +99,8 @@ These criteria are production blockers. CipherChat must not process production u
 - Key-change send blocking test output: `npm run app:test`
 - Passing CI output for `npm run validate:ci`
 - Android release-candidate SQLCipher verification result
-- iOS development-client SQLCipher verification result
+- iOS development-client or preview-build SQLCipher verification result
+- APNs/FCM provider readiness and generic payload evidence
 - Cryptography design review and implementation evidence
 - Account/session abuse-control test evidence
 - Metadata retention cleanup test evidence

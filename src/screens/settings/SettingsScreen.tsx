@@ -27,6 +27,10 @@ import {
   evaluateNativeSigningKeyProviderReadiness,
   secureStorePrototypeSigningKeyProviderReadiness,
 } from '../../security/nativeSigningKeyProvider';
+import {
+  evaluatePushProviderReadiness,
+  missingProductionPushProviderEvidence,
+} from '../../services/notifications/pushProviderReadiness';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -69,6 +73,7 @@ export function SettingsScreen() {
   const nativeSigningReadiness = evaluateNativeSigningKeyProviderReadiness(
     secureStorePrototypeSigningKeyProviderReadiness,
   );
+  const pushProviderReadiness = evaluatePushProviderReadiness(missingProductionPushProviderEvidence);
   const sqlCipherVerificationSubtitle = sqlCipherVerificationResult
     ? sqlCipherVerificationResult.passed
       ? `Passed at ${sqlCipherVerificationResult.checkedAt}; encrypted=${String(sqlCipherVerificationResult.status.encrypted)}`
@@ -395,6 +400,18 @@ export function SettingsScreen() {
           title="Signal Adapter"
           subtitle={status.signalAdapterSummary ?? 'Native adapter readiness has not been checked yet'}
           testID="settings-signal-adapter"
+        />
+        <SettingRow
+          icon={pushProviderReadiness.productionReady ? 'notifications' : 'notifications-off'}
+          title="Push Provider"
+          subtitle={pushProviderReadiness.summary}
+          testID="settings-push-provider-readiness"
+        />
+        <SettingRow
+          icon={pushProviderReadiness.productionReady ? 'shield-checkmark' : 'warning'}
+          title="Generic Push Payload Policy"
+          subtitle="Generic wake/sync payloads only; APNs/FCM evidence is still missing"
+          testID="settings-push-payload-policy"
         />
         <SettingRow
           icon={devicePrekeyStatus?.needsTopUp ? 'warning' : 'key'}

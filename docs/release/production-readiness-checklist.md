@@ -16,7 +16,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - `npm run verify:release-evidence` passes and linked runtime evidence is no longer marked blocking.
 - `npm run collect:sqlcipher-evidence` output is attached with matching Android/iOS runtime screenshots or logs.
 - Android release-candidate APK validates SQLCipher adapter status; Phase 75 BlueStacks evidence exists for the current APK and must be refreshed for future release candidates.
-- iOS development client validates SQLCipher adapter status.
+- iOS development client or preview build validates SQLCipher adapter status with the Phase 77 workflow.
 - Release builds are generated and smoke-tested.
 
 ## Cryptography
@@ -71,6 +71,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Push notification payloads are checked against the generic metadata policy and reject message plaintext, sender names, filenames, conversation identifiers, account identifiers, safety numbers, and tokens.
 - APNs/FCM provider configuration is complete and production startup fails closed without it.
 - Push provider ports are wired with background/data-only wake delivery and no alert or notification body.
+- Push provider readiness evidence confirms APNs and FCM are configured through deployment secrets, generic payload policy is enforced, provider logs contain no sensitive fields, and release smoke evidence is attached.
 - Metadata minimization review is complete.
 - Data retention policy is implemented for server metadata cleanup.
 - Contact discovery scraping-resistance review is complete.

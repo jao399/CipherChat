@@ -29,6 +29,8 @@ CipherChat is not production-ready encrypted messaging software. Live production
 - Phase 75 BlueStacks Android release-candidate verification passed: the release APK installed, Settings > Release Evidence > SQLCipher Runtime Check reported a pass, and Android SQLCipher evidence is complete for that APK.
 - Phase 74 adds a native non-exportable signing key provider boundary while keeping SecureStore marked as prototype-only.
 - Phase 76 documents the Signal/libsignal integration plan and adds a documentation gate without claiming production Signal support.
+- Phase 77 documents the repeatable iOS SQLCipher runtime evidence workflow while keeping iOS evidence blocking until a real iOS run passes.
+- Phase 78 adds APNs/FCM provider readiness reporting and Settings visibility while keeping production push evidence blocked.
 
 ## How To Run Mobile Mock Mode
 
@@ -114,7 +116,7 @@ Baseline and final validation on 2026-05-01:
 - `npm run typecheck`: passed.
 - `npm test`: passed; app tests 68/68 and API tests 78/78.
 - `npm run verify:release-evidence`: passed evidence document checks; Android release-candidate SQLCipher evidence is complete for the Phase 75 APK and iOS runtime SQLCipher evidence remains marked blocking.
-- `npm run collect:sqlcipher-evidence`: prints static config and manual runtime steps only; device/emulator runtime proof remains manual.
+- `npm run collect:sqlcipher-evidence`: prints static config, Android/iOS evidence status, and manual iOS/Android runtime steps without faking iOS proof.
 - `npm run validate:ci`: passed, including Prisma validation, integration tests, release/security verification scripts, Expo Doctor, and high-severity audit gate.
 - `npx expo-doctor`: passed, 18/18 checks.
 
@@ -130,6 +132,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Contacts discovery, public key sync, safety number review, and trust actions.
 - Settings readiness dashboard and dev-only prototype store migration controls.
 - Development Evidence and Release Evidence sections with SQLCipher Runtime Check for installed development and release-candidate clients.
+- Settings shows push provider readiness, generic push payload policy status, and missing APNs/FCM evidence.
 - Privacy dashboard and device management.
 - API health/readiness, persistence-backed sessions/devices/messages/prekeys, and metadata retention jobs.
 
@@ -141,8 +144,9 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Secure file transfer production upload is blocked until a reviewed client-side file crypto adapter exists.
 - The Phase 71 file crypto boundary is policy and adapter shape only; no production file encryption adapter is installed.
 - The Phase 72 push metadata boundary allows generic notifications only; production APNs/FCM wiring and provider evidence remain incomplete.
+- The Phase 78 push provider evidence boundary reports APNs/FCM as not configured by default; no provider evidence is complete.
 - Calls are a UI prototype; production encrypted voice/video transport is not implemented.
-- Android SQLCipher runtime availability has Phase 75 release-candidate APK evidence for the current artifact; iOS SQLCipher runtime availability still requires macOS/Xcode verification.
+- Android SQLCipher runtime availability has Phase 75 release-candidate APK evidence for the current artifact; Phase 77 documents the iOS path, but iOS SQLCipher runtime availability still requires macOS/Xcode or EAS device verification.
 - BlueStacks passed the Phase 73 Android development SQLCipher probe and the Phase 75 Android release-candidate APK probe, but BlueStacks is not final production evidence for non-exportable native signing keys.
 - OS-backed non-exportable signing keys require the Phase 74 native provider plus runtime/review evidence before production launch.
 - External security review and remediation evidence remain required before production launch.
@@ -151,11 +155,11 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 
 - Install and review a native Signal/libsignal-compatible one-to-one crypto adapter.
 - Provide production Signal prekey generation and storage using non-exportable native key material.
-- Complete iOS SQLCipher runtime evidence on macOS/Xcode.
+- Complete iOS SQLCipher runtime evidence on macOS/Xcode or an installed EAS iOS build.
 - Re-run Settings > Release Evidence > SQLCipher Runtime Check for every new Android release-candidate APK.
 - Install and review a native non-exportable signing key provider behind the Phase 74 boundary.
 - Complete production secure file encryption adapter and file handling review.
-- Complete push notification provider configuration with generic wake-only payloads.
+- Complete push notification provider configuration, provider log review, and release smoke evidence with generic wake-only payloads.
 - Attach real SQLCipher release evidence to `docs/release/android-sqlcipher-evidence.md` and `docs/release/ios-sqlcipher-evidence.md`.
 - Complete external security audit and attach remediation evidence.
 - Resolve or accept with documented risk any remaining dependency advisories before a real release.

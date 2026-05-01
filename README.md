@@ -1001,12 +1001,33 @@ CipherChat now has a documented production integration plan for a real Signal/li
 
 More detail: `docs/architecture/phase-76-signal-libsignal-integration-plan.md`.
 
+### Phase 77 - iOS SQLCipher Runtime Evidence Workflow
+
+CipherChat now has a documented iOS SQLCipher evidence workflow:
+
+- `docs/release/ios-sqlcipher-evidence.md` includes EAS internal build, macOS/Xcode simulator, and local release-candidate verification paths.
+- `npm run collect:sqlcipher-evidence` reports Android evidence status and iOS missing status without faking runtime proof.
+- iOS evidence remains blocking until the iOS app is built, installed, opened, and the in-app SQLCipher Runtime Check passes.
+
+More detail: `docs/release/ios-sqlcipher-evidence.md`.
+
+### Phase 78 - Push Provider Evidence Boundary
+
+CipherChat now has a production APNs/FCM provider evidence boundary:
+
+- `src/services/notifications/pushProviderReadiness.ts` reports APNs/FCM readiness and missing evidence.
+- The default state remains blocked: no APNs/FCM provider is configured and no provider log review or release smoke evidence is attached.
+- Settings shows Push Provider and Generic Push Payload Policy status.
+- No Apple keys, Firebase credentials, push tokens, or provider secrets are committed.
+
+More detail: `docs/architecture/phase-78-push-provider-evidence-boundary.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.
-2. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
+2. Run the Phase 77 iOS SQLCipher verification path where macOS/Xcode or EAS iOS device tooling is available.
 3. Re-run Android SQLCipher release-candidate evidence for every future APK.
 4. Install and review a native non-exportable signing key provider behind the Phase 74 boundary.
 5. Install and review a real production file encryption adapter behind the Phase 71 boundary.
-6. Complete production APNs/FCM wiring with generic wake-only payload evidence.
+6. Complete production APNs/FCM wiring with generic wake-only payload evidence, provider log review, and release smoke proof.
 7. Add MLS and key transparency or auditable key-history review before production group/contact trust.
