@@ -30,6 +30,7 @@ const [packageJson, appJson, easJson] = await Promise.all([
 const expoConfig = appJson.expo ?? {};
 const opSQLiteConfig = packageJson['op-sqlite'] ?? {};
 const developmentProfile = easJson.build?.development ?? {};
+const previewProfile = easJson.build?.preview ?? {};
 
 console.log('CipherChat SQLCipher runtime evidence helper');
 info('host', `${os.platform()} ${os.release()} ${os.arch()}`);
@@ -58,6 +59,18 @@ if (developmentProfile.developmentClient === true) {
   needsEvidence('EAS development profile', 'development profile is not configured as a development client');
 }
 
+if (previewProfile.android?.buildType === 'apk') {
+  pass('EAS preview Android artifact', 'preview profile builds an installable APK');
+} else {
+  needsEvidence('EAS preview Android artifact', 'preview profile must build an installable APK for BlueStacks evidence');
+}
+
+if (previewProfile.env?.EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE === 'true') {
+  pass('Preview release evidence flag', 'SQLCipher Runtime Check is visible in preview APKs');
+} else {
+  needsEvidence('Preview release evidence flag', 'preview profile must set EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE=true');
+}
+
 if (expoConfig.android?.package) {
   pass('Android package', expoConfig.android.package);
 }
@@ -67,16 +80,16 @@ if (expoConfig.ios?.bundleIdentifier) {
 }
 
 console.log('\nManual runtime evidence steps');
-console.log('1. Build and install the Expo development client for the target release-candidate config.');
-console.log('2. Open CipherChat on the installed Android or iOS client.');
-console.log('3. Go to Settings > Development Evidence > SQLCipher Runtime Check.');
-console.log('4. Run the check and capture the pass/fail result.');
-console.log('5. The check must report encrypted=true and schema v1 after writing, reading, and deleting a harmless deviceMetadata record.');
-console.log('6. Attach screenshot/log output to docs/release/android-sqlcipher-evidence.md or docs/release/ios-sqlcipher-evidence.md.');
-console.log('7. Do not capture message content, filenames, contact graph data, private keys, tokens, safety numbers, or decrypted identifiers.');
+console.log('1. Build and install the Expo development client or release-candidate APK for the target config.');
+console.log('2. For Android release-candidate evidence, prefer the EAS preview APK profile or an equivalent local release build with EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE=true.');
+console.log('3. Open CipherChat on the installed Android or iOS client.');
+console.log('4. Go to Settings > Development Evidence or Release Evidence > SQLCipher Runtime Check.');
+console.log('5. Run the check and capture the pass/fail result.');
+console.log('6. The check must report encrypted=true and schema v1 after writing, reading, and deleting a harmless deviceMetadata record.');
+console.log('7. Attach screenshot/log output to docs/release/android-sqlcipher-evidence.md or docs/release/ios-sqlcipher-evidence.md.');
+console.log('8. Do not capture message content, filenames, contact graph data, private keys, tokens, safety numbers, or decrypted identifiers.');
 
-needsEvidence(
+info(
   'runtime verification',
-  'This script only checks static config and manual steps. Device/emulator SQLCipher runtime evidence remains missing until captured from the installed app.',
+  'This script only checks static config and manual steps. Runtime evidence status is recorded in docs/release/android-sqlcipher-evidence.md and docs/release/ios-sqlcipher-evidence.md.',
 );
-

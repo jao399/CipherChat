@@ -979,13 +979,34 @@ CipherChat now has a native non-exportable device signing key boundary:
 
 More detail: `docs/architecture/phase-74-native-signing-key-boundary.md`.
 
+### Phase 75 - Android Release-Candidate SQLCipher Evidence
+
+CipherChat now has Android SQLCipher runtime evidence for the current release-candidate APK:
+
+- `EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE=true` exposes Settings > Release Evidence > SQLCipher Runtime Check in preview/release-candidate APKs.
+- A local Gradle release APK was built with the SQLCipher OP-SQLite native path active.
+- The APK installed on BlueStacks `emulator-5554`.
+- The in-app SQLCipher Runtime Check passed after opening the encrypted database, applying schema v1, and round-tripping a harmless test record.
+- This closes Android SQLCipher evidence for that exact APK only; future Android release candidates must repeat the probe.
+
+More detail: `docs/release/android-sqlcipher-evidence.md`.
+
+### Phase 76 - Signal/libsignal Integration Plan
+
+CipherChat now has a documented production integration plan for a real Signal/libsignal adapter:
+
+- `docs/architecture/phase-76-signal-libsignal-integration-plan.md` defines native adapter, Android, iOS, X3DH/prekey, Double Ratchet, safety-number, encrypted session storage, migration, test, and readiness requirements.
+- `npm run verify:signal-integration-plan` checks the plan is present in CI.
+- This is a planning and gatekeeping phase only. No native Signal/libsignal adapter is installed, and live production sends remain fail-closed.
+
+More detail: `docs/architecture/phase-76-signal-libsignal-integration-plan.md`.
+
 ## Next Steps
 
 1. Install and review a real native Signal/libsignal adapter behind the registry.
-2. Refresh Android SQLCipher evidence for the exact release-candidate build.
-3. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
+2. Run the iOS development-client SQLCipher verification path where macOS tooling is available.
+3. Re-run Android SQLCipher release-candidate evidence for every future APK.
 4. Install and review a native non-exportable signing key provider behind the Phase 74 boundary.
 5. Install and review a real production file encryption adapter behind the Phase 71 boundary.
 6. Complete production APNs/FCM wiring with generic wake-only payload evidence.
-7. Complete a formal crypto integration plan for `libsignal` and MLS before implementing message encryption.
-8. Add key transparency or auditable key-history review before production contact trust.
+7. Add MLS and key transparency or auditable key-history review before production group/contact trust.

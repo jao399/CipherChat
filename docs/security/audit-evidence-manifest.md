@@ -16,6 +16,7 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Release operations gate | `npm run verify:release-operations` |
 | Release evidence placeholder gate | `npm run verify:release-evidence` |
 | SQLCipher evidence helper | `npm run collect:sqlcipher-evidence` |
+| Signal integration plan gate | `npm run verify:signal-integration-plan` |
 | Audit readiness gate | `npm run verify:audit-readiness` |
 | Release smoke test | `npm run release:smoke` |
 | High-severity dependency audit | `npm audit --omit=dev --audit-level=high` |
@@ -34,6 +35,7 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Push metadata boundary | `docs/architecture/phase-72-push-metadata-boundary.md` |
 | Runtime SQLCipher evidence workflow | `docs/architecture/phase-73-runtime-sqlcipher-evidence-workflow.md` |
 | Native signing key boundary | `docs/architecture/phase-74-native-signing-key-boundary.md` |
+| Signal/libsignal integration plan | `docs/architecture/phase-76-signal-libsignal-integration-plan.md` |
 
 ## Implementation evidence
 
@@ -44,7 +46,7 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Runtime health | `apps/api/src/startup/runtimeHealth.ts`, `apps/api/src/routes/healthRoutes.ts` |
 | Graceful shutdown | `apps/api/src/startup/gracefulShutdown.ts` |
 | Message crypto gate | `src/security/messageCryptoPolicy.ts`, `src/services/messages/messageEncryptionProvider.ts` |
-| Signal provider boundary | `src/services/messages/signalOneToOneCryptoProvider.ts` |
+| Signal provider boundary | `src/services/messages/signalOneToOneCryptoProvider.ts`, `docs/architecture/phase-76-signal-libsignal-integration-plan.md` |
 | Native signing key boundary | `src/security/nativeSigningKeyProvider.ts`, `src/security/deviceSigningKeyStore.ts` |
 | Secure file transfer boundary | `src/security/fileCryptoPolicy.ts`, `src/services/files/fileEncryptionProvider.ts`, `src/services/files/secureFileTransferProvider.ts` |
 | Push privacy boundary | `src/services/notifications/pushNotificationPolicy.ts`, `apps/api/src/push/pushPrivacy.ts`, `apps/api/src/push/pushNotificationService.ts` |
@@ -53,8 +55,9 @@ This manifest lists the evidence an external reviewer should request or reproduc
 
 ## Runtime evidence to attach before launch
 
-- Android development-client SQLCipher evidence from `docs/release/android-sqlcipher-evidence.md`, including the Phase 73 BlueStacks development runtime pass, plus release-candidate screenshot or logs for the exact build being reviewed.
+- Android SQLCipher evidence from `docs/release/android-sqlcipher-evidence.md`, including the Phase 73 BlueStacks development runtime pass and Phase 75 BlueStacks release-candidate APK pass for the current APK. Future Android release-candidate APKs require the same probe.
 - iOS development-client SQLCipher evidence from `docs/release/ios-sqlcipher-evidence.md`, plus screenshot or logs showing encrypted database availability.
+- Signal/libsignal adapter evidence showing the Phase 76 production readiness criteria are satisfied; the plan alone is not production crypto evidence.
 - Native signing key provider review and runtime evidence showing non-exportable private key behavior and public-key-only export. BlueStacks can support Android development checks, but it is not final production evidence for non-exportable key storage by itself.
 - Release smoke workflow run URL.
 - Container image digest promoted to staging or production.

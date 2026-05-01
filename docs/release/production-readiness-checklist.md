@@ -12,9 +12,10 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - `npm run release:smoke` passes against the deployed API.
 - `npm run verify:dev-build-config` passes.
 - `npm run verify:signal-adapter-readiness` passes.
+- `npm run verify:signal-integration-plan` passes.
 - `npm run verify:release-evidence` passes and linked runtime evidence is no longer marked blocking.
 - `npm run collect:sqlcipher-evidence` output is attached with matching Android/iOS runtime screenshots or logs.
-- Android development client validates SQLCipher adapter status; Phase 41 evidence exists and must be refreshed for the release-candidate build.
+- Android release-candidate APK validates SQLCipher adapter status; Phase 75 BlueStacks evidence exists for the current APK and must be refreshed for future release candidates.
 - iOS development client validates SQLCipher adapter status.
 - Release builds are generated and smoke-tested.
 
@@ -29,6 +30,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - One-to-one messaging uses a reviewed Signal/X3DH + Double Ratchet implementation.
 - Signal one-to-one adapters declare and validate the `signal-x3dh-v1` prekey bundle contract.
 - Signal one-to-one adapter registration is backed by startup readiness evidence for the installed native adapter.
+- Phase 76 Signal/libsignal integration plan requirements are satisfied by the selected native adapter and external review.
 - File encryption provider selection is explicit and test-covered.
 - Secure file transfer uses a reviewed production-ready file crypto adapter that encrypts file bytes, filenames, and MIME types before upload.
 - One-time prekeys are claimed through a transactional consume-on-read path.

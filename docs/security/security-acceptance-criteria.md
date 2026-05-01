@@ -23,6 +23,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Device identity keys, signed prekeys, one-time prekeys, and session state must have documented lifecycle rules.
 - Production Signal adapters must use the `signal-x3dh-v1` prekey bundle contract and reject prototype placeholder prekeys.
 - Production Signal adapter registration must be explicit, startup-checked, and backed by release evidence for the installed native adapter.
+- Production Signal implementation must satisfy the Phase 76 Signal/libsignal integration plan before live one-to-one sends are enabled.
 - One-time prekey claim routes must consume at most one prekey transactionally and avoid returning reusable prekey arrays for production session setup.
 - Prekey inventory status must expose counts and thresholds only, never key material or message/contact metadata.
 - Prekey top-up routes must accept only client-generated public one-time prekeys from the authenticated current device and must not log or return prekey values.
@@ -92,10 +93,11 @@ These criteria are production blockers. CipherChat must not process production u
 - Startup health gate output: `npm run verify:startup-health`
 - Release evidence placeholder gate output: `npm run verify:release-evidence`
 - SQLCipher evidence helper output: `npm run collect:sqlcipher-evidence`
+- Signal integration plan gate output: `npm run verify:signal-integration-plan`
 - Audit readiness gate output: `npm run verify:audit-readiness`
 - Key-change send blocking test output: `npm run app:test`
 - Passing CI output for `npm run validate:ci`
-- Android development-client SQLCipher verification result
+- Android release-candidate SQLCipher verification result
 - iOS development-client SQLCipher verification result
 - Cryptography design review and implementation evidence
 - Account/session abuse-control test evidence

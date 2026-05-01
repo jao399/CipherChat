@@ -30,6 +30,8 @@ import {
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
+const releaseEvidenceEnabled = process.env.EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE === 'true';
+
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {
@@ -57,6 +59,7 @@ export function SettingsScreen() {
   const [runningMigration, setRunningMigration] = useState(false);
   const [migrationPreview, setMigrationPreview] = useState<PrototypeStoreMigrationResult['migratedCounts'] | null>(null);
   const [migrationResult, setMigrationResult] = useState<PrototypeStoreMigrationResult | null>(null);
+  const showSqlCipherEvidenceControls = __DEV__ || releaseEvidenceEnabled;
   const encryptedDatabase = getEncryptedDatabaseReadiness();
   const encryptedDatabaseState = encryptedDatabaseStatus
     ? encryptedDatabaseStatus.available
@@ -402,9 +405,9 @@ export function SettingsScreen() {
         />
       </View>
 
-      {__DEV__ ? (
+      {showSqlCipherEvidenceControls ? (
         <>
-          <SectionHeader title="Development Evidence" />
+          <SectionHeader title={__DEV__ ? 'Development Evidence' : 'Release Evidence'} />
           <View style={styles.group}>
             <SettingRow
               icon={checkingSqlCipherRuntime ? 'sync' : 'shield-checkmark'}
@@ -414,7 +417,11 @@ export function SettingsScreen() {
               onPress={runSqlCipherEvidenceCheck}
             />
           </View>
+        </>
+      ) : null}
 
+      {__DEV__ ? (
+        <>
           <SectionHeader title="Development Migration" />
           <View style={styles.group}>
             <SettingRow

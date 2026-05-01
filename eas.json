@@ -22,7 +22,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_CIPHERCHAT_API_MODE": "mock"
+        "EXPO_PUBLIC_CIPHERCHAT_API_MODE": "mock",
+        "EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE": "true"
       }
     },
     "production": {

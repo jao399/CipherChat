@@ -1,8 +1,8 @@
 # Android SQLCipher Evidence
 
-Evidence status: phase-73-bluestacks-development-runtime-passed-release-candidate-refresh-required
-Blocking status: release-candidate-refresh-required-before-production
-Last verified: Phase 73 BlueStacks Android development-client runtime verification
+Evidence status: phase-75-bluestacks-release-candidate-runtime-passed
+Blocking status: complete-for-this-android-release-candidate-apk
+Last verified: Phase 75 BlueStacks Android release-candidate APK runtime verification
 
 ## Current Evidence
 
@@ -15,7 +15,9 @@ SQLCipher check passed
 SQLCipher runtime verification passed: encrypted database opened, schema v1 applied, and a harmless test record round-tripped.
 ```
 
-This proves the current development build can execute the SQLCipher runtime probe on the available BlueStacks Android runtime. It does not replace release-candidate evidence for the exact production build.
+This proves the current development build can execute the SQLCipher runtime probe on the available BlueStacks Android runtime. It does not replace release-candidate evidence for a production build by itself.
+
+Phase 75 added a release-candidate path and ran the same SQLCipher probe against an installed Android release APK on BlueStacks. That release-candidate result is now the current Android evidence for this APK only.
 
 ## BlueStacks Development Runtime Workflow
 
@@ -100,17 +102,56 @@ npx expo start --dev-client --host lan --port 8083
 - Current JavaScript bundle loaded: yes, via Expo development client and Metro on port `8083`.
 - SQLCipher probe passed: yes, the app reported encrypted DB open, schema v1 applied, and harmless record round-trip.
 - Evidence classification: BlueStacks development runtime evidence completed.
-- Production classification: Android release-candidate SQLCipher evidence still blocking until the exact release-candidate APK/build is installed and the same probe passes there.
+- Production classification: development evidence only; Phase 75 is the release-candidate evidence for the current APK.
 
-## Required Release Evidence
+## BlueStacks Phase 75 Release-Candidate Result
 
-- Build and install the Android Expo development client for the release-candidate configuration.
+BlueStacks was used as the Android runtime target for the installed release-candidate APK.
+
+- BlueStacks detected: yes, as `emulator-5554`.
+- Target details: Android 9, model `SM_S908E`.
+- EAS CLI availability: `npx eas --version` failed locally with `could not determine executable to run`, so an equivalent local native Gradle release APK was built instead of using the hosted EAS CLI.
+- Build command:
+
+```powershell
+$env:EXPO_PUBLIC_CIPHERCHAT_API_MODE='mock'
+$env:EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE='true'
+cd android
+.\gradlew.bat :app:assembleRelease
+```
+
+- Build result: `BUILD SUCCESSFUL`.
+- Native SQLCipher path: Gradle reported `[OP-SQLITE] using sqlcipher.`
+- Artifact: `android\app\build\outputs\apk\release\app-release.apk`
+- Artifact size: `110666771` bytes.
+- Artifact timestamp: `2026-05-01 13:31:55` local workstation time.
+- Install command:
+
+```powershell
+& "C:\Program Files\BlueStacks_nxt\HD-Adb.exe" -s emulator-5554 install -r android\app\build\outputs\apk\release\app-release.apk
+```
+
+- Install result: `Success`.
+- Launch target: `com.amgadalzomi.cipherchat/.MainActivity`.
+- App path: Welcome/auth to Device Verification to Settings.
+- Evidence action: Settings > Release Evidence > SQLCipher Runtime Check.
+- SQLCipher probe result:
+
+```text
+SQLCipher check passed
+SQLCipher runtime verification passed: encrypted database opened, schema v1 applied, and a harmless test record round-tripped.
+```
+
+This closes Android SQLCipher runtime evidence for this exact release-candidate APK. Every future Android release-candidate APK must repeat the same runtime probe before being treated as covered.
+
+## Required Future Release Evidence
+
+- Re-run this workflow for every new Android release-candidate APK.
 - Run `npm run collect:sqlcipher-evidence` to capture static project configuration and manual runtime steps.
-- Open CipherChat and go to Settings > Development Evidence > SQLCipher Runtime Check.
 - Confirm the runtime check opens the encrypted database, applies schema v1, writes/reads/deletes the harmless verification record, and reports `encrypted=true`.
 - Capture logs or screenshots showing the adapter status without message content, filenames, contact graph data, private keys, tokens, safety numbers, or decrypted identifiers.
 - Attach the evidence to this document or the external audit packet.
 
 ## Production Status
 
-BlueStacks supports the development runtime probe in Phase 73. This remains blocking for production until release-candidate Android evidence is captured from the exact build under review. Demo and mock mode remain usable.
+Android SQLCipher runtime evidence is complete for the Phase 75 BlueStacks release-candidate APK. iOS SQLCipher runtime evidence, Signal/libsignal production crypto, production file crypto, native non-exportable signing key evidence, push provider evidence, dependency review, and external security review remain production blockers.

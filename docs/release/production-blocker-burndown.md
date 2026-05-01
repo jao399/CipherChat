@@ -9,7 +9,7 @@ This burndown tracks what can be closed inside this repository versus what still
 | Blocker | Current status | Evidence |
 | --- | --- | --- |
 | Mock/demo UX readiness | Reduced | `docs/release/demo-readiness-report.md`; mobile screens route through device verification and show honest prototype language. |
-| Android SQLCipher runtime evidence | Reduced | `docs/architecture/phase-41-android-development-client-sqlcipher.md`; Phase 73 BlueStacks development runtime probe passed; must still be refreshed for the exact release-candidate build. |
+| Android SQLCipher runtime evidence | Closed for current RC APK | `docs/release/android-sqlcipher-evidence.md`; Phase 73 BlueStacks development runtime probe passed and Phase 75 BlueStacks release-candidate APK probe passed. Future Android RCs must repeat the probe. |
 | API local live-mode coherence | Reduced | `npm run api:test:integration`, `/health`, `/ready`, Prisma migrations, Redis/BullMQ queue tests. |
 | Live production send gate | Closed as a safety gate | `src/security/messageCryptoPolicy.ts`; live send/receive fail closed without reviewed production crypto. |
 | Trust re-check on retry | Closed | `src/services/api/BackendProvider.tsx` re-checks recipient trust before retrying queued fanout. |
@@ -20,14 +20,14 @@ This burndown tracks what can be closed inside this repository versus what still
 | Release evidence placeholders | Reduced | `npm run verify:release-evidence` checks Android/iOS SQLCipher evidence documents exist while still reporting missing runtime proof as blocking. |
 | Runtime SQLCipher evidence workflow | Reduced | `src/services/local/sqlCipherRuntimeVerification.ts`, Settings > Development Evidence, and `npm run collect:sqlcipher-evidence` make runtime verification repeatable without faking evidence. |
 | Native signing key provider boundary | Reduced | `src/security/nativeSigningKeyProvider.ts` keeps production non-exportable signing keys blocked until a reviewed native provider and runtime evidence exist. |
+| Signal/libsignal integration plan | Reduced | `docs/architecture/phase-76-signal-libsignal-integration-plan.md` defines required native adapter, X3DH, Double Ratchet, storage, migration, and readiness criteria while keeping live sends fail-closed. |
 
 ## Still Blocking Production Launch
 
 | Blocker | Why it remains blocking | Next concrete action |
 | --- | --- | --- |
-| Reviewed Signal/libsignal one-to-one adapter | Real production E2EE is not implemented. The app only has a provider boundary and fail-closed gate. | Select a maintained native Signal/libsignal integration, implement the adapter behind `SignalOneToOneCryptoAdapter`, add interoperability vectors, and obtain cryptography review. |
+| Reviewed Signal/libsignal one-to-one adapter | Real production E2EE is not implemented. The app only has a provider boundary, Phase 76 integration plan, and fail-closed gate. | Select a maintained native Signal/libsignal integration, implement the adapter behind `SignalOneToOneCryptoAdapter`, add interoperability vectors, and obtain cryptography review. |
 | Production Signal prekey generation | Live bundle publication correctly blocks without a production-ready Signal prekey generator. | Implement `SignalPrekeyGenerationAdapter` using the same reviewed native adapter and non-exportable key storage where available. |
-| Android SQLCipher release-candidate evidence | Phase 73 provides an in-app runtime check and the BlueStacks development runtime probe passed, but the exact release-candidate build still needs fresh Android proof. | Run Settings > Development Evidence > SQLCipher Runtime Check on the Android release-candidate build and update `docs/release/android-sqlcipher-evidence.md`. |
 | iOS SQLCipher runtime evidence | Current workspace is Windows; iOS runtime evidence requires macOS/Xcode. Phase 73 provides the in-app check but no iOS proof is attached. | Run Settings > Development Evidence > SQLCipher Runtime Check on the iOS development client and update `docs/release/ios-sqlcipher-evidence.md`. |
 | Non-exportable device signing keys | Phase 74 defines the provider boundary, but the current SecureStore fallback is still JavaScript-readable inside the signing store and not production non-exportable evidence. BlueStacks runtime testing is useful development evidence only and does not prove Android Keystore non-exportability. | Implement and review native Android Keystore/iOS Keychain or Secure Enclave signing providers, then attach runtime evidence from appropriate production targets. |
 | Production secure file crypto | Phase 71 defines the adapter and policy boundary, but no reviewed implementation is installed. | Implement a reviewed client-side file crypto adapter, add large-file and metadata-minimization tests, and complete file handling review. |
@@ -41,6 +41,7 @@ This burndown tracks what can be closed inside this repository versus what still
 npm run typecheck
 npm test
 npm run validate:ci
+npm run verify:signal-integration-plan
 npm run verify:release-evidence
 npm run collect:sqlcipher-evidence
 npx expo-doctor
