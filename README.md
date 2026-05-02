@@ -9,7 +9,7 @@ Author: **Amgad Hussein Alzomi**
 Status: **demo-ready and portfolio-ready**.  
 Production status: **blocked by design until reviewed cryptography, native evidence, push evidence, dependency triage, and external audit are complete**.
 
-Current phase: **Phase 83 - copyright and splash attribution**.
+Current phase: **Phase 84 - APK handoff and README splash GIF**.
 
 ## Badges
 
@@ -64,6 +64,8 @@ What makes it security-focused:
 ## Screenshots
 
 Public-safe mock/demo screenshots are stored in [screenshots/](screenshots/README.md). They use prototype data only and do not represent production encrypted messaging readiness.
+
+![CipherChat animated splash](assets/cipherchat-splash.gif)
 
 | Splash | Onboarding | Sign In |
 | --- | --- | --- |
