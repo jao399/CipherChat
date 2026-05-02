@@ -6,40 +6,41 @@ import { DarkCard } from '../../components/common/DarkCard';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import { SecureBadge } from '../../components/common/SecureBadge';
+import { useLanguage } from '../../i18n';
 import { colors, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'About'>;
 
 export function AboutScreen(_: Props) {
+  const { t, textAlign } = useLanguage();
+
   return (
     <ScreenContainer scroll>
-      <ScreenHeader title="About CipherChat" subtitle="Private messaging identity" back />
+      <ScreenHeader title={t('about.title')} subtitle={t('about.subtitle')} back />
       <View style={styles.hero}>
-        <AppLogo size={96} subtitle="Secure. Private. Yours alone." />
-        <SecureBadge label="UI prototype" tone="purple" />
+        <AppLogo size={96} subtitle={t('settings.tagline')} />
+        <SecureBadge label={t('about.badge')} tone="purple" />
       </View>
       <DarkCard style={styles.card}>
         <Text style={styles.title}>CipherChat</Text>
-        <Text style={styles.text}>
-          A premium Expo React Native prototype for a future end-to-end encrypted messaging product.
-        </Text>
+        <Text style={[styles.text, { textAlign }]}>{t('about.text')}</Text>
         <View style={styles.row}>
-          <Text style={styles.label}>Version</Text>
+          <Text style={[styles.label, { textAlign }]}>{t('about.version')}</Text>
           <Text style={styles.value}>0.1.0 prototype</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Identity</Text>
-          <Text style={styles.value}>Zero-knowledge messaging UI</Text>
+          <Text style={[styles.label, { textAlign }]}>{t('about.identity')}</Text>
+          <Text style={[styles.value, { textAlign }]}>{t('about.identity.value')}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Credit</Text>
-          <Text style={styles.value}>Made by Amgad Alzomi</Text>
+          <Text style={[styles.label, { textAlign }]}>{t('about.credit')}</Text>
+          <Text style={[styles.value, { textAlign }]}>{t('about.madeBy')}</Text>
         </View>
       </DarkCard>
       <DarkCard style={styles.card}>
-        <Text style={styles.title}>Future Links</Text>
-        <Text style={styles.text}>Security whitepaper, audit reports, privacy policy, and source code links can live here.</Text>
+        <Text style={[styles.title, { textAlign }]}>{t('about.futureLinks')}</Text>
+        <Text style={[styles.text, { textAlign }]}>{t('about.futureLinks.text')}</Text>
       </DarkCard>
     </ScreenContainer>
   );

@@ -8,12 +8,14 @@ import { QRCard, VerificationCodeCard } from '../../components/common/QRCard';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { LogoMark } from '../../components/common/LogoMark';
 import { useBackend } from '../../hooks/useBackend';
+import { useLanguage } from '../../i18n';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeviceVerification'>;
 
 export function DeviceVerificationScreen({ navigation }: Props) {
+  const { t, textAlign, rowDirection, isRTL } = useLanguage();
   const { status, bootstrapPrototypeSession, trustCurrentDeviceIdentity } = useBackend();
   const [linking, setLinking] = useState(false);
 
@@ -25,8 +27,8 @@ export function DeviceVerificationScreen({ navigation }: Props) {
       navigation.replace('MainTabs');
     } catch (error) {
       Alert.alert(
-        'Secure session unavailable',
-        error instanceof Error ? error.message : 'CipherChat could not prepare this device session.',
+        t('deviceVerification.secureSessionUnavailable.title'),
+        error instanceof Error ? error.message : t('deviceVerification.secureSessionUnavailable.text'),
       );
     } finally {
       setLinking(false);
@@ -34,9 +36,9 @@ export function DeviceVerificationScreen({ navigation }: Props) {
   };
 
   const trustStateText = {
-    changed: 'Identity changed. Review this safety number before continuing.',
-    new: 'New device identity. Verify this safety number before trusting.',
-    trusted: 'Trusted device identity. Safety number is unchanged.',
+    changed: t('deviceVerification.trust.changed'),
+    new: t('deviceVerification.trust.new'),
+    trusted: t('deviceVerification.trust.trusted'),
   }[status.identityTrustState ?? 'new'];
 
   return (
@@ -50,20 +52,18 @@ export function DeviceVerificationScreen({ navigation }: Props) {
           onPress={() => navigation.goBack()}
           hitSlop={8}
         >
-          <Ionicons name="chevron-back" size={30} color={colors.text} />
+          <Ionicons name={isRTL ? 'chevron-forward' : 'chevron-back'} size={30} color={colors.text} />
         </TouchableOpacity>
       </View>
       <View style={styles.center}>
         <LogoMark size={58} />
-        <Text style={styles.title}>Verify Your Device</Text>
-        <Text style={styles.text}>
-          Scan the QR code with your other device or enter the safety code manually.
-        </Text>
+        <Text style={[styles.title, { textAlign }]}>{t('deviceVerification.title')}</Text>
+        <Text style={[styles.text, { textAlign }]}>{t('deviceVerification.subtitle')}</Text>
       </View>
       <QRCard />
       <View style={styles.gap} />
       <VerificationCodeCard blocks={status.identitySafetyNumber} />
-      <View style={[styles.trustCard, status.identityTrustState === 'changed' && styles.changedTrustCard]}>
+      <View style={[styles.trustCard, { flexDirection: rowDirection }, status.identityTrustState === 'changed' && styles.changedTrustCard]}>
         <Ionicons
           name={status.identityTrustState === 'trusted' ? 'shield-checkmark' : 'warning-outline'}
           size={20}
@@ -71,19 +71,19 @@ export function DeviceVerificationScreen({ navigation }: Props) {
         />
         <Text style={styles.trustText}>{trustStateText}</Text>
       </View>
-      <View style={styles.note}>
+      <View style={[styles.note, { flexDirection: rowDirection }]}>
         <Ionicons name="information-circle-outline" size={22} color={colors.textSecondary} />
         <Text style={styles.noteText}>
-          This records local device trust for the demo. Production message E2EE still requires a reviewed Signal adapter.
+          {t('deviceVerification.note')}
         </Text>
       </View>
       <Text style={styles.backendNote}>
         {status.mode === 'mock'
-          ? 'Prototype mode: a local mock device session will be prepared.'
+          ? t('deviceVerification.mockMode')
           : status.summary}
       </Text>
       {status.identityFingerprint ? (
-        <Text style={styles.fingerprint}>Device fingerprint {status.identityFingerprint}</Text>
+        <Text style={styles.fingerprint}>{t('deviceVerification.fingerprint')} {status.identityFingerprint}</Text>
       ) : null}
       <TouchableOpacity
         accessibilityRole="button"
@@ -92,7 +92,7 @@ export function DeviceVerificationScreen({ navigation }: Props) {
         style={styles.trustAction}
         onPress={trustCurrentDeviceIdentity}
       >
-        <Text style={styles.trustActionText}>Trust this safety number</Text>
+        <Text style={styles.trustActionText}>{t('deviceVerification.trustAction')}</Text>
       </TouchableOpacity>
       <GlowButton
         accessibilityLabel="Continue after device verification"
@@ -102,10 +102,10 @@ export function DeviceVerificationScreen({ navigation }: Props) {
         disabled={linking}
         icon="shield-checkmark"
       >
-        {linking ? 'Preparing Secure Session...' : 'Continue Securely'}
+        {linking ? t('deviceVerification.preparing') : t('deviceVerification.continue')}
       </GlowButton>
       <TouchableOpacity accessibilityRole="link" accessibilityLabel="Need help with device verification" hitSlop={10}>
-        <Text style={styles.help}>Need help?</Text>
+        <Text style={styles.help}>{t('deviceVerification.help')}</Text>
       </TouchableOpacity>
     </ScreenContainer>
   );

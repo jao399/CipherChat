@@ -6,12 +6,15 @@ import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { callHistory } from '../../data/mockData';
+import { useLanguage } from '../../i18n';
 import { colors, radii, spacing, typography } from '../../theme';
 
 export function CallsScreen() {
+  const { t, rowDirection } = useLanguage();
+
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
-      <ScreenHeader title="Secure Calls" subtitle="Private call UI prototype">
+      <ScreenHeader title={t('calls.title')} subtitle={t('calls.subtitle')}>
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Start a secure call demo"
@@ -22,17 +25,17 @@ export function CallsScreen() {
         </TouchableOpacity>
       </ScreenHeader>
 
-      <DarkCard style={styles.activeCard}>
+      <DarkCard style={[styles.activeCard, { flexDirection: rowDirection }]}>
         <View style={styles.activeIcon}>
           <Ionicons name="videocam" size={25} color={colors.security} />
         </View>
         <View style={styles.activeText}>
-          <Text style={styles.activeTitle}>Call demo ready</Text>
-          <Text style={styles.activeSubtitle}>Voice/video transport is a prototype surface, not production E2EE.</Text>
+          <Text style={styles.activeTitle}>{t('calls.demoReady')}</Text>
+          <Text style={styles.activeSubtitle}>{t('calls.demoText')}</Text>
         </View>
       </DarkCard>
 
-      <SectionHeader title="Recent Calls" />
+      <SectionHeader title={t('calls.recent')} />
       <View style={styles.list}>
         {callHistory.map((call) => (
           <View key={call.id} style={styles.callRow}>

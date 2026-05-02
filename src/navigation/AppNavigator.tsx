@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { SignInScreen } from '../screens/auth/SignInScreen';
 import { SignUpScreen } from '../screens/auth/SignUpScreen';
+import { LanguageSelectionScreen } from '../screens/onboarding/LanguageSelectionScreen';
 import { OnboardingScreen } from '../screens/onboarding/OnboardingScreen';
 import { SplashScreen } from '../screens/onboarding/SplashScreen';
 import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
@@ -42,6 +43,7 @@ export function AppNavigator() {
         }}
       >
         <Stack.Screen name="Splash" component={SplashScreen} />
+        <Stack.Screen name="LanguageSelection" component={LanguageSelectionScreen} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="SignIn" component={SignInScreen} />

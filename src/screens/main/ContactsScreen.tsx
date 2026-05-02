@@ -13,11 +13,13 @@ import { SectionHeader } from '../../components/common/SectionHeader';
 import { SecureBadge } from '../../components/common/SecureBadge';
 import { contacts } from '../../data/mockData';
 import { useBackend } from '../../hooks/useBackend';
+import { useLanguage } from '../../i18n';
 import { describeRemoteTrustState, findRemoteTrustRecord } from '../../security';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
 export function ContactsScreen() {
+  const { t, textAlign, rowDirection } = useLanguage();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {
     remoteTrustRecords,
@@ -36,7 +38,7 @@ export function ContactsScreen() {
     const normalizedQuery = query.trim();
 
     if (normalizedQuery.length < 2) {
-      Alert.alert('Search needs more detail', 'Enter at least two characters to discover CipherChat accounts.');
+      Alert.alert(t('contacts.needsMore.title'), t('contacts.needsMore.text'));
       return;
     }
 
@@ -46,8 +48,8 @@ export function ContactsScreen() {
       await discoverContacts(normalizedQuery);
     } catch (error) {
       Alert.alert(
-        'Contact discovery unavailable',
-        error instanceof Error ? error.message : 'CipherChat could not search for contact identity bundles.',
+        t('contacts.discoveryUnavailable.title'),
+        error instanceof Error ? error.message : t('contacts.discoveryUnavailable.text'),
       );
     } finally {
       setDiscovering(false);
@@ -67,8 +69,8 @@ export function ContactsScreen() {
       }
     } catch (error) {
       Alert.alert(
-        'Public key sync unavailable',
-        error instanceof Error ? error.message : 'CipherChat could not sync public identity bundles.',
+        t('contacts.syncUnavailable.title'),
+        error instanceof Error ? error.message : t('contacts.syncUnavailable.text'),
       );
     } finally {
       setSyncing(false);
@@ -80,15 +82,15 @@ export function ContactsScreen() {
       await trustRemoteIdentity(recordId);
     } catch (error) {
       Alert.alert(
-        'Trust update failed',
-        error instanceof Error ? error.message : 'CipherChat could not update this trust record.',
+        t('contacts.trustFailed.title'),
+        error instanceof Error ? error.message : t('contacts.trustFailed.text'),
       );
     }
   };
 
   const addDiscoveryResult = async (accountId: string, deviceId?: string) => {
     if (!deviceId) {
-      Alert.alert('No device bundle', 'This contact has not published an active identity bundle yet.');
+      Alert.alert(t('contacts.noDevice.title'), t('contacts.noDevice.text'));
       return;
     }
 
@@ -96,28 +98,28 @@ export function ContactsScreen() {
       await addDiscoveredContact(accountId, deviceId);
     } catch (error) {
       Alert.alert(
-        'Could not add contact',
-        error instanceof Error ? error.message : 'CipherChat could not add this discovered contact.',
+        t('contacts.addFailed.title'),
+        error instanceof Error ? error.message : t('contacts.addFailed.text'),
       );
     }
   };
 
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
-      <ScreenHeader title="Contacts" subtitle="Discover verified people and keys" />
+      <ScreenHeader title={t('contacts.title')} subtitle={t('contacts.subtitle')} />
 
-      <View style={styles.search}>
+      <View style={[styles.search, { flexDirection: rowDirection }]}>
         <Ionicons name="at" size={18} color={colors.muted} />
         <TextInput
-          accessibilityLabel="Search contacts by username or key"
+          accessibilityLabel={t('contacts.search')}
           testID="contacts-search"
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={() => void runDiscovery()}
           returnKeyType="search"
-          placeholder="Search username or key"
+          placeholder={t('contacts.search')}
           placeholderTextColor={colors.muted}
-          style={styles.searchInput}
+          style={[styles.searchInput, { textAlign }]}
         />
         <TouchableOpacity
           accessibilityRole="button"
@@ -133,7 +135,7 @@ export function ContactsScreen() {
 
       {query.trim().length >= 2 ? (
         <View style={styles.discoveryBlock}>
-          <SectionHeader title="Discovery Results" action={discovering ? 'Searching...' : `${contactDiscoveryResults.length} found`} />
+          <SectionHeader title={t('contacts.discoveryResults')} action={discovering ? t('common.searching') : `${contactDiscoveryResults.length} ${t('contacts.found')}`} />
           <View style={styles.discoveryList}>
             {contactDiscoveryResults.length > 0 ? (
               contactDiscoveryResults.map((result) => {
@@ -150,10 +152,10 @@ export function ContactsScreen() {
                     <View style={styles.contactBody}>
                       <Text style={styles.contactName}>{result.displayName}</Text>
                       <Text style={styles.handle}>
-                        {result.username ? `@${result.username}` : result.accountId} | {result.devices.length} active device
-                        {result.devices.length === 1 ? '' : 's'}
+                        {result.username ? `@${result.username}` : result.accountId} | {result.devices.length}{' '}
+                        {result.devices.length === 1 ? t('contacts.activeDevice') : t('contacts.activeDevices')}
                       </Text>
-                      <Text style={styles.safetyNumber}>{device?.deviceName ?? 'No active identity bundle'}</Text>
+                      <Text style={styles.safetyNumber}>{device?.deviceName ?? t('contacts.noActiveBundle')}</Text>
                     </View>
                     <TouchableOpacity
                       accessibilityRole="button"
@@ -163,7 +165,7 @@ export function ContactsScreen() {
                       style={[styles.discoveryAdd, tracked && styles.discoveryTracked]}
                       onPress={() => void addDiscoveryResult(result.accountId, device?.deviceId)}
                     >
-                      <Text style={styles.discoveryAddText}>{tracked ? 'Tracked' : 'Add Key'}</Text>
+                      <Text style={styles.discoveryAddText}>{tracked ? t('contacts.tracked') : t('contacts.addKey')}</Text>
                     </TouchableOpacity>
                   </View>
                 );
@@ -171,7 +173,7 @@ export function ContactsScreen() {
             ) : (
               <View style={styles.discoveryEmpty}>
                 <Ionicons name="search" size={18} color={colors.muted} />
-                <Text style={styles.handle}>Search results will show verified public device bundles here.</Text>
+                <Text style={styles.handle}>{t('contacts.discoveryEmpty')}</Text>
               </View>
             )}
           </View>
@@ -179,12 +181,12 @@ export function ContactsScreen() {
       ) : null}
 
       <DarkCard style={styles.profileCard}>
-        <Text style={styles.profileTitle}>Your secure profile</Text>
-        <Text style={styles.profileText}>Share this code to let trusted contacts verify your identity key.</Text>
+        <Text style={[styles.profileTitle, { textAlign }]}>{t('contacts.profile.title')}</Text>
+        <Text style={[styles.profileText, { textAlign }]}>{t('contacts.profile.text')}</Text>
         <QRCard />
         <View style={styles.profileActions}>
           <GlowButton accessibilityLabel="Share prototype profile" testID="contacts-share-profile" icon="share-social">
-            Share Profile
+            {t('contacts.shareProfile')}
           </GlowButton>
           <SecondaryButton
             accessibilityLabel="Verify this device"
@@ -192,12 +194,12 @@ export function ContactsScreen() {
             onPress={() => navigation.navigate('DeviceVerification')}
             icon="scan"
           >
-            Verify Device
+            {t('contacts.verifyDevice')}
           </SecondaryButton>
         </View>
       </DarkCard>
 
-      <SectionHeader title="Suggested Contacts" action={status.remoteTrustSyncing || syncing ? 'Syncing...' : 'Verified first'} />
+      <SectionHeader title={t('contacts.suggested')} action={status.remoteTrustSyncing || syncing ? t('contacts.syncing') : t('contacts.verifiedFirst')} />
       <SecondaryButton
         accessibilityLabel="Sync public contact keys"
         testID="contacts-sync-public-keys"
@@ -206,7 +208,7 @@ export function ContactsScreen() {
         disabled={syncing || status.remoteTrustSyncing}
         onPress={syncPublicKeys}
       >
-        Sync Public Keys
+        {t('contacts.syncPublicKeys')}
       </SecondaryButton>
       <View style={styles.list}>
         {contacts.map((contact) => {
@@ -236,7 +238,7 @@ export function ContactsScreen() {
                     </View>
                   ) : null}
                 </View>
-                <Text style={styles.handle}>{contact.handle} | {contact.mutualKeys} mutual keys</Text>
+                <Text style={styles.handle}>{contact.handle} | {contact.mutualKeys} {t('contacts.mutualKeys')}</Text>
                 {trust ? (
                   <Text style={styles.safetyNumber}>{trust.safetyNumberBlocks.join(' ')}</Text>
                 ) : null}

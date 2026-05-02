@@ -19,12 +19,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlowButton } from '../../components/common/Buttons';
 import { LogoMark } from '../../components/common/LogoMark';
 import { ONBOARDING_STORAGE_KEY } from '../../constants/storage';
-import { onboardingSlides } from '../../data/mockData';
+import { useLanguage } from '../../i18n';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { OnboardingSlide } from '../../types';
 import {
   getNextOnboardingIndex,
-  getOnboardingCtaLabel,
   isFinalOnboardingSlide,
 } from '../../utils/onboardingNavigation';
 import type { RootStackParamList } from '../../navigation/types';
@@ -39,11 +38,13 @@ const onboardingArtworkBySlideId: Record<string, number> = {
 };
 
 export function OnboardingScreen({ navigation }: Props) {
+  const { t, textAlign } = useLanguage();
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<OnboardingSlide>>(null);
   const { width: slideWidth } = useWindowDimensions();
+  const onboardingSlides = getLocalizedOnboardingSlides(t);
   const isLastSlide = isFinalOnboardingSlide(index, onboardingSlides.length);
-  const ctaLabel = getOnboardingCtaLabel(index, onboardingSlides.length);
+  const ctaLabel = isLastSlide ? t('common.getStarted') : t('common.next');
 
   const finish = async () => {
     await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
@@ -68,8 +69,10 @@ export function OnboardingScreen({ navigation }: Props) {
   const keyExtractor = useCallback((item: OnboardingSlide) => item.id, []);
 
   const renderSlide = useCallback(
-    ({ item }: { item: OnboardingSlide }) => <OnboardingSlideView slide={item} width={slideWidth} />,
-    [slideWidth],
+    ({ item }: { item: OnboardingSlide }) => (
+      <OnboardingSlideView slide={item} width={slideWidth} textAlign={textAlign} />
+    ),
+    [slideWidth, textAlign],
   );
 
   return (
@@ -94,13 +97,13 @@ export function OnboardingScreen({ navigation }: Props) {
           </View>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Skip onboarding"
+            accessibilityLabel={t('onboarding.skipA11y')}
             testID="onboarding-skip"
             onPress={finish}
             hitSlop={8}
             style={styles.skipButton}
           >
-            <Text style={styles.skip}>SKIP</Text>
+            <Text style={styles.skip}>{t('common.skip')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -138,7 +141,7 @@ export function OnboardingScreen({ navigation }: Props) {
             ))}
           </View>
           <GlowButton
-            accessibilityLabel={isLastSlide ? 'Finish onboarding' : 'Next onboarding slide'}
+            accessibilityLabel={isLastSlide ? t('onboarding.finishA11y') : t('onboarding.nextA11y')}
             testID={isLastSlide ? 'onboarding-get-started' : 'onboarding-next'}
             onPress={next}
             icon={isLastSlide ? 'arrow-forward' : 'chevron-forward'}
@@ -151,7 +154,15 @@ export function OnboardingScreen({ navigation }: Props) {
   );
 }
 
-function OnboardingSlideView({ slide, width }: { slide: OnboardingSlide; width: number }) {
+function OnboardingSlideView({
+  slide,
+  width,
+  textAlign,
+}: {
+  slide: OnboardingSlide;
+  width: number;
+  textAlign: 'left' | 'right';
+}) {
   const artwork = onboardingArtworkBySlideId[slide.id] ?? onboardingArtworkBySlideId.privacy;
 
   return (
@@ -171,11 +182,42 @@ function OnboardingSlideView({ slide, width }: { slide: OnboardingSlide; width: 
         <View style={styles.slideLogo}>
           <LogoMark size={52} />
         </View>
-        <Text testID={`onboarding-title-${slide.id}`} style={styles.title}>{slide.title}</Text>
-        <Text style={styles.text}>{slide.text}</Text>
+        <Text testID={`onboarding-title-${slide.id}`} style={[styles.title, { textAlign }]}>
+          {slide.title}
+        </Text>
+        <Text style={[styles.text, { textAlign }]}>{slide.text}</Text>
       </View>
     </View>
   );
+}
+
+function getLocalizedOnboardingSlides(t: ReturnType<typeof useLanguage>['t']): OnboardingSlide[] {
+  return [
+    {
+      id: 'privacy',
+      title: t('onboarding.privacy.title'),
+      text: t('onboarding.privacy.text'),
+      icon: 'shield-checkmark',
+    },
+    {
+      id: 'devices',
+      title: t('onboarding.devices.title'),
+      text: t('onboarding.devices.text'),
+      icon: 'qr-code',
+    },
+    {
+      id: 'files',
+      title: t('onboarding.files.title'),
+      text: t('onboarding.files.text'),
+      icon: 'document-lock',
+    },
+    {
+      id: 'control',
+      title: t('onboarding.control.title'),
+      text: t('onboarding.control.text'),
+      icon: 'analytics',
+    },
+  ];
 }
 
 const styles = StyleSheet.create({

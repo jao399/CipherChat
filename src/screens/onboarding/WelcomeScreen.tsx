@@ -4,6 +4,7 @@ import { ImageBackground, StyleSheet, Text, View } from 'react-native';
 
 import { GlowButton, SecondaryButton } from '../../components/common/Buttons';
 import { LogoMark } from '../../components/common/LogoMark';
+import { useLanguage } from '../../i18n';
 import { colors, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -12,6 +13,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 const welcomeHero = require('../../assets/images/welcome-hero.png');
 
 export function WelcomeScreen({ navigation }: Props) {
+  const { t, textAlign } = useLanguage();
+
   return (
     <View style={styles.screen}>
       <View style={styles.content}>
@@ -24,7 +27,7 @@ export function WelcomeScreen({ navigation }: Props) {
           <Text style={styles.title}>
             Cipher<Text style={styles.titlePurple}>Chat</Text>
           </Text>
-          <Text style={styles.text}>Private messaging.{'\n'}Reimagined for a safer world.</Text>
+          <Text style={[styles.text, { textAlign }]}>{t('welcome.subtitle')}</Text>
           <View style={styles.dots}>
             {[0, 1, 2, 3].map((dot) => (
               <View key={dot} style={[styles.dot, dot === 0 && styles.activeDot]} />
@@ -38,14 +41,14 @@ export function WelcomeScreen({ navigation }: Props) {
             testID="welcome-get-started"
             onPress={() => navigation.navigate('SignUp')}
           >
-            GET STARTED
+            {t('welcome.getStarted')}
           </GlowButton>
           <SecondaryButton
             accessibilityLabel="Sign in to an existing CipherChat account"
             testID="welcome-sign-in"
             onPress={() => navigation.navigate('SignIn')}
           >
-            I ALREADY HAVE AN ACCOUNT
+            {t('welcome.signInExisting')}
           </SecondaryButton>
         </View>
       </View>

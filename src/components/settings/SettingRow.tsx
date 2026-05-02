@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 import { colors, spacing, typography } from '../../theme';
+import { useLanguage } from '../../i18n';
 
 type SettingRowProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -14,6 +15,7 @@ type SettingRowProps = {
 };
 
 export function SettingRow({ icon, title, subtitle, onPress, value, onValueChange, testID }: SettingRowProps) {
+  const { textAlign, rowDirection, isRTL } = useLanguage();
   const hasSwitch = typeof value === 'boolean';
 
   return (
@@ -23,7 +25,7 @@ export function SettingRow({ icon, title, subtitle, onPress, value, onValueChang
       accessibilityState={hasSwitch ? { checked: value } : undefined}
       activeOpacity={0.78}
       onPress={hasSwitch && onValueChange ? () => onValueChange(!value) : onPress}
-      style={styles.row}
+      style={[styles.row, { flexDirection: rowDirection }]}
       testID={testID}
       disabled={!onPress && !hasSwitch}
     >
@@ -31,8 +33,8 @@ export function SettingRow({ icon, title, subtitle, onPress, value, onValueChang
         <Ionicons name={icon} size={21} color={colors.security} />
       </View>
       <View style={styles.textWrap}>
-        <Text style={styles.title}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        <Text style={[styles.title, { textAlign }]}>{title}</Text>
+        {subtitle ? <Text style={[styles.subtitle, { textAlign }]}>{subtitle}</Text> : null}
       </View>
       {hasSwitch ? (
         <Switch
@@ -43,7 +45,7 @@ export function SettingRow({ icon, title, subtitle, onPress, value, onValueChang
           thumbColor={value ? colors.text : colors.muted}
         />
       ) : (
-        <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={18} color={colors.muted} />
       )}
     </TouchableOpacity>
   );

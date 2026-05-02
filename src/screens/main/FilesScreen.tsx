@@ -8,6 +8,7 @@ import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { secureFiles } from '../../data/mockData';
+import { useLanguage } from '../../i18n';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 import type { SecureFile } from '../../types';
@@ -20,11 +21,12 @@ const fileIcon: Record<SecureFile['type'], keyof typeof Ionicons.glyphMap> = {
 };
 
 export function FilesScreen() {
+  const { t, textAlign, rowDirection } = useLanguage();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
-      <ScreenHeader title="Secure Files" subtitle="Demo file transfer controls">
+      <ScreenHeader title={t('files.title')} subtitle={t('files.subtitle')}>
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Open secure file transfer"
@@ -36,24 +38,29 @@ export function FilesScreen() {
         </TouchableOpacity>
       </ScreenHeader>
 
-      <View style={styles.search}>
+      <View style={[styles.search, { flexDirection: rowDirection }]}>
         <Ionicons name="search" size={18} color={colors.muted} />
         <TextInput
-          accessibilityLabel="Search encrypted files"
+          accessibilityLabel={t('files.search')}
           testID="files-search"
-          placeholder="Search encrypted files"
+          placeholder={t('files.search')}
           placeholderTextColor={colors.muted}
-          style={styles.searchInput}
+          style={[styles.searchInput, { textAlign }]}
         />
       </View>
 
       <View style={styles.filters}>
-        {['All', 'Recent', 'PDF', 'Images'].map((item, index) => (
-          <FilterChip key={item} label={item} active={index === 0} testID={`files-filter-${item.toLowerCase()}`} />
+        {[
+          ['all', t('files.filter.all')],
+          ['recent', t('files.filter.recent')],
+          ['pdf', t('files.filter.pdf')],
+          ['images', t('files.filter.images')],
+        ].map(([id, label], index) => (
+          <FilterChip key={id} label={label} active={index === 0} testID={`files-filter-${id}`} />
         ))}
       </View>
 
-      <SectionHeader title="Recent Files" action="Prototype only" />
+      <SectionHeader title={t('files.recent')} action={t('files.prototypeOnly')} />
       <View style={styles.list}>
         {secureFiles.map((file) => (
           <TouchableOpacity

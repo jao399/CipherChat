@@ -17,6 +17,7 @@ import { MessageBubble } from '../../components/chat/MessageBubble';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { chats, messages } from '../../data/mockData';
 import { useBackend } from '../../hooks/useBackend';
+import { useLanguage } from '../../i18n';
 import { describeRemoteTrustState, findRemoteTrustRecord } from '../../security';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
@@ -27,6 +28,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Conversation'>;
 const timers = ['10s', '30s', '1m', '5m', '10m'];
 
 export function ConversationScreen({ navigation, route }: Props) {
+  const { t, textAlign, rowDirection, isRTL } = useLanguage();
   const [timer, setTimer] = useState('30s');
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
@@ -60,14 +62,14 @@ export function ConversationScreen({ navigation, route }: Props) {
         kind: 'text',
         text:
           item.state === 'sent'
-            ? 'Encrypted message queued for delivery.'
-            : 'Encrypted message is queued locally for retry.',
+            ? t('conversation.queuedSent')
+            : t('conversation.queuedRetry'),
         time: new Date(item.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
         status: item.state,
       }));
 
     return [...chatMessages, ...localWithQueueState, ...persistedQueueMessages];
-  }, [chat.id, chatMessages, conversationQueue, localMessages]);
+  }, [chat.id, chatMessages, conversationQueue, localMessages, t]);
   const retryableQueue = conversationQueue.filter((item) => item.state === 'failed' || item.state === 'queued');
 
   const sendDraft = async () => {
@@ -78,7 +80,7 @@ export function ConversationScreen({ navigation, route }: Props) {
     }
 
     if (!remoteTrust) {
-      Alert.alert('No trusted device key', 'Discover and verify this contact before sending encrypted messages.');
+      Alert.alert(t('conversation.noTrustedKey.title'), t('conversation.noTrustedKey.text'));
       return;
     }
 
@@ -110,8 +112,8 @@ export function ConversationScreen({ navigation, route }: Props) {
       setDraft('');
     } catch (error) {
       Alert.alert(
-        'Secure send blocked',
-        error instanceof Error ? error.message : 'CipherChat could not prepare the encrypted outbound envelope.',
+        t('conversation.sendBlocked.title'),
+        error instanceof Error ? error.message : t('conversation.sendBlocked.fallback'),
       );
     } finally {
       setSending(false);
@@ -128,8 +130,8 @@ export function ConversationScreen({ navigation, route }: Props) {
       );
     } catch (error) {
       Alert.alert(
-        'Retry unavailable',
-        error instanceof Error ? error.message : 'CipherChat could not retry this outbound envelope.',
+        t('conversation.retryUnavailable.title'),
+        error instanceof Error ? error.message : t('conversation.retryUnavailable.fallback'),
       );
     } finally {
       setRetryingId(null);
@@ -139,7 +141,7 @@ export function ConversationScreen({ navigation, route }: Props) {
   return (
     <ScreenContainer padded={false}>
       <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.header}>
+        <View style={[styles.header, { flexDirection: rowDirection }]}>
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={`Back from conversation with ${chat.name}`}
@@ -147,7 +149,7 @@ export function ConversationScreen({ navigation, route }: Props) {
             style={styles.back}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="chevron-back" size={22} color={colors.text} />
+            <Ionicons name={isRTL ? 'chevron-forward' : 'chevron-back'} size={22} color={colors.text} />
           </TouchableOpacity>
           <View style={[styles.avatar, { backgroundColor: chat.avatarColor }]}>
             <Text style={styles.avatarText}>{chat.avatar}</Text>
@@ -155,9 +157,9 @@ export function ConversationScreen({ navigation, route }: Props) {
           <View style={styles.headerText}>
             <View style={styles.nameRow}>
               <Text style={styles.name}>{chat.name}</Text>
-              {chat.verified ? <Text style={styles.verified}>Verified</Text> : null}
+              {chat.verified ? <Text style={styles.verified}>{t('conversation.verified')}</Text> : null}
             </View>
-            <Text style={styles.online}>{chat.online ? 'Online' : 'Encrypted session'}</Text>
+            <Text style={styles.online}>{chat.online ? t('conversation.online') : t('conversation.encryptedSession')}</Text>
           </View>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Start secure call with ${chat.name}`} testID="conversation-call" style={styles.headerIcon}>
             <Ionicons name="call" size={19} color={colors.text} />
@@ -195,14 +197,14 @@ export function ConversationScreen({ navigation, route }: Props) {
             <View style={styles.queueCard}>
               <View style={styles.queueHeader}>
                 <Ionicons name="cloud-upload" size={16} color={colors.primaryBright} />
-                <Text style={styles.queueTitle}>Outbound queue</Text>
+                <Text style={styles.queueTitle}>{t('conversation.outboundQueue')}</Text>
               </View>
               {retryableQueue.map((item) => (
                 <View key={item.id} style={styles.queueRow}>
                   <View style={styles.queueBody}>
                     <Text style={styles.queueState}>{item.state}</Text>
                     <Text style={styles.queueMeta}>
-                      {item.envelopeCount} envelope{item.envelopeCount === 1 ? '' : 's'} | attempt {item.attemptCount}
+                      {item.envelopeCount} {item.envelopeCount === 1 ? t('conversation.envelope') : t('conversation.envelopes')} | {t('conversation.attempt')} {item.attemptCount}
                     </Text>
                     {item.lastError ? <Text style={styles.queueError}>{item.lastError}</Text> : null}
                   </View>
@@ -214,14 +216,14 @@ export function ConversationScreen({ navigation, route }: Props) {
                     style={styles.retryButton}
                     onPress={() => void retryQueuedMessage(item.id)}
                   >
-                    <Text style={styles.retryButtonText}>{retryingId === item.id ? 'Retrying' : 'Retry'}</Text>
+                    <Text style={styles.retryButtonText}>{retryingId === item.id ? t('common.retrying') : t('common.retry')}</Text>
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
           ) : null}
           <View style={styles.timerCard}>
-            <Text style={styles.timerLabel}>This message will self-destruct</Text>
+            <Text style={styles.timerLabel}>{t('conversation.timerLabel')}</Text>
             <View style={styles.timerRow}>
               {timers.map((item) => (
                 <TouchableOpacity
@@ -242,22 +244,22 @@ export function ConversationScreen({ navigation, route }: Props) {
 
         <View style={styles.composer}>
           <TextInput
-            accessibilityLabel="Message composer"
+            accessibilityLabel={t('conversation.composer')}
             testID="conversation-composer"
             value={draft}
             onChangeText={setDraft}
             onSubmitEditing={() => void sendDraft()}
             returnKeyType="send"
-            placeholder="Type a message..."
+            placeholder={t('conversation.composer')}
             placeholderTextColor={colors.muted}
-            style={styles.input}
+            style={[styles.input, { textAlign }]}
           />
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open emoji picker" testID="conversation-emoji" style={styles.composerIcon}>
             <Ionicons name="happy" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={draft.trim() ? 'Send encrypted message' : 'Record voice message'}
+            accessibilityLabel={draft.trim() ? t('conversation.sendA11y') : t('conversation.voiceA11y')}
             testID={draft.trim() ? 'conversation-send' : 'conversation-mic'}
             disabled={sending}
             style={[styles.mic, sending && styles.micDisabled]}

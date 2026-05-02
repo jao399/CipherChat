@@ -8,35 +8,37 @@ import { GlassCard } from '../../components/common/DarkCard';
 import { InputField, PasswordField } from '../../components/common/InputField';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
+import { useLanguage } from '../../i18n';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
 export function SignUpScreen({ navigation }: Props) {
+  const { t, textAlign, rowDirection } = useLanguage();
   const [agreed, setAgreed] = useState(true);
 
   return (
     <ScreenContainer scroll>
-      <ScreenHeader title="Create Account" subtitle="Start with a protected identity" back />
+      <ScreenHeader title={t('auth.signUp.title')} subtitle={t('auth.signUp.subtitle')} back />
       <GlassCard style={styles.card}>
-        <InputField label="Full name" icon="person" placeholder="Amgad Alzomi" />
-        <InputField label="Email" icon="mail" placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" />
-        <InputField label="Phone (optional)" icon="call" placeholder="+1 555 014 0092" keyboardType="phone-pad" />
-        <PasswordField label="Password" placeholder="Create a strong password" />
-        <PasswordField label="Confirm password" placeholder="Repeat your password" />
+        <InputField label={t('auth.signUp.fullName')} icon="person" placeholder="Amgad Alzomi" />
+        <InputField label={t('auth.signUp.email')} icon="mail" placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" />
+        <InputField label={t('auth.signUp.phone')} icon="call" placeholder="+1 555 014 0092" keyboardType="phone-pad" />
+        <PasswordField label={t('auth.signUp.password')} placeholder={t('auth.signUp.passwordPlaceholder')} />
+        <PasswordField label={t('auth.signUp.confirmPassword')} placeholder={t('auth.signUp.confirmPasswordPlaceholder')} />
         <TouchableOpacity
           accessibilityRole="checkbox"
           accessibilityLabel="Agree to privacy-first terms and secure messaging policy"
           accessibilityState={{ checked: agreed }}
           testID="signup-terms"
-          style={styles.checkRow}
+          style={[styles.checkRow, { flexDirection: rowDirection }]}
           onPress={() => setAgreed((value) => !value)}
         >
           <View style={[styles.checkbox, agreed && styles.checked]}>
             {agreed ? <Ionicons name="checkmark" size={16} color={colors.text} /> : null}
           </View>
-          <Text style={styles.terms}>I agree to the privacy-first terms and secure messaging policy.</Text>
+          <Text style={[styles.terms, { textAlign }]}>{t('auth.signUp.terms')}</Text>
         </TouchableOpacity>
         <GlowButton
           accessibilityLabel="Create account"
@@ -45,7 +47,7 @@ export function SignUpScreen({ navigation }: Props) {
           onPress={() => navigation.replace('DeviceVerification')}
           icon="shield-checkmark"
         >
-          Create Account
+          {t('auth.signUp.submit')}
         </GlowButton>
       </GlassCard>
       <TouchableOpacity
@@ -55,7 +57,7 @@ export function SignUpScreen({ navigation }: Props) {
         style={styles.switch}
         onPress={() => navigation.navigate('SignIn')}
       >
-        <Text style={styles.switchText}>Already have an account? Sign in</Text>
+        <Text style={styles.switchText}>{t('auth.signUp.switch')}</Text>
       </TouchableOpacity>
     </ScreenContainer>
   );

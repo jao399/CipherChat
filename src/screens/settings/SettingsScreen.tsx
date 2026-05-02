@@ -13,6 +13,7 @@ import { SectionHeader } from '../../components/common/SectionHeader';
 import { SettingRow } from '../../components/settings/SettingRow';
 import { ONBOARDING_STORAGE_KEY } from '../../constants/storage';
 import { useBackend } from '../../hooks/useBackend';
+import { useLanguage, type Language } from '../../i18n';
 import {
   collectPrototypeStoreMigrationItems,
   getEncryptedDatabaseReadiness,
@@ -38,6 +39,7 @@ import type { RootStackParamList } from '../../navigation/types';
 const releaseEvidenceEnabled = process.env.EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE === 'true';
 
 export function SettingsScreen() {
+  const { language, setLanguage, t, textAlign } = useLanguage();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {
     status,
@@ -80,11 +82,19 @@ export function SettingsScreen() {
     ? sqlCipherVerificationResult.passed
       ? `Passed at ${sqlCipherVerificationResult.checkedAt}; encrypted=${String(sqlCipherVerificationResult.status.encrypted)}`
       : sqlCipherVerificationResult.summary
-    : 'Runtime evidence check writes and deletes a harmless test record';
+    : t('settings.sqlcipherRoundtrip');
 
   const resetOnboarding = async () => {
     await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
     navigation.replace('Onboarding');
+  };
+
+  const changeLanguage = async (nextLanguage: Language) => {
+    const result = await setLanguage(nextLanguage);
+
+    if (result.restartRecommended) {
+      Alert.alert(t('settings.language.change'), t('language.restartNotice'));
+    }
   };
 
   const toggleLiveApi = async (enabled: boolean) => {
@@ -178,37 +188,37 @@ export function SettingsScreen() {
   };
 
   const trustLabel = {
-    changed: 'Changed - review safety number',
-    new: 'New - not trusted yet',
-    trusted: 'Trusted',
+    changed: t('settings.trust.changed'),
+    new: t('settings.trust.new'),
+    trusted: t('settings.trust.trusted'),
   }[status.identityTrustState ?? 'new'];
   const backendModeSubtitle =
     status.mode === 'live'
-      ? `Live metadata API - ${status.baseUrl}`
-      : 'Mock demo mode - UI data stays local';
-  const backendReadinessSubtitle = `${status.ready ? 'Ready' : 'Unavailable'} - ${status.summary}`;
+      ? `${t('settings.backendLive')} - ${status.baseUrl}`
+      : t('settings.backendMock');
+  const backendReadinessSubtitle = `${status.ready ? t('settings.ready') : t('settings.unavailable')} - ${status.summary}`;
   const trustStateSubtitle =
     status.identityTrustState === 'trusted'
-      ? 'Current device safety number is trusted'
+      ? t('settings.currentTrusted')
       : status.identityTrustState === 'changed'
-        ? 'Device identity changed; review before trusting'
-        : 'New device identity needs local review';
+        ? t('settings.identityChanged')
+        : t('settings.identityNew');
   const prekeyInventorySubtitle = devicePrekeyStatus
     ? `${devicePrekeyStatus.oneTimePrekeyCount} one-time prekeys; ${devicePrekeyStatus.needsTopUp ? 'top-up recommended' : 'inventory healthy'}`
-    : 'Open Device Management after verification to refresh';
+    : t('settings.prekeyOpenManagement');
   const inboxSubtitle = inboundEnvelopeStatus.lastError
     ? inboundEnvelopeStatus.lastError
     : inboundEnvelopeStatus.lastPolledAt
       ? `${inboundEnvelopeStatus.pendingCount} fetched now | ${inboundEnvelopeStatus.totalAcknowledged} total acknowledged${inboundEnvelopeStatus.nextCursor ? ' | more pages ready' : ''}`
-      : 'Poll pending envelopes for this device';
+      : t('settings.pollInbox');
   const migrationSubtitle = migrationPreview
     ? `${migrationPreview.localMessages} messages | ${migrationPreview.remoteTrustRecords} trust | ${migrationPreview.outboundQueueItems} outbound | ${migrationPreview.inboundReceipts} receipts`
-    : 'Preview prototype stores before copying';
+    : t('settings.migrationPreview');
   const migrationRunSubtitle = migrationResult
     ? migrationResult.status === 'completed'
       ? `${migrationResult.migratedCounts.localMessages + migrationResult.migratedCounts.remoteTrustRecords + migrationResult.migratedCounts.outboundQueueItems + migrationResult.migratedCounts.inboundReceipts} records copied`
       : migrationResult.reason ?? 'Migration did not run'
-    : 'Copies only when encrypted DB is active';
+    : t('settings.copiesEncryptedOnly');
 
   const checkMigrationReadiness = async () => {
     setCheckingMigrationReadiness(true);
@@ -260,7 +270,7 @@ export function SettingsScreen() {
 
   return (
     <ScreenContainer scroll contentContainerStyle={styles.content}>
-      <ScreenHeader title="Settings" subtitle="Privacy and account controls">
+      <ScreenHeader title={t('settings.title')} subtitle={t('settings.subtitle')}>
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Open privacy dashboard"
@@ -274,40 +284,64 @@ export function SettingsScreen() {
 
       <DarkCard style={styles.profile}>
         <AppLogo size={48} variant="horizontal" />
-        <Text style={styles.profileText}>Secure. Private. Yours alone.</Text>
+        <Text style={[styles.profileText, { textAlign }]}>{t('settings.tagline')}</Text>
       </DarkCard>
 
-      <SectionHeader title="Account" />
+      <SectionHeader title={t('settings.language.section')} />
       <View style={styles.group}>
-        <SettingRow icon="person" title="Account" subtitle="Profile, email, and recovery" testID="settings-account" />
-        <SettingRow icon="shield-checkmark" title="Privacy Dashboard" subtitle="97% privacy score" testID="settings-privacy-row" onPress={() => navigation.navigate('PrivacyDashboard')} />
-        <SettingRow icon="phone-portrait" title="Device Management" subtitle="Review and revoke account devices" testID="settings-device-management" onPress={() => navigation.navigate('DeviceManagement')} />
-        <SettingRow icon="qr-code" title="Device Verification" subtitle="Verify this device safety number" testID="settings-device-verification" onPress={() => navigation.navigate('DeviceVerification')} />
+        <SettingRow
+          icon="language"
+          title={t('settings.language.current')}
+          subtitle={language === 'ar' ? t('language.arabic') : t('language.english')}
+          testID="settings-language-current"
+        />
+        <SettingRow
+          icon="globe"
+          title={t('language.english')}
+          subtitle={language === 'en' ? t('settings.language.current') : t('settings.language.change')}
+          testID="settings-language-english"
+          onPress={() => void changeLanguage('en')}
+        />
+        <SettingRow
+          icon="globe-outline"
+          title={t('language.arabic')}
+          subtitle={language === 'ar' ? t('settings.language.current') : t('settings.language.note')}
+          testID="settings-language-arabic"
+          onPress={() => void changeLanguage('ar')}
+        />
       </View>
 
-      <SectionHeader title="Privacy & Security" />
+      <SectionHeader title={t('settings.account.section')} />
       <View style={styles.group}>
-        <SettingRow icon="key" title="Safety Number" subtitle="Verify contacts manually" testID="settings-safety-number" />
-        <SettingRow icon="checkmark-done" title="Read Receipts" subtitle="Control delivery transparency" testID="settings-read-receipts" value={readReceipts} onValueChange={setReadReceipts} />
-        <SettingRow icon="timer" title="Disappearing Messages" subtitle="Default timer: 30 seconds" testID="settings-disappearing-messages" value={disappearing} onValueChange={setDisappearing} />
-        <SettingRow icon="lock-closed" title="App Lock" subtitle="Require biometric unlock" testID="settings-app-lock" value={appLock} onValueChange={setAppLock} />
-        <SettingRow icon="finger-print" title="Two-Step Verification" subtitle="Add a security PIN" testID="settings-two-step" />
-        <SettingRow icon="ban" title="Blocked Contacts" subtitle="3 blocked identities" testID="settings-blocked-contacts" />
+        <SettingRow icon="person" title={t('settings.account.title')} subtitle={t('settings.account.subtitle')} testID="settings-account" />
+        <SettingRow icon="shield-checkmark" title={t('settings.privacyDashboard')} subtitle={t('settings.privacyDashboard.subtitle')} testID="settings-privacy-row" onPress={() => navigation.navigate('PrivacyDashboard')} />
+        <SettingRow icon="phone-portrait" title={t('settings.deviceManagement')} subtitle={t('settings.deviceManagement.subtitle')} testID="settings-device-management" onPress={() => navigation.navigate('DeviceManagement')} />
+        <SettingRow icon="qr-code" title={t('settings.deviceVerification')} subtitle={t('settings.deviceVerification.subtitle')} testID="settings-device-verification" onPress={() => navigation.navigate('DeviceVerification')} />
       </View>
 
-      <SectionHeader title="App" />
+      <SectionHeader title={t('settings.privacySecurity.section')} />
       <View style={styles.group}>
-        <SettingRow icon="notifications" title="Notifications" subtitle="Private previews enabled" testID="settings-notifications" />
-        <SettingRow icon="file-tray-full" title="Data & Storage" subtitle="Encrypted local only" testID="settings-data-storage" />
-        <SettingRow icon="help-circle" title="Help & Support" subtitle="Security guide and support" testID="settings-help" />
-        <SettingRow icon="information-circle" title="About CipherChat" subtitle="Version and credits" testID="settings-about" onPress={() => navigation.navigate('About')} />
+        <SettingRow icon="key" title={t('settings.safetyNumber')} subtitle={t('settings.safetyNumber.subtitle')} testID="settings-safety-number" />
+        <SettingRow icon="checkmark-done" title={t('settings.readReceipts')} subtitle={t('settings.readReceipts.subtitle')} testID="settings-read-receipts" value={readReceipts} onValueChange={setReadReceipts} />
+        <SettingRow icon="timer" title={t('settings.disappearingMessages')} subtitle={t('settings.disappearingMessages.subtitle')} testID="settings-disappearing-messages" value={disappearing} onValueChange={setDisappearing} />
+        <SettingRow icon="lock-closed" title={t('settings.appLock')} subtitle={t('settings.appLock.subtitle')} testID="settings-app-lock" value={appLock} onValueChange={setAppLock} />
+        <SettingRow icon="finger-print" title={t('settings.twoStep')} subtitle={t('settings.twoStep.subtitle')} testID="settings-two-step" />
+        <SettingRow icon="ban" title={t('settings.blockedContacts')} subtitle={t('settings.blockedContacts.subtitle')} testID="settings-blocked-contacts" />
       </View>
 
-      <SectionHeader title="Prototype Backend" />
+      <SectionHeader title={t('settings.app.section')} />
+      <View style={styles.group}>
+        <SettingRow icon="notifications" title={t('settings.notifications')} subtitle={t('settings.notifications.subtitle')} testID="settings-notifications" />
+        <SettingRow icon="file-tray-full" title={t('settings.dataStorage')} subtitle={t('settings.dataStorage.subtitle')} testID="settings-data-storage" />
+        <SettingRow icon="help-circle" title={t('settings.help')} subtitle={t('settings.help.subtitle')} testID="settings-help" />
+        <SettingRow icon="information-circle" title={t('settings.about')} subtitle={t('settings.about.subtitle')} testID="settings-about" onPress={() => navigation.navigate('About')} />
+      </View>
+
+      <SectionHeader title={t('settings.backend.section')} />
       <View style={styles.group}>
         <SettingRow
           icon="server"
-          title="Backend Mode"
+          title={t('settings.backendMode')}
           subtitle={backendModeSubtitle}
           testID="settings-live-api-mode"
           value={status.mode === 'live'}
@@ -315,65 +349,65 @@ export function SettingsScreen() {
         />
         <SettingRow
           icon={status.ready ? 'cloud-done' : 'cloud-offline'}
-          title="Backend Readiness"
+          title={t('settings.backendReadiness')}
           subtitle={backendReadinessSubtitle}
           testID="settings-backend-status"
           onPress={refreshStatus}
         />
         <SettingRow
           icon={status.sessionActive ? 'key' : 'key-outline'}
-          title="Prototype Session"
-          subtitle={status.sessionActive ? 'Device session stored securely' : 'No device session yet'}
+          title={t('settings.prototypeSession')}
+          subtitle={status.sessionActive ? t('settings.sessionStored') : t('settings.noSession')}
           testID="settings-prototype-session"
           onPress={resetApiSession}
         />
         <SettingRow
           icon="finger-print"
-          title="Device Identity"
-          subtitle={status.identityFingerprint ? `${trustLabel} - ${status.identityFingerprint}` : 'Preparing local identity'}
+          title={t('settings.deviceIdentity')}
+          subtitle={status.identityFingerprint ? `${trustLabel} - ${status.identityFingerprint}` : t('settings.preparingIdentity')}
           testID="settings-device-identity"
           onPress={rotateIdentity}
         />
         <SettingRow
           icon={status.identityTrustState === 'trusted' ? 'shield-checkmark' : 'warning'}
-          title="Trust State"
+          title={t('settings.trustState')}
           subtitle={trustStateSubtitle}
           testID="settings-trust-state"
           onPress={() => navigation.navigate('DeviceVerification')}
         />
         <SettingRow
           icon={revokingDevice ? 'sync' : 'trash'}
-          title="Revoke This Device"
+          title={t('settings.revokeThisDevice')}
           subtitle={
             revokingDevice
-              ? 'Revoking device access...'
+              ? t('settings.revoking')
               : status.sessionActive
-                ? 'Remove this device and invalidate its session'
-                : 'Start a verified session before revocation'
+                ? t('settings.revokeAvailable')
+                : t('settings.revokeNeedsSession')
           }
           testID="settings-revoke-device"
           onPress={revokeThisDevice}
         />
         <SettingRow
           icon={status.identityTrustState === 'changed' ? 'warning' : 'shield-checkmark'}
-          title="Safety Number"
-          subtitle={status.identitySafetyNumber?.join(' ') ?? 'Preparing safety number'}
+          title={t('settings.safetyNumber')}
+          subtitle={status.identitySafetyNumber?.join(' ') ?? t('settings.preparingIdentity')}
           testID="settings-device-safety-number"
           onPress={() => navigation.navigate('DeviceVerification')}
         />
         <SettingRow
           icon={inboundEnvelopeStatus.polling || pollingInbox ? 'sync' : 'mail-unread'}
-          title="Encrypted Inbox"
-          subtitle={inboundEnvelopeStatus.polling || pollingInbox ? 'Polling encrypted envelopes...' : inboxSubtitle}
+          title={t('settings.encryptedInbox')}
+          subtitle={inboundEnvelopeStatus.polling || pollingInbox ? t('settings.pollingInbox') : inboxSubtitle}
           testID="settings-encrypted-inbox"
           onPress={pollEncryptedInbox}
         />
         <SettingRow
           icon="server"
-          title="Encrypted Database Status"
+          title={t('settings.encryptedDatabase')}
           subtitle={
             checkingEncryptedDatabase
-              ? 'Checking SQLCipher adapter...'
+              ? t('settings.checkingSqlcipher')
               : `${encryptedDatabaseState} - ${encryptedDatabase.migrationItemCount} prototype stores to migrate`
           }
           testID="settings-encrypted-local-database"
@@ -381,49 +415,49 @@ export function SettingsScreen() {
         />
         <SettingRow
           icon="hardware-chip"
-          title="Device Crypto Provider"
-          subtitle={status.cryptoProvider ?? 'Prototype identity provider is preparing'}
+          title={t('settings.deviceCryptoProvider')}
+          subtitle={status.cryptoProvider ?? t('settings.preparingIdentity')}
           testID="settings-device-crypto-provider"
         />
         <SettingRow
           icon={nativeSigningReadiness.eligibleForProduction ? 'shield-checkmark' : 'warning'}
-          title="Native Signing Key Provider"
+          title={t('settings.nativeSigningProvider')}
           subtitle={nativeSigningReadiness.summary}
           testID="settings-native-signing-key-provider"
         />
         <SettingRow
           icon={status.messageCryptoReady ? 'shield-checkmark' : 'warning'}
-          title="Message Crypto"
+          title={t('settings.messageCrypto')}
           subtitle={status.messageCryptoSummary}
           testID="settings-message-crypto"
         />
         <SettingRow
           icon={status.signalAdapterEligible ? 'hardware-chip' : 'construct'}
-          title="Signal Adapter"
-          subtitle={status.signalAdapterSummary ?? 'Native adapter readiness has not been checked yet'}
+          title={t('settings.signalAdapter')}
+          subtitle={status.signalAdapterSummary ?? t('settings.signalNotChecked')}
           testID="settings-signal-adapter"
         />
         <SettingRow
           icon={fileCryptoReadiness.eligibleForProduction ? 'lock-closed' : 'warning'}
-          title="File Crypto Provider"
+          title={t('settings.fileCryptoProvider')}
           subtitle={fileCryptoReadiness.summary}
           testID="settings-file-crypto-provider"
         />
         <SettingRow
           icon={pushProviderReadiness.productionReady ? 'notifications' : 'notifications-off'}
-          title="Push Provider"
+          title={t('settings.pushProvider')}
           subtitle={pushProviderReadiness.summary}
           testID="settings-push-provider-readiness"
         />
         <SettingRow
           icon={pushProviderReadiness.productionReady ? 'shield-checkmark' : 'warning'}
-          title="Generic Push Payload Policy"
-          subtitle="Generic wake/sync payloads only; APNs/FCM evidence is still missing"
+          title={t('settings.genericPushPolicy')}
+          subtitle={t('settings.genericPushPolicy.subtitle')}
           testID="settings-push-payload-policy"
         />
         <SettingRow
           icon={devicePrekeyStatus?.needsTopUp ? 'warning' : 'key'}
-          title="Prekey Inventory"
+          title={t('settings.prekeyInventory')}
           subtitle={prekeyInventorySubtitle}
           testID="settings-prekey-inventory"
           onPress={() => navigation.navigate('DeviceManagement')}
@@ -432,12 +466,12 @@ export function SettingsScreen() {
 
       {showSqlCipherEvidenceControls ? (
         <>
-          <SectionHeader title={__DEV__ ? 'Development Evidence' : 'Release Evidence'} />
+          <SectionHeader title={__DEV__ ? t('settings.developmentEvidence') : t('settings.releaseEvidence')} />
           <View style={styles.group}>
             <SettingRow
               icon={checkingSqlCipherRuntime ? 'sync' : 'shield-checkmark'}
-              title="SQLCipher Runtime Check"
-              subtitle={checkingSqlCipherRuntime ? 'Opening encrypted DB and round-tripping test record...' : sqlCipherVerificationSubtitle}
+              title={t('settings.sqlcipherRuntimeCheck')}
+              subtitle={checkingSqlCipherRuntime ? t('settings.sqlcipherOpening') : sqlCipherVerificationSubtitle}
               testID="settings-sqlcipher-runtime-check"
               onPress={runSqlCipherEvidenceCheck}
             />
@@ -447,19 +481,19 @@ export function SettingsScreen() {
 
       {__DEV__ ? (
         <>
-          <SectionHeader title="Development Migration" />
+          <SectionHeader title={t('settings.developmentMigration')} />
           <View style={styles.group}>
             <SettingRow
               icon={checkingMigrationReadiness ? 'sync' : 'analytics'}
-              title="Migration Readiness"
-              subtitle={checkingMigrationReadiness ? 'Inspecting prototype stores...' : migrationSubtitle}
+              title={t('settings.migrationReadiness')}
+              subtitle={checkingMigrationReadiness ? t('settings.inspectingStores') : migrationSubtitle}
               testID="settings-migration-readiness"
               onPress={checkMigrationReadiness}
             />
             <SettingRow
               icon={runningMigration ? 'sync' : 'lock-closed'}
-              title="Copy to Encrypted Database"
-              subtitle={runningMigration ? 'Running guarded migration...' : migrationRunSubtitle}
+              title={t('settings.copyToEncryptedDatabase')}
+              subtitle={runningMigration ? t('settings.runningMigration') : migrationRunSubtitle}
               testID="settings-run-encrypted-migration"
               onPress={runPrototypeMigration}
             />
@@ -469,12 +503,12 @@ export function SettingsScreen() {
 
       <TouchableOpacity
         accessibilityRole="button"
-        accessibilityLabel="Reset onboarding prototype"
+        accessibilityLabel={t('settings.resetOnboarding')}
         testID="settings-reset-onboarding"
         style={styles.reset}
         onPress={resetOnboarding}
       >
-        <Text style={styles.resetText}>Reset onboarding prototype</Text>
+        <Text style={styles.resetText}>{t('settings.resetOnboarding')}</Text>
       </TouchableOpacity>
     </ScreenContainer>
   );

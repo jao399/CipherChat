@@ -10,14 +10,22 @@ import { FilterChip } from '../../components/common/FilterChip';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { chats } from '../../data/mockData';
 import { useBackend } from '../../hooks/useBackend';
+import { useLanguage, type TranslationKey } from '../../i18n';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Filter = 'All' | 'Unread' | 'Groups' | 'Verified';
 
 const filters: Filter[] = ['All', 'Unread', 'Groups', 'Verified'];
+const filterLabelKeys: Record<Filter, TranslationKey> = {
+  All: 'chats.filter.all',
+  Unread: 'chats.filter.unread',
+  Groups: 'chats.filter.groups',
+  Verified: 'chats.filter.verified',
+};
 
 export function ChatsScreen() {
+  const { t, textAlign, rowDirection } = useLanguage();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { inboundEnvelopeStatus } = useBackend();
   const [query, setQuery] = useState('');
@@ -38,7 +46,7 @@ export function ChatsScreen() {
   return (
     <ScreenContainer padded={false}>
       <View style={styles.content}>
-        <View style={styles.header}>
+        <View style={[styles.header, { flexDirection: rowDirection }]}>
           <Text style={styles.title}>CipherChat</Text>
           <TouchableOpacity
             accessibilityRole="button"
@@ -52,16 +60,16 @@ export function ChatsScreen() {
         </View>
 
         <View style={styles.searchRow}>
-          <View style={styles.search}>
+          <View style={[styles.search, { flexDirection: rowDirection }]}>
             <Ionicons name="search" size={18} color={colors.muted} />
             <TextInput
-              accessibilityLabel="Search conversations"
+              accessibilityLabel={t('chats.search')}
               testID="chats-search"
               value={query}
               onChangeText={setQuery}
-              placeholder="Search conversations"
+              placeholder={t('chats.search')}
               placeholderTextColor={colors.muted}
-              style={styles.searchInput}
+              style={[styles.searchInput, { textAlign }]}
             />
           </View>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Start a new chat" testID="chats-add" style={styles.addButton}>
@@ -73,7 +81,7 @@ export function ChatsScreen() {
           {filters.map((item) => (
             <FilterChip
               key={item}
-              label={item}
+              label={t(filterLabelKeys[item])}
               active={filter === item}
               testID={`chat-filter-${item.toLowerCase()}`}
               onPress={() => setFilter(item)}
@@ -90,13 +98,13 @@ export function ChatsScreen() {
             />
           </View>
           <View style={styles.inboxText}>
-            <Text style={styles.inboxTitle}>Encrypted inbox</Text>
+            <Text style={[styles.inboxTitle, { textAlign }]}>{t('chats.inbox.title')}</Text>
             <Text style={styles.inboxSubtitle}>
               {inboundEnvelopeStatus.lastError
                 ? inboundEnvelopeStatus.lastError
                 : inboundEnvelopeStatus.lastPolledAt
-                  ? `${inboundEnvelopeStatus.totalAcknowledged} receipts acknowledged${inboundEnvelopeStatus.nextCursor ? ' | more pages ready' : ''}`
-                  : 'No inbound sync run yet'}
+                  ? `${inboundEnvelopeStatus.totalAcknowledged} ${t('chats.inbox.receiptsAcknowledged')}${inboundEnvelopeStatus.nextCursor ? ` | ${t('chats.inbox.more')}` : ''}`
+                  : t('chats.inbox.idle')}
             </Text>
           </View>
         </View>
@@ -111,7 +119,7 @@ export function ChatsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <EmptyState title="No secure chats found" text="Try a different search or filter." icon="chatbubble-ellipses" />
+            <EmptyState title={t('chats.empty.title')} text={t('chats.empty.text')} icon="chatbubble-ellipses" />
           }
           ListFooterComponent={filteredChats.length > 0 ? <ArchiveRow /> : null}
         />
@@ -121,17 +129,19 @@ export function ChatsScreen() {
 }
 
 function ArchiveRow() {
+  const { t, rowDirection } = useLanguage();
+
   return (
-    <View style={styles.archiveRow}>
+    <View style={[styles.archiveRow, { flexDirection: rowDirection }]}>
       <View style={styles.archiveAvatar}>
         <Ionicons name="archive-outline" size={27} color={colors.textSecondary} />
       </View>
       <View style={styles.archiveBody}>
         <View style={styles.archiveNameRow}>
-          <Text style={styles.archiveName}>Archive</Text>
+          <Text style={styles.archiveName}>{t('chats.archive')}</Text>
           <Ionicons name="lock-closed" size={13} color={colors.textSecondary} />
         </View>
-        <Text style={styles.archiveText}>7 archived conversations</Text>
+        <Text style={styles.archiveText}>{t('chats.archiveCount')}</Text>
       </View>
       <Ionicons name="chevron-forward" size={25} color={colors.textSecondary} />
     </View>

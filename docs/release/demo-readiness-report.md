@@ -34,6 +34,7 @@ CipherChat is not production-ready encrypted messaging software. Live production
 - Phase 79 documents the production file encryption adapter plan and adds a CI documentation gate while keeping file transfer production-blocked.
 - Phase 80 adds an external review request package and dependency advisory triage without suppressing the existing moderate Expo transitive advisories.
 - Phase 81 packages the project for GitHub, CV, portfolio, and demos with a concise README, case study, final demo script, and final project status document.
+- Phase 85 adds first-launch English/Arabic language selection before onboarding, Arabic UI labels, RTL-aware helpers, persisted language choice, and Settings language switching.
 
 ## How To Run Mobile Mock Mode
 
@@ -117,7 +118,7 @@ Baseline and final validation on 2026-05-01:
 
 - `npm install`: passed; npm reported 11 moderate transitive advisories.
 - `npm run typecheck`: passed.
-- `npm test`: passed; app tests 72/72 and API tests 78/78.
+- `npm test`: passed; app tests 81/81 and API tests 78/78.
 - `npm run verify:release-evidence`: passed evidence document checks; Android release-candidate SQLCipher evidence is complete for the Phase 75 APK and iOS runtime SQLCipher evidence remains marked blocking.
 - `npm run collect:sqlcipher-evidence`: prints static config, Android/iOS evidence status, and manual iOS/Android runtime steps without faking iOS proof.
 - `npm run verify:file-crypto-plan`: passes documentation and boundary checks for the Phase 79 production file encryption adapter plan.
@@ -131,6 +132,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 ## Screens And Features Completed
 
 - Splash and animated onboarding with existing tutorial artwork.
+- First-launch language selection before onboarding with English and Arabic support.
 - Welcome/auth screens with device verification in the entry flow.
 - Chats list, encrypted inbox status, trust warnings, mock composer, outbound queue, and retry controls.
 - Calls tab as a clearly labeled prototype UI surface.
@@ -141,6 +143,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Settings shows push provider readiness, generic push payload policy status, and missing APNs/FCM evidence.
 - Settings shows file crypto provider readiness and clearly reports the missing reviewed production adapter.
 - Privacy dashboard and device management.
+- Arabic localization for core demo UI surfaces, with honest Arabic security wording that keeps production blockers visible.
 - API health/readiness, persistence-backed sessions/devices/messages/prekeys, and metadata retention jobs.
 - Portfolio and presentation docs: `docs/portfolio/cipherchat-case-study.md`, `docs/release/demo-script.md`, and `docs/release/final-project-status.md`.
 
@@ -159,6 +162,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - BlueStacks passed the Phase 73 Android development SQLCipher probe and the Phase 75 Android release-candidate APK probe, but BlueStacks is not final production evidence for non-exportable native signing keys.
 - OS-backed non-exportable signing keys require the Phase 74 native provider plus runtime/review evidence before production launch.
 - External security review and remediation evidence remain required before production launch.
+- Localization does not add production cryptography or change any fail-closed security gates.
 
 ## Remaining Production Blockers
 

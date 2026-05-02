@@ -4,6 +4,7 @@ import type { PropsWithChildren } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { colors, spacing, typography } from '../../theme';
+import { useLanguage } from '../../i18n';
 
 type ScreenHeaderProps = PropsWithChildren<{
   title: string;
@@ -12,11 +13,12 @@ type ScreenHeaderProps = PropsWithChildren<{
 }>;
 
 export function ScreenHeader({ title, subtitle, back = false, children }: ScreenHeaderProps) {
+  const { textAlign, rowDirection, isRTL } = useLanguage();
   const navigation = useNavigation();
 
   return (
     <View style={styles.header}>
-      <View style={styles.left}>
+      <View style={[styles.left, { flexDirection: rowDirection }]}>
         {back ? (
           <TouchableOpacity
             accessibilityRole="button"
@@ -26,12 +28,12 @@ export function ScreenHeader({ title, subtitle, back = false, children }: Screen
             onPress={() => navigation.goBack()}
             hitSlop={8}
           >
-            <Ionicons name="chevron-back" size={22} color={colors.text} />
+            <Ionicons name={isRTL ? 'chevron-forward' : 'chevron-back'} size={22} color={colors.text} />
           </TouchableOpacity>
         ) : null}
         <View>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+          <Text style={[styles.title, { textAlign }]}>{title}</Text>
+          {subtitle ? <Text style={[styles.subtitle, { textAlign }]}>{subtitle}</Text> : null}
         </View>
       </View>
       {children ? <View style={styles.actions}>{children}</View> : null}

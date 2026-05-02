@@ -8,23 +8,26 @@ import { InputField, PasswordField } from '../../components/common/InputField';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
 import { ScreenHeader } from '../../components/common/ScreenHeader';
 import { SecureBadge } from '../../components/common/SecureBadge';
+import { useLanguage } from '../../i18n';
 import { colors, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 
 export function SignInScreen({ navigation }: Props) {
+  const { t, textAlign } = useLanguage();
+
   return (
     <ScreenContainer scroll>
-      <ScreenHeader title="Sign In" subtitle="Return to your secure space" back />
+      <ScreenHeader title={t('auth.signIn.title')} subtitle={t('auth.signIn.subtitle')} back />
       <View style={styles.logo}>
         <AppLogo size={60} variant="horizontal" />
       </View>
       <GlassCard style={styles.card}>
-        <InputField label="Email or phone" icon="mail" placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" />
-        <PasswordField placeholder="Enter your password" />
+        <InputField label={t('auth.signIn.email')} icon="mail" placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" />
+        <PasswordField label={t('auth.signUp.password')} placeholder={t('auth.signIn.passwordPlaceholder')} />
         <TouchableOpacity style={styles.forgot}>
-          <Text style={styles.forgotText}>Forgot password?</Text>
+          <Text style={styles.forgotText}>{t('auth.signIn.forgot')}</Text>
         </TouchableOpacity>
         <GlowButton
           accessibilityLabel="Sign in securely"
@@ -32,16 +35,14 @@ export function SignInScreen({ navigation }: Props) {
           onPress={() => navigation.replace('DeviceVerification')}
           icon="lock-closed"
         >
-          Sign In Securely
+          {t('auth.signIn.submit')}
         </GlowButton>
         <SecondaryButton accessibilityLabel="Use biometric sign in" testID="signin-biometric" icon="finger-print">
-          Use Biometric Sign In
+          {t('auth.signIn.biometric')}
         </SecondaryButton>
         <View style={styles.note}>
-          <SecureBadge label="Prototype gated" />
-          <Text style={styles.noteText}>
-            Production message encryption is blocked until a reviewed Signal adapter is installed.
-          </Text>
+          <SecureBadge label={t('auth.prototypeGated')} />
+          <Text style={[styles.noteText, { textAlign }]}>{t('auth.signIn.note')}</Text>
         </View>
       </GlassCard>
       <TouchableOpacity
@@ -51,7 +52,7 @@ export function SignInScreen({ navigation }: Props) {
         style={styles.switch}
         onPress={() => navigation.navigate('SignUp')}
       >
-        <Text style={styles.switchText}>New to CipherChat? Create an account</Text>
+        <Text style={styles.switchText}>{t('auth.signIn.create')}</Text>
       </TouchableOpacity>
     </ScreenContainer>
   );

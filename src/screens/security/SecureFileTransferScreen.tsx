@@ -6,19 +6,21 @@ import { SecureButton } from '../../components/common/Buttons';
 import { DarkCard } from '../../components/common/DarkCard';
 import { FileTransferCard } from '../../components/common/FileTransferCard';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
+import { useLanguage } from '../../i18n';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SecureFileTransfer'>;
 
-const checkpoints = [
-  ['Crypto Boundary', 'Production upload waits for a reviewed file crypto adapter'],
-  ['Opaque Transfer', 'Backend receives encrypted bytes and metadata only'],
-  ['File Protection', 'Screenshot and preview policy remain release blockers'],
-  ['Auto-Delete', 'Expiry controls are modeled for the demo'],
-];
-
 export function SecureFileTransferScreen({ navigation }: Props) {
+  const { t, rowDirection, isRTL } = useLanguage();
+  const checkpoints = [
+    [t('security.fileTransfer.cryptoBoundary'), t('security.fileTransfer.cryptoBoundaryDetail')],
+    [t('security.fileTransfer.opaqueTransfer'), t('security.fileTransfer.opaqueTransferDetail')],
+    [t('security.fileTransfer.fileProtection'), t('security.fileTransfer.fileProtectionDetail')],
+    [t('security.fileTransfer.autoDelete'), t('security.fileTransfer.autoDeleteDetail')],
+  ];
+
   return (
     <ScreenContainer scroll contentContainerStyle={styles.screen}>
       <View style={styles.header}>
@@ -29,15 +31,15 @@ export function SecureFileTransferScreen({ navigation }: Props) {
           style={styles.back}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={30} color={colors.text} />
+          <Ionicons name={isRTL ? 'chevron-forward' : 'chevron-back'} size={30} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>Secure File Transfer</Text>
+        <Text style={styles.title}>{t('security.fileTransfer.title')}</Text>
         <View style={styles.headerSpacer} />
       </View>
       <FileTransferCard name="Quarterly_Report.pdf" size="8.7 MB" />
       <DarkCard style={styles.checkpoints}>
         {checkpoints.map(([title, detail], index) => (
-          <View key={title} style={styles.checkRow}>
+          <View key={title} style={[styles.checkRow, { flexDirection: rowDirection }]}>
             <View style={styles.checkIcon}>
               <Ionicons
                 name={index === 0 ? 'lock-closed-outline' : index === 1 ? 'file-tray-full-outline' : index === 2 ? 'shield-checkmark-outline' : 'timer-outline'}
@@ -64,7 +66,7 @@ export function SecureFileTransferScreen({ navigation }: Props) {
         testID="secure-transfer-send"
         onPress={() => navigation.goBack()}
       >
-        PREVIEW SECURE SEND
+        {t('security.fileTransfer.previewSend')}
       </SecureButton>
     </ScreenContainer>
   );

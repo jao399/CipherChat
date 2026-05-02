@@ -9,7 +9,7 @@ Author: **Amgad Hussein Alzomi**
 Status: **demo-ready and portfolio-ready**.  
 Production status: **blocked by design until reviewed cryptography, native evidence, push evidence, dependency triage, and external audit are complete**.
 
-Current phase: **Phase 84 - APK handoff and README splash GIF**.
+Current phase: **Phase 85 - Arabic localization and first-launch language selection**.
 
 ## Badges
 
@@ -83,11 +83,14 @@ Public-safe mock/demo screenshots are stored in [screenshots/](screenshots/READM
 | --- | --- |
 | ![Settings readiness dashboard](screenshots/10-settings-readiness.png) | ![SQLCipher runtime check passed](screenshots/11-sqlcipher-runtime-check.png) |
 
+Arabic screenshot slots are documented for Phase 85: language selection, Arabic onboarding, and Arabic settings. Captures use mock/demo data only.
+
 ## Key Features
 
 | Area | What is included |
 | --- | --- |
 | Animated Splash | Dark cyber-security launch sequence with CipherChat branding. |
+| English/Arabic UI | First-launch language selection before onboarding, persisted language choice, Arabic UI labels, and RTL-aware helpers. |
 | Onboarding | Polished tutorial flow for secure messaging concepts. |
 | Auth UX | Sign in and sign up screens that route through device verification. |
 | Device Verification | Device identity, safety-number style display, and trust flow. |
@@ -137,6 +140,7 @@ Core security ideas:
 | --- | --- |
 | Demo readiness | Complete |
 | Portfolio readiness | Complete |
+| English/Arabic UI support | Complete for core demo surfaces |
 | Android SQLCipher RC evidence | Complete for the exact tested APK |
 | Production secure messaging | Blocked |
 | iOS SQLCipher runtime evidence | Blocked |
@@ -246,6 +250,7 @@ Remaining blockers:
 - no production APNs/FCM provider evidence,
 - no external security audit yet,
 - moderate Expo transitive advisories are tracked, not hidden.
+- Arabic localization does not change the production-blocked security status.
 
 `prototype-sha256-envelope-v1` is a demo-only provider. It must not be described as real production encryption.
 
@@ -255,6 +260,7 @@ Remaining blockers:
 - TypeScript architecture
 - polished mobile product UX
 - backend/API design with Fastify, PostgreSQL, Redis, Prisma, and BullMQ
+- English/Arabic localization and RTL-aware mobile UI work
 - mobile security thinking and secure storage planning
 - release readiness and CI discipline
 - threat-aware documentation
@@ -263,6 +269,10 @@ Remaining blockers:
 ## Phase 50 - External Security Review And Audit Readiness
 
 CipherChat keeps its external audit package in `docs/security/external-audit-readiness.md`. The audit readiness gate is `npm run verify:audit-readiness`, and it remains a documentation/readiness gate only. It does not complete external review or mark CipherChat production-ready.
+
+## Phase 85 - Arabic Localization And First-Launch Language Selection
+
+CipherChat now asks first-time users to choose English or Arabic before onboarding starts. The selected language is persisted with `@cipherchat/language-v1`, Arabic uses RTL-aware text alignment and row direction helpers, and Settings includes language switching. This phase is UI/localization work only and does not change production security blockers.
 
 ## Author
 

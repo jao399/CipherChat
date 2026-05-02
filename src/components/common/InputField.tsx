@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { colors, radii, spacing, typography } from '../../theme';
+import { useLanguage } from '../../i18n';
 
 type InputFieldProps = TextInputProps & {
   label?: string;
@@ -17,17 +18,18 @@ type InputFieldProps = TextInputProps & {
 };
 
 export function InputField({ label, icon, style, ...props }: InputFieldProps) {
+  const { textAlign, rowDirection } = useLanguage();
   const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.wrapper}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[styles.field, focused && styles.focused]}>
+      {label ? <Text style={[styles.label, { textAlign }]}>{label}</Text> : null}
+      <View style={[styles.field, { flexDirection: rowDirection }, focused && styles.focused]}>
         {icon ? <Ionicons name={icon} size={19} color={focused ? colors.primaryBright : colors.muted} /> : null}
         <TextInput
           {...props}
           placeholderTextColor={colors.muted}
-          style={[styles.input, style]}
+          style={[styles.input, { textAlign }, style]}
           onBlur={(event) => {
             setFocused(false);
             props.onBlur?.(event);
@@ -43,19 +45,20 @@ export function InputField({ label, icon, style, ...props }: InputFieldProps) {
 }
 
 export function PasswordField({ label = 'Password', ...props }: InputFieldProps) {
+  const { textAlign, rowDirection } = useLanguage();
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={[styles.field, focused && styles.focused]}>
+      <Text style={[styles.label, { textAlign }]}>{label}</Text>
+      <View style={[styles.field, { flexDirection: rowDirection }, focused && styles.focused]}>
         <Ionicons name="lock-closed" size={19} color={focused ? colors.primaryBright : colors.muted} />
         <TextInput
           {...props}
           secureTextEntry={!visible}
           placeholderTextColor={colors.muted}
-          style={styles.input}
+          style={[styles.input, { textAlign }]}
           onBlur={(event) => {
             setFocused(false);
             props.onBlur?.(event);

@@ -30,6 +30,7 @@ Blocked. CipherChat must not be described as production-ready encrypted messagin
 - Phase 79: Production file encryption adapter plan and documentation gate.
 - Phase 80: External review request package and dependency advisory triage.
 - Phase 81: Final demo/portfolio release package, concise README, case study, demo script, and final status document.
+- Phase 85: English/Arabic localization, first-launch language selection before onboarding, RTL-aware helpers, persisted language choice, and Settings language switching.
 
 ## Remaining Production Blockers
 

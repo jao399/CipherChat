@@ -6,7 +6,7 @@ Start with the mobile app in mock mode. Show the splash, onboarding, sign-in or 
 
 ## 3-Minute Demo Flow
 
-1. Open CipherChat and show the splash/onboarding visual identity.
+1. Open CipherChat and show Splash -> Language Selection -> Onboarding.
 2. Sign in or sign up and continue through Device Verification.
 3. Open Chats and show the demo conversation UI.
 4. Open Contacts and point out key review/trust-state behavior.
@@ -15,7 +15,7 @@ Start with the mobile app in mock mode. Show the splash, onboarding, sign-in or 
 
 ## 5-Minute Demo Flow
 
-1. Show Splash -> Onboarding -> Welcome/Auth -> Device Verification.
+1. Show Splash -> Language Selection -> Onboarding -> Welcome/Auth -> Device Verification.
 2. In Chats, show the polished conversation surface and explain mock mode.
 3. In Contacts, show trust states and explain that new/changed keys block sends until reviewed.
 4. In Files, open Secure File Transfer and explain that the UI is demo-only until a reviewed file crypto adapter exists.
@@ -30,6 +30,7 @@ Start with the mobile app in mock mode. Show the splash, onboarding, sign-in or 
    - Push Provider,
    - Encrypted Database Status,
    - SQLCipher Runtime Check.
+   - Language, then switch to Arabic if you want to demonstrate RTL-aware UI.
 6. Mention the local API workspace: Fastify, PostgreSQL, Prisma, Redis/BullMQ, metadata-only routes, and tests.
 7. End with the production blockers and validation evidence.
 
@@ -38,6 +39,8 @@ Start with the mobile app in mock mode. Show the splash, onboarding, sign-in or 
 Use this wording:
 
 CipherChat is a secure-messaging architecture prototype with real production gates. It does not claim production end-to-end encryption yet. The demo uses mock/prototype message flow, while live production sending remains blocked until a reviewed Signal/libsignal adapter is installed. The backend is designed for encrypted envelopes and metadata-only operations, and the app exposes readiness states instead of hiding missing security work.
+
+Arabic UI support is localization only. It does not change the security model, production blockers, or fail-closed message crypto gates.
 
 ## Answer: Is It Production Ready?
 

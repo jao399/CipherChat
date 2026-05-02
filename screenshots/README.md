@@ -19,5 +19,8 @@ Committed screenshot sequence:
 - `09-privacy-dashboard.png`
 - `10-settings-readiness.png`
 - `11-sqlcipher-runtime-check.png`
+- `12-language-selection.png`
+- `13-arabic-onboarding.png`
+- `14-arabic-settings.png`
 
-Future screenshot updates should preserve the same public-safe mock/demo data boundary.
+The Arabic screenshot names are reserved for public-safe mock/demo captures of the Phase 85 language selection and RTL UI, using the same mock/demo data boundary as the existing sequence.

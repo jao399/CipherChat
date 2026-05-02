@@ -4,6 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { PrivacyScoreCard } from '../../components/common/PrivacyScoreCard';
 import { ScreenContainer } from '../../components/common/ScreenContainer';
+import { useLanguage } from '../../i18n';
 import { privacyMetrics } from '../../data/mockData';
 import { colors, radii, spacing, typography } from '../../theme';
 import type { RootStackParamList } from '../../navigation/types';
@@ -11,6 +12,8 @@ import type { RootStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<RootStackParamList, 'PrivacyDashboard'>;
 
 export function PrivacyDashboardScreen({ navigation }: Props) {
+  const { t, isRTL } = useLanguage();
+
   return (
     <ScreenContainer scroll contentContainerStyle={styles.screen}>
       <View style={styles.topBar}>
@@ -22,10 +25,10 @@ export function PrivacyDashboardScreen({ navigation }: Props) {
           onPress={() => navigation.goBack()}
           hitSlop={8}
         >
-          <Ionicons name="chevron-back" size={30} color={colors.text} />
+          <Ionicons name={isRTL ? 'chevron-forward' : 'chevron-back'} size={30} color={colors.text} />
         </TouchableOpacity>
       </View>
-      <Text style={styles.screenTitle}>Privacy Dashboard</Text>
+      <Text style={styles.screenTitle}>{t('security.privacy.title')}</Text>
       <PrivacyScoreCard score={97} />
       <View style={styles.metrics}>
         {privacyMetrics.map((metric) => (

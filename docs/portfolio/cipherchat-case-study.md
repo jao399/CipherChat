@@ -50,6 +50,8 @@ The API is intentionally metadata-only for message delivery. It does not need or
 
 The mobile app implements a complete demo flow with a dark cyber-security aesthetic, neon purple glow, green security accents, glass cards, and security-focused Settings visibility. Mock mode supports smooth demo conversations while live production sending remains blocked until the missing crypto adapter is reviewed and installed.
 
+Phase 85 adds English/Arabic UI support with first-launch language selection before onboarding, persisted language choice, RTL-aware helpers, and Settings language switching. Arabic security wording keeps the same honest limitations as English and does not imply production readiness.
+
 ## Testing/CI Evidence
 
 The project includes app tests, API tests, API persistence integration tests, Prisma validation, TypeScript checks, Expo Doctor, release-evidence gates, Signal adapter readiness gates, file crypto plan gates, external review package gates, plaintext lifecycle checks, abuse controls, metadata retention checks, queue operations checks, production config checks, and startup health checks.
@@ -86,6 +88,7 @@ This evidence applies only to that tested APK. Future Android release candidates
 CipherChat demonstrates:
 
 - senior-level product polish in a mobile prototype,
+- Arabic localization and RTL-aware mobile UI implementation,
 - backend API design for secure protocol metadata,
 - threat-aware engineering and fail-closed security gates,
 - practical CI/release evidence workflows,
