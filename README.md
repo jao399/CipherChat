@@ -9,7 +9,7 @@ Author: **Amgad Hussein Alzomi**
 Status: **demo-ready and portfolio-ready**.  
 Production status: **blocked by design until reviewed cryptography, native evidence, push evidence, dependency triage, and external audit are complete**.
 
-Current phase: **Phase 82 - public GitHub screenshot gallery**.
+Current phase: **Phase 83 - copyright and splash attribution**.
 
 ## Badges
 
@@ -39,6 +39,7 @@ Current phase: **Phase 82 - public GitHub screenshot gallery**.
 - [Honest Limitations](#honest-limitations)
 - [What This Project Demonstrates](#what-this-project-demonstrates)
 - [Author](#author)
+- [Copyright](#copyright)
 
 ## Why CipherChat
 
@@ -264,3 +265,9 @@ CipherChat keeps its external audit package in `docs/security/external-audit-rea
 ## Author
 
 **Amgad Hussein Alzomi**
+
+## Copyright
+
+Copyright (c) 2026 **Amgad Alzomi**. All rights reserved.
+
+CipherChat is public as a portfolio and demonstration project. See [LICENSE](LICENSE) for ownership and usage terms.

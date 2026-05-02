@@ -14,6 +14,7 @@ export const encryptedSplash = {
     title: 'CipherChat',
     tagline: 'Secure. Private. Yours Alone.',
     signature: 'Made by Amgad Alzomi',
+    copyright: 'Copyright (c) 2026 Amgad Alzomi',
   },
   timing: {
     gridFadeIn: 360,
@@ -21,7 +22,7 @@ export const encryptedSplash = {
     logoAssemble: 430,
     logoPulse: 360,
     textFadeIn: 330,
-    holdBeforeExit: 180,
+    holdBeforeExit: 950,
     fadeOut: 240,
   },
 };

@@ -1,7 +1,9 @@
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 
 import { LogoMark } from '../common/LogoMark';
 import { encryptedSplash } from '../../constants/splash';
+
+const splashLogoGif = require('../../../assets/cipherchat-splash.gif');
 
 type EncryptedCoreLogoProps = {
   logoProgress: Animated.Value;
@@ -78,7 +80,15 @@ export function EncryptedCoreLogo({
           },
         ]}
       >
-        <LogoMark size={132} />
+        <Image
+          source={splashLogoGif}
+          style={styles.logoGifBackdrop}
+          resizeMode="contain"
+          accessibilityLabel="CipherChat animated splash logo"
+        />
+        <View style={styles.logoMarkOverlay}>
+          <LogoMark size={124} />
+        </View>
       </Animated.View>
 
       <Animated.View
@@ -126,8 +136,20 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
   },
   logoShell: {
-    width: 150,
-    height: 150,
+    width: 178,
+    height: 178,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoGifBackdrop: {
+    position: 'absolute',
+    width: 178,
+    height: 178,
+    opacity: 0.62,
+  },
+  logoMarkOverlay: {
+    width: 136,
+    height: 136,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,6 +1,8 @@
 {
   "name": "cipherchat",
   "version": "1.0.0",
+  "author": "Amgad Alzomi",
+  "license": "UNLICENSED",
   "main": "index.ts",
   "workspaces": [
     "apps/api"

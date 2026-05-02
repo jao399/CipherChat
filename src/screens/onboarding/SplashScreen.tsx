@@ -95,6 +95,7 @@ export function SplashScreen({ navigation }: Props) {
           </View>
           <Animated.View style={[styles.signatureWrap, { opacity: textProgress }]}>
             <Text style={styles.signature}>{encryptedSplash.text.signature}</Text>
+            <Text style={styles.copyright}>{encryptedSplash.text.copyright}</Text>
           </Animated.View>
         </SafeAreaView>
       </Animated.View>
@@ -129,10 +130,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   signature: {
+    color: encryptedSplash.colors.whiteText,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
+    opacity: 0.9,
+  },
+  copyright: {
     color: encryptedSplash.colors.mutedText,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 16,
     fontWeight: '600',
-    opacity: 0.72,
+    marginTop: 3,
+    opacity: 0.74,
   },
 });
