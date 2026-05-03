@@ -31,6 +31,7 @@ Blocked. CipherChat must not be described as production-ready encrypted messagin
 - Phase 80: External review request package and dependency advisory triage.
 - Phase 81: Final demo/portfolio release package, concise README, case study, demo script, and final status document.
 - Phase 85: English/Arabic localization, first-launch language selection before onboarding, RTL-aware helpers, persisted language choice, and Settings language switching.
+- Phase 86: EAS iOS cloud build profiles and static readiness gate for Windows-hosted iOS builds, while keeping iOS SQLCipher runtime evidence blocking.
 
 ## Remaining Production Blockers
 

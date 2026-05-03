@@ -26,6 +26,28 @@
         "EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE": "true"
       }
     },
+    "ios-device-preview": {
+      "extends": "preview",
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_CIPHERCHAT_API_MODE": "mock",
+        "EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE": "true"
+      }
+    },
+    "ios-testflight": {
+      "extends": "preview",
+      "distribution": "store",
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_CIPHERCHAT_API_MODE": "mock",
+        "EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE": "true"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "env": {

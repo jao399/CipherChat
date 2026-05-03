@@ -21,6 +21,38 @@ SQLCipher runtime verification passed: encrypted database opened, schema v1 appl
 
 The check must prove that the adapter reports `encrypted=true`, schema v1 is applied, and the harmless `deviceMetadata` verification record is written, read, and deleted. The record must not contain message text, file content, filenames, contact graph data, private keys, tokens, safety numbers, or decrypted identifiers.
 
+## EAS iOS Cloud Build From Windows
+
+Use EAS cloud builds from Windows when macOS/Xcode is not available locally. This prepares an installable iOS artifact, but it does not close the evidence blocker until the installed app passes the runtime check on an iPhone or TestFlight build.
+
+### Internal iPhone Build
+
+Use this path for an enrolled iPhone/ad hoc internal build.
+
+```powershell
+npx eas-cli@latest login
+npx eas-cli@latest whoami
+npx eas-cli@latest device:create
+npm run eas:ios:device-preview
+```
+
+Install the resulting internal build on the enrolled iPhone using the EAS install link. Open CipherChat, complete the demo entry flow, open Settings > Release Evidence, run SQLCipher Runtime Check, and record the pass/fail result.
+
+### TestFlight Build
+
+Use this path when Apple Developer Program and App Store Connect access are ready.
+
+```powershell
+npx eas-cli@latest login
+npx eas-cli@latest whoami
+npm run eas:ios:testflight
+npm run eas:ios:submit-latest
+```
+
+Install the TestFlight build on an enrolled tester iPhone. Open CipherChat, complete the demo entry flow, open Settings > Release Evidence, run SQLCipher Runtime Check, and record the pass/fail result.
+
+Do not commit Apple credentials, certificates, provisioning profiles, App Store Connect API keys, EAS credentials, logs with secrets, screenshots with private data, or build artifacts.
+
 ## EAS iOS Internal Build Path
 
 Use this path when an enrolled iOS device and EAS credentials are available.
@@ -34,7 +66,7 @@ npm run collect:sqlcipher-evidence
 2. Build the iOS preview/internal artifact:
 
 ```powershell
-npx eas build --profile preview --platform ios
+npm run eas:ios:device-preview
 ```
 
 3. Install the resulting internal build on the enrolled iOS device using the EAS installation link or Apple internal distribution flow.

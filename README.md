@@ -9,7 +9,7 @@ Author: **Amgad Hussein Alzomi**
 Status: **demo-ready and portfolio-ready**.  
 Production status: **blocked by design until reviewed cryptography, native evidence, push evidence, dependency triage, and external audit are complete**.
 
-Current phase: **Phase 85 - Arabic localization and first-launch language selection**.
+Current phase: **Phase 86 - EAS iOS cloud build preparation**.
 
 ## Badges
 
@@ -176,6 +176,25 @@ Run Android from the local workspace:
 npm run android
 ```
 
+Prepare an iOS cloud build from Windows:
+
+```powershell
+npm run verify:eas-ios-cloud-build
+npx eas-cli@latest login
+npx eas-cli@latest whoami
+npx eas-cli@latest device:create
+npm run eas:ios:device-preview
+```
+
+For TestFlight, use:
+
+```powershell
+npm run eas:ios:testflight
+npm run eas:ios:submit-latest
+```
+
+iOS SQLCipher evidence remains blocked until the installed iPhone/TestFlight build passes Settings > Release Evidence > SQLCipher Runtime Check.
+
 Run the local backend dependencies:
 
 ```powershell
@@ -236,6 +255,7 @@ Current expected validation state:
 - [Portfolio case study](docs/portfolio/cipherchat-case-study.md)
 - [Screenshots guide](screenshots/README.md)
 - [Public repository checklist](docs/release/public-repo-checklist.md)
+- [Phase 86 EAS iOS cloud build preparation](docs/architecture/phase-86-eas-ios-cloud-build-prep.md)
 
 ## Honest Limitations
 

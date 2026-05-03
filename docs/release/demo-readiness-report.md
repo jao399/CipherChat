@@ -35,6 +35,7 @@ CipherChat is not production-ready encrypted messaging software. Live production
 - Phase 80 adds an external review request package and dependency advisory triage without suppressing the existing moderate Expo transitive advisories.
 - Phase 81 packages the project for GitHub, CV, portfolio, and demos with a concise README, case study, final demo script, and final project status document.
 - Phase 85 adds first-launch English/Arabic language selection before onboarding, Arabic UI labels, RTL-aware helpers, persisted language choice, and Settings language switching.
+- Phase 86 adds explicit EAS iOS cloud build profiles and a static readiness gate for Windows-hosted iOS builds while keeping iOS SQLCipher evidence blocking until an installed iPhone/TestFlight runtime check passes.
 
 ## How To Run Mobile Mock Mode
 
@@ -109,6 +110,7 @@ In the app, open Settings and switch Backend Mode to live. Live mode supports ba
 npm run typecheck
 npm test
 npm run verify:release-evidence
+npm run verify:eas-ios-cloud-build
 npm run collect:sqlcipher-evidence
 npm run validate:ci
 npx expo-doctor
@@ -120,6 +122,7 @@ Baseline and final validation on 2026-05-01:
 - `npm run typecheck`: passed.
 - `npm test`: passed; app tests 81/81 and API tests 78/78.
 - `npm run verify:release-evidence`: passed evidence document checks; Android release-candidate SQLCipher evidence is complete for the Phase 75 APK and iOS runtime SQLCipher evidence remains marked blocking.
+- `npm run verify:eas-ios-cloud-build`: passes static EAS iOS cloud build readiness checks while keeping iOS SQLCipher evidence marked missing/blocking.
 - `npm run collect:sqlcipher-evidence`: prints static config, Android/iOS evidence status, and manual iOS/Android runtime steps without faking iOS proof.
 - `npm run verify:file-crypto-plan`: passes documentation and boundary checks for the Phase 79 production file encryption adapter plan.
 - `npm run verify:external-review-package`: passes external review package and dependency triage document checks.

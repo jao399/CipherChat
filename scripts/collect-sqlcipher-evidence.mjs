@@ -31,6 +31,8 @@ const expoConfig = appJson.expo ?? {};
 const opSQLiteConfig = packageJson['op-sqlite'] ?? {};
 const developmentProfile = easJson.build?.development ?? {};
 const previewProfile = easJson.build?.preview ?? {};
+const iosDevicePreviewProfile = easJson.build?.['ios-device-preview'] ?? {};
+const iosTestflightProfile = easJson.build?.['ios-testflight'] ?? {};
 
 async function readEvidenceStatus(relativePath) {
   try {
@@ -111,6 +113,26 @@ if (previewProfile.env?.EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE === 'true') {
   needsEvidence('EAS preview iOS evidence flag', 'preview profile must expose Release Evidence for iOS release-candidate checks');
 }
 
+if (
+  iosDevicePreviewProfile.distribution === 'internal' &&
+  iosDevicePreviewProfile.ios?.simulator === false &&
+  iosDevicePreviewProfile.env?.EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE === 'true'
+) {
+  pass('EAS iOS device preview profile', 'ios-device-preview builds an internal iPhone artifact with Release Evidence enabled');
+} else {
+  needsEvidence('EAS iOS device preview profile', 'ios-device-preview must build an internal iPhone artifact with Release Evidence enabled');
+}
+
+if (
+  iosTestflightProfile.distribution === 'store' &&
+  iosTestflightProfile.ios?.simulator === false &&
+  iosTestflightProfile.env?.EXPO_PUBLIC_CIPHERCHAT_RELEASE_EVIDENCE === 'true'
+) {
+  pass('EAS iOS TestFlight profile', 'ios-testflight builds a store-signed iPhone artifact with Release Evidence enabled');
+} else {
+  needsEvidence('EAS iOS TestFlight profile', 'ios-testflight must build a store-signed iPhone artifact with Release Evidence enabled');
+}
+
 console.log('\nRecorded runtime evidence status');
 info('Android SQLCipher evidence', `evidence=${androidEvidence.evidence}; blocking=${androidEvidence.blocking}`);
 needsEvidence('iOS SQLCipher evidence', `evidence=${iosEvidence.evidence}; blocking=${iosEvidence.blocking}`);
@@ -132,8 +154,13 @@ console.log('  npx expo start --dev-client');
 console.log('  xcrun simctl install booted <path-to-CipherChat.app>');
 console.log('  xcrun simctl launch booted com.amgadalzomi.cipherchat');
 console.log('Device/internal release-candidate path with EAS:');
-console.log('  npx eas build --profile preview --platform ios');
+console.log('  npx eas-cli@latest device:create');
+console.log('  npm run eas:ios:device-preview');
 console.log('  Install the resulting internal build on an enrolled iOS device.');
+console.log('TestFlight path with EAS:');
+console.log('  npm run eas:ios:testflight');
+console.log('  npm run eas:ios:submit-latest');
+console.log('  Install the TestFlight build on an enrolled tester iPhone.');
 console.log('Then open CipherChat, complete the demo entry flow, open Settings > Release Evidence, run SQLCipher Runtime Check, and attach the pass/fail screenshot or logs to docs/release/ios-sqlcipher-evidence.md.');
 
 if (os.platform() === 'win32') {
