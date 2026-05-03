@@ -109,6 +109,26 @@ export {
   type SignalAdapterReadiness,
 } from './signalAdapterReadiness';
 export {
+  isSignalNativeAdapterProductionEvidenceComplete,
+  requiredSignalNativeAdapterEvidence,
+  signalNativeAdapterContractVersion,
+  type SignalNativeAdapter,
+  type SignalNativeAdapterReadinessReport,
+  type SignalNativeCreateSessionInput,
+  type SignalNativeDecryptInput,
+  type SignalNativeDecryptedMessage,
+  type SignalNativeEncryptedMessage,
+  type SignalNativeEncryptInput,
+  type SignalNativeIdentityChangeResult,
+  type SignalNativeIdentityFingerprint,
+  type SignalNativeOneTimePrekey,
+  type SignalNativePlatform,
+  type SignalNativePublicIdentity,
+  type SignalNativeSessionRef,
+  type SignalNativeSessionSnapshot,
+  type SignalNativeSignedPrekey,
+} from './signalNativeAdapter';
+export {
   clearRegisteredSignalOneToOneCryptoAdapter,
   getRegisteredSignalOneToOneCryptoAdapter,
   registerSignalOneToOneCryptoAdapter,

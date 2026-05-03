@@ -24,6 +24,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Production Signal adapters must use the `signal-x3dh-v1` prekey bundle contract and reject prototype placeholder prekeys.
 - Production Signal adapter registration must be explicit, startup-checked, and backed by release evidence for the installed native adapter.
 - Production Signal implementation must satisfy the Phase 76 Signal/libsignal integration plan before live one-to-one sends are enabled.
+- Production Signal implementation must satisfy the Gate 2 libsignal feasibility requirements and must not treat the TypeScript native adapter contract as production evidence.
 - One-time prekey claim routes must consume at most one prekey transactionally and avoid returning reusable prekey arrays for production session setup.
 - Prekey inventory status must expose counts and thresholds only, never key material or message/contact metadata.
 - Prekey top-up routes must accept only client-generated public one-time prekeys from the authenticated current device and must not log or return prekey values.
@@ -98,6 +99,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Release evidence placeholder gate output: `npm run verify:release-evidence`
 - SQLCipher evidence helper output: `npm run collect:sqlcipher-evidence`
 - Signal integration plan gate output: `npm run verify:signal-integration-plan`
+- Gate 2 feasibility spike evidence: `docs/architecture/gate-02-libsignal-feasibility-spike.md`
 - File crypto plan gate output: `npm run verify:file-crypto-plan`
 - Audit readiness gate output: `npm run verify:audit-readiness`
 - External review package gate output: `npm run verify:external-review-package`

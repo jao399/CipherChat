@@ -144,7 +144,7 @@ Core security ideas:
 | Android SQLCipher RC evidence | Complete for the exact tested APK |
 | Production secure messaging | Blocked |
 | iOS SQLCipher runtime evidence | Blocked |
-| Signal/libsignal adapter | Blocked |
+| Signal/libsignal adapter | Blocked; Gate 2 feasibility spike only |
 | Production file encryption adapter | Blocked |
 | Native non-exportable signing key provider | Blocked |
 | APNs/FCM provider evidence | Blocked |
@@ -256,6 +256,7 @@ Current expected validation state:
 - [Screenshots guide](screenshots/README.md)
 - [Public repository checklist](docs/release/public-repo-checklist.md)
 - [Phase 86 EAS iOS cloud build preparation](docs/architecture/phase-86-eas-ios-cloud-build-prep.md)
+- [Gate 2 libsignal feasibility spike](docs/architecture/gate-02-libsignal-feasibility-spike.md)
 
 ## Honest Limitations
 
