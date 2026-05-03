@@ -9,7 +9,7 @@ Author: **Amgad Hussein Alzomi**
 Status: **demo-ready and portfolio-ready**.  
 Production status: **blocked by design until reviewed cryptography, native evidence, push evidence, dependency triage, and external audit are complete**.
 
-Current phase: **Phase 86 - EAS iOS cloud build preparation**.
+Current phase: **Phase 87 - Native non-exportable key provider boundary**.
 
 ## Badges
 
@@ -100,6 +100,7 @@ Arabic screenshot slots are documented for Phase 85: language selection, Arabic 
 | Secure File Transfer Prototype | Demo UI plus production file-crypto gates and adapter plan. |
 | Privacy Dashboard | Security posture and privacy-oriented presentation surface. |
 | Settings Readiness Dashboard | Backend, crypto, Signal adapter, file crypto, push provider, database, prekey, and evidence status. |
+| Native Key Provider Boundary | Settings and tests show SecureStore prototype keys are demo-only while production requires reviewed Android Keystore/iOS Keychain or Secure Enclave evidence. |
 | Backend/API Foundation | Fastify API routes for accounts, device sessions, bundles, envelopes, inbox, ack, prekeys, revocation, and health. |
 | CI/Test Validation | TypeScript, app/API tests, Prisma validation, integration tests, release gates, Expo Doctor, and high audit gate. |
 | SQLCipher Evidence Workflow | Android release-candidate evidence for the tested APK and documented iOS verification path. |
@@ -146,7 +147,7 @@ Core security ideas:
 | iOS SQLCipher runtime evidence | Blocked |
 | Signal/libsignal adapter | Blocked |
 | Production file encryption adapter | Blocked |
-| Native non-exportable signing key provider | Blocked |
+| Native non-exportable signing key provider | Blocked; Phase 87 boundary and readiness evaluator complete |
 | APNs/FCM provider evidence | Blocked |
 | External security review | Blocked |
 | Moderate Expo transitive advisories | Tracked, unresolved |
@@ -231,6 +232,7 @@ npm test
 npm run validate:ci
 npx expo-doctor
 npm run verify:release-evidence
+npm run verify:native-key-provider-boundary
 npm run collect:sqlcipher-evidence
 ```
 
@@ -241,6 +243,7 @@ Current expected validation state:
 - `npm run validate:ci` passes,
 - `npx expo-doctor` passes 18/18,
 - release evidence reports Android OK for the tested APK and iOS still blocking,
+- native key provider boundary verification passes while production non-exportable key evidence remains blocked,
 - high-severity audit gate passes,
 - moderate Expo transitive advisories are tracked in documentation.
 
@@ -256,6 +259,7 @@ Current expected validation state:
 - [Screenshots guide](screenshots/README.md)
 - [Public repository checklist](docs/release/public-repo-checklist.md)
 - [Phase 86 EAS iOS cloud build preparation](docs/architecture/phase-86-eas-ios-cloud-build-prep.md)
+- [Phase 87 native non-exportable key provider plan](docs/architecture/phase-87-native-non-exportable-key-provider-plan.md)
 
 ## Honest Limitations
 
@@ -293,6 +297,10 @@ CipherChat keeps its external audit package in `docs/security/external-audit-rea
 ## Phase 85 - Arabic Localization And First-Launch Language Selection
 
 CipherChat now asks first-time users to choose English or Arabic before onboarding starts. The selected language is persisted with `@cipherchat/language-v1`, Arabic uses RTL-aware text alignment and row direction helpers, and Settings includes language switching. This phase is UI/localization work only and does not change production security blockers.
+
+## Phase 87 - Native Non-Exportable Key Provider Boundary
+
+CipherChat now has a clearer native signing key provider descriptor and readiness evaluator for future Android Keystore and iOS Keychain/Secure Enclave providers. The current SecureStore prototype flow remains demo-only; production non-exportable signing key support is still blocked until a reviewed native provider and runtime evidence exist.
 
 ## Author
 

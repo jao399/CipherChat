@@ -18,6 +18,7 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | SQLCipher evidence helper | `npm run collect:sqlcipher-evidence` |
 | Signal integration plan gate | `npm run verify:signal-integration-plan` |
 | File crypto plan gate | `npm run verify:file-crypto-plan` |
+| Native key provider boundary gate | `npm run verify:native-key-provider-boundary` |
 | Audit readiness gate | `npm run verify:audit-readiness` |
 | External review package gate | `npm run verify:external-review-package` |
 | Release smoke test | `npm run release:smoke` |
@@ -38,7 +39,7 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Production file encryption adapter plan | `docs/architecture/phase-79-production-file-encryption-adapter-plan.md` |
 | Push metadata boundary | `docs/architecture/phase-72-push-metadata-boundary.md` |
 | Runtime SQLCipher evidence workflow | `docs/architecture/phase-73-runtime-sqlcipher-evidence-workflow.md` |
-| Native signing key boundary | `docs/architecture/phase-74-native-signing-key-boundary.md` |
+| Native signing key boundary | `docs/architecture/phase-74-native-signing-key-boundary.md`; `docs/architecture/phase-87-native-non-exportable-key-provider-plan.md` |
 | Signal/libsignal integration plan | `docs/architecture/phase-76-signal-libsignal-integration-plan.md` |
 | Push provider evidence boundary | `docs/architecture/phase-78-push-provider-evidence-boundary.md` |
 
@@ -52,7 +53,7 @@ This manifest lists the evidence an external reviewer should request or reproduc
 | Graceful shutdown | `apps/api/src/startup/gracefulShutdown.ts` |
 | Message crypto gate | `src/security/messageCryptoPolicy.ts`, `src/services/messages/messageEncryptionProvider.ts` |
 | Signal provider boundary | `src/services/messages/signalOneToOneCryptoProvider.ts`, `docs/architecture/phase-76-signal-libsignal-integration-plan.md` |
-| Native signing key boundary | `src/security/nativeSigningKeyProvider.ts`, `src/security/deviceSigningKeyStore.ts` |
+| Native signing key boundary | `src/security/nativeSigningKeyProvider.ts`, `src/security/nativeSigningKeyReadiness.ts`, `src/security/deviceSigningKeyStore.ts` |
 | Secure file transfer boundary | `src/security/fileCryptoPolicy.ts`, `src/services/files/fileEncryptionProvider.ts`, `src/services/files/secureFileTransferProvider.ts` |
 | Push privacy boundary | `src/services/notifications/pushNotificationPolicy.ts`, `src/services/notifications/pushProviderReadiness.ts`, `apps/api/src/push/pushPrivacy.ts`, `apps/api/src/push/pushNotificationService.ts` |
 | Encrypted local database | `src/services/local/opSQLiteEncryptedLocalDatabase.ts`, `src/services/local/sqlCipherRuntimeVerification.ts` |
@@ -65,7 +66,7 @@ This manifest lists the evidence an external reviewer should request or reproduc
 - Signal/libsignal adapter evidence showing the Phase 76 production readiness criteria are satisfied; the plan alone is not production crypto evidence.
 - Production file encryption adapter evidence showing the Phase 79 readiness criteria are satisfied; the plan alone is not production file crypto evidence.
 - APNs/FCM provider evidence showing configured provider ports, generic wake-only payloads, provider log review, and release smoke results. The Phase 78 boundary alone is not provider evidence.
-- Native signing key provider review and runtime evidence showing non-exportable private key behavior and public-key-only export. BlueStacks can support Android development checks, but it is not final production evidence for non-exportable key storage by itself.
+- Native signing key provider review and runtime evidence showing non-exportable private key behavior and public-key-only export. Phase 87 improves the provider boundary and readiness evaluator, but the production blocker remains open until a reviewed Android Keystore/iOS Keychain or Secure Enclave provider and runtime evidence exist. BlueStacks can support Android development checks, but it is not final production evidence for non-exportable key storage by itself.
 - Release smoke workflow run URL.
 - Container image digest promoted to staging or production.
 - External security review report and remediation tracking link.

@@ -36,6 +36,7 @@ CipherChat is not production-ready encrypted messaging software. Live production
 - Phase 81 packages the project for GitHub, CV, portfolio, and demos with a concise README, case study, final demo script, and final project status document.
 - Phase 85 adds first-launch English/Arabic language selection before onboarding, Arabic UI labels, RTL-aware helpers, persisted language choice, and Settings language switching.
 - Phase 86 adds explicit EAS iOS cloud build profiles and a static readiness gate for Windows-hosted iOS builds while keeping iOS SQLCipher evidence blocking until an installed iPhone/TestFlight runtime check passes.
+- Phase 87 improves the native non-exportable signing key provider boundary with platform/protection/evidence reporting, Settings visibility, tests, and a CI-safe verifier while keeping production key storage blocked.
 
 ## How To Run Mobile Mock Mode
 
@@ -111,6 +112,7 @@ npm run typecheck
 npm test
 npm run verify:release-evidence
 npm run verify:eas-ios-cloud-build
+npm run verify:native-key-provider-boundary
 npm run collect:sqlcipher-evidence
 npm run validate:ci
 npx expo-doctor
@@ -123,6 +125,7 @@ Baseline and final validation on 2026-05-01:
 - `npm test`: passed; app tests 81/81 and API tests 78/78.
 - `npm run verify:release-evidence`: passed evidence document checks; Android release-candidate SQLCipher evidence is complete for the Phase 75 APK and iOS runtime SQLCipher evidence remains marked blocking.
 - `npm run verify:eas-ios-cloud-build`: passes static EAS iOS cloud build readiness checks while keeping iOS SQLCipher evidence marked missing/blocking.
+- `npm run verify:native-key-provider-boundary`: passes provider boundary checks while keeping SecureStore prototype keys outside production non-exportable evidence.
 - `npm run collect:sqlcipher-evidence`: prints static config, Android/iOS evidence status, and manual iOS/Android runtime steps without faking iOS proof.
 - `npm run verify:file-crypto-plan`: passes documentation and boundary checks for the Phase 79 production file encryption adapter plan.
 - `npm run verify:external-review-package`: passes external review package and dependency triage document checks.
@@ -145,6 +148,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Development Evidence and Release Evidence sections with SQLCipher Runtime Check for installed development and release-candidate clients.
 - Settings shows push provider readiness, generic push payload policy status, and missing APNs/FCM evidence.
 - Settings shows file crypto provider readiness and clearly reports the missing reviewed production adapter.
+- Settings shows native signing key provider status, protection level, missing production evidence, and a SecureStore demo-only notice.
 - Privacy dashboard and device management.
 - Arabic localization for core demo UI surfaces, with honest Arabic security wording that keeps production blockers visible.
 - API health/readiness, persistence-backed sessions/devices/messages/prekeys, and metadata retention jobs.
@@ -164,6 +168,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Android SQLCipher runtime availability has Phase 75 release-candidate APK evidence for the current artifact; Phase 77 documents the iOS path, but iOS SQLCipher runtime availability still requires macOS/Xcode or EAS device verification.
 - BlueStacks passed the Phase 73 Android development SQLCipher probe and the Phase 75 Android release-candidate APK probe, but BlueStacks is not final production evidence for non-exportable native signing keys.
 - OS-backed non-exportable signing keys require the Phase 74 native provider plus runtime/review evidence before production launch.
+- Phase 87 does not complete production non-exportable signing keys; it improves the boundary and keeps readiness blocked until reviewed native evidence exists.
 - External security review and remediation evidence remain required before production launch.
 - Localization does not add production cryptography or change any fail-closed security gates.
 
@@ -173,7 +178,7 @@ The remaining npm audit output is moderate severity in Expo transitive dependenc
 - Provide production Signal prekey generation and storage using non-exportable native key material.
 - Complete iOS SQLCipher runtime evidence on macOS/Xcode or an installed EAS iOS build.
 - Re-run Settings > Release Evidence > SQLCipher Runtime Check for every new Android release-candidate APK.
-- Install and review a native non-exportable signing key provider behind the Phase 74 boundary.
+- Install and review a native non-exportable signing key provider behind the Phase 87 boundary.
 - Complete production secure file encryption adapter and file handling review.
 - Complete push notification provider configuration, provider log review, and release smoke evidence with generic wake-only payloads.
 - Attach real SQLCipher release evidence to `docs/release/android-sqlcipher-evidence.md` and `docs/release/ios-sqlcipher-evidence.md`.

@@ -2,61 +2,38 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
-  assertNativeSigningKeyProviderReadyForProduction,
   blockedNativeSigningKeyProvider,
-  evaluateNativeSigningKeyProviderReadiness,
   secureStorePrototypeSigningKeyProviderReadiness,
-  type NativeSigningKeyProviderReadinessInput,
 } from './nativeSigningKeyProvider';
 
-const reviewedNativeProvider: NativeSigningKeyProviderReadinessInput = {
-  id: 'reviewed-native-ed25519-keystore-v1',
-  algorithm: 'ed25519',
-  evidence: {
-    evidenceSummary: 'Reviewed native provider with attached Android/iOS runtime evidence.',
-    nonExportablePrivateKey: true,
-    privateKeyExportableToJavaScript: false,
-    publicKeyExportOnly: true,
-    reviewedImplementation: true,
-    runtimeEvidenceAttached: true,
-  },
-  keyStorage: 'native-non-exportable',
-  productionReady: true,
-  supportsRevocation: true,
-  supportsRotation: true,
-};
+describe('native signing key provider descriptors', () => {
+  it('keeps the default native provider blocked and unavailable', async () => {
+    assert.equal(blockedNativeSigningKeyProvider.providerId, 'native-non-exportable-signing-key-missing');
+    assert.equal(blockedNativeSigningKeyProvider.productionReady, false);
+    assert.equal(blockedNativeSigningKeyProvider.keyProtectionLevel, 'unavailable');
+    assert.equal(blockedNativeSigningKeyProvider.evidenceStatus, 'missing');
+    assert.equal(blockedNativeSigningKeyProvider.canExportPublicKeyOnly, false);
+    assert.equal(blockedNativeSigningKeyProvider.privateKeyExportable, 'unknown');
+    assert(blockedNativeSigningKeyProvider.requiredEvidence.length > 0);
 
-describe('native signing key provider readiness', () => {
-  it('blocks production readiness when no native provider is installed', async () => {
-    const readiness = evaluateNativeSigningKeyProviderReadiness();
-
-    assert.equal(readiness.eligibleForProduction, false);
-    assert.match(readiness.summary, /Reviewed native implementation evidence is missing/);
     await assert.rejects(
       blockedNativeSigningKeyProvider.signChallenge(new Uint8Array([1, 2, 3])),
       /not installed/,
     );
   });
 
-  it('does not treat SecureStore-held private keys as production non-exportable evidence', () => {
-    const readiness = evaluateNativeSigningKeyProviderReadiness(
-      secureStorePrototypeSigningKeyProviderReadiness,
+  it('marks SecureStore prototype keys as demo-only and not production evidence', () => {
+    assert.equal(secureStorePrototypeSigningKeyProviderReadiness.productionReady, false);
+    assert.equal(
+      secureStorePrototypeSigningKeyProviderReadiness.keyProtectionLevel,
+      'prototype-securestore',
     );
-
-    assert.equal(readiness.eligibleForProduction, false);
-    assert(readiness.blockers.some((blocker) => blocker.includes('not native non-exportable')));
-    assert(readiness.blockers.some((blocker) => blocker.includes('exportable to JavaScript')));
-    assert.throws(
-      () => assertNativeSigningKeyProviderReadyForProduction(secureStorePrototypeSigningKeyProviderReadiness),
-      /Production native signing key provider remains blocked/,
+    assert.equal(secureStorePrototypeSigningKeyProviderReadiness.privateKeyExportable, true);
+    assert.equal(secureStorePrototypeSigningKeyProviderReadiness.canSignChallenge, true);
+    assert.equal(secureStorePrototypeSigningKeyProviderReadiness.canExportPublicKeyOnly, false);
+    assert.match(
+      secureStorePrototypeSigningKeyProviderReadiness.evidenceSummary,
+      /JavaScript can still access key material/,
     );
-  });
-
-  it('accepts only reviewed non-exportable public-key-only native provider evidence', () => {
-    const readiness = evaluateNativeSigningKeyProviderReadiness(reviewedNativeProvider);
-
-    assert.equal(readiness.eligibleForProduction, true);
-    assert.doesNotThrow(() => assertNativeSigningKeyProviderReadyForProduction(reviewedNativeProvider));
   });
 });
-

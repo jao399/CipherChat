@@ -1,33 +1,53 @@
 import type { PublicKeyMaterial } from './cryptoContracts';
 
-export type NativeSigningKeyEvidence = {
+export type NativeSigningPlatform = 'android' | 'ios' | 'web' | 'unavailable';
+
+export type NativeSigningEvidenceStatus = 'missing' | 'partial' | 'complete';
+
+export type NativeSigningKeyProtectionLevel =
+  | 'prototype-securestore'
+  | 'os-backed-exportable-unknown'
+  | 'android-keystore-non-exportable'
+  | 'ios-keychain-non-exportable'
+  | 'ios-secure-enclave-non-exportable'
+  | 'unavailable';
+
+export type PrivateKeyExportableState = boolean | 'unknown';
+
+export type NativeSigningKeyProviderDescriptor = {
+  providerId: string;
+  platformSupport: NativeSigningPlatform[];
+  productionReady: boolean;
+  evidenceStatus: NativeSigningEvidenceStatus;
+  keyProtectionLevel: NativeSigningKeyProtectionLevel;
+  canGenerateKey: boolean;
+  canExportPublicKeyOnly: boolean;
+  canSignChallenge: boolean;
+  privateKeyExportable: PrivateKeyExportableState;
+  requiresNativeBuild: boolean;
+  supportsRotation: boolean;
+  supportsRevocation: boolean;
   reviewedImplementation: boolean;
   runtimeEvidenceAttached: boolean;
-  nonExportablePrivateKey: boolean;
-  publicKeyExportOnly: boolean;
-  privateKeyExportableToJavaScript: boolean;
-  platformBackedBy?: 'android-keystore' | 'ios-keychain' | 'secure-enclave' | 'unknown';
+  requiredEvidence: string[];
+  limitations: string[];
   evidenceSummary: string;
 };
 
-export type NativeSigningKeyProviderReadinessInput = {
-  id: string;
-  productionReady: boolean;
-  algorithm: 'ed25519';
-  keyStorage: 'expo-secure-store' | 'native-non-exportable';
-  supportsRotation: boolean;
-  supportsRevocation: boolean;
-  evidence: NativeSigningKeyEvidence;
-};
+export type NativeSigningKeyProviderReadinessInput = NativeSigningKeyProviderDescriptor;
 
-export type NativeSigningKeyProviderReadiness = {
-  provider: string;
-  eligibleForProduction: boolean;
-  summary: string;
-  blockers: string[];
-};
+export type NativeSigningKeyEvidence = Pick<
+  NativeSigningKeyProviderDescriptor,
+  | 'evidenceStatus'
+  | 'evidenceSummary'
+  | 'keyProtectionLevel'
+  | 'privateKeyExportable'
+  | 'requiredEvidence'
+  | 'reviewedImplementation'
+  | 'runtimeEvidenceAttached'
+>;
 
-export type NativeSigningKeyProvider = NativeSigningKeyProviderReadinessInput & {
+export type NativeSigningKeyProvider = NativeSigningKeyProviderDescriptor & {
   generateKeyPair(): Promise<{ publicKey: PublicKeyMaterial }>;
   getPublicKey(): Promise<PublicKeyMaterial | null>;
   signChallenge(challenge: Uint8Array): Promise<Uint8Array>;
@@ -36,19 +56,33 @@ export type NativeSigningKeyProvider = NativeSigningKeyProviderReadinessInput & 
   getEvidence(): NativeSigningKeyEvidence;
 };
 
+const missingNativeProviderEvidence = [
+  'Reviewed Android Keystore or iOS Keychain/Secure Enclave implementation',
+  'Runtime device proof that private key bytes are non-exportable',
+  'Public-key-only export verification',
+  'Challenge signing proof without exposing private key bytes to JavaScript',
+  'Rotation and revocation behavior evidence',
+];
+
 export const blockedNativeSigningKeyProvider: NativeSigningKeyProvider = {
-  id: 'native-non-exportable-signing-key-missing',
-  algorithm: 'ed25519',
-  evidence: {
-    evidenceSummary: 'No reviewed native Android Keystore/iOS Keychain provider is installed.',
-    nonExportablePrivateKey: false,
-    privateKeyExportableToJavaScript: false,
-    publicKeyExportOnly: false,
-    reviewedImplementation: false,
-    runtimeEvidenceAttached: false,
-  },
-  keyStorage: 'native-non-exportable',
+  providerId: 'native-non-exportable-signing-key-missing',
+  canExportPublicKeyOnly: false,
+  canGenerateKey: false,
+  canSignChallenge: false,
+  evidenceStatus: 'missing',
+  evidenceSummary: 'No reviewed native Android Keystore/iOS Keychain provider is installed.',
+  keyProtectionLevel: 'unavailable',
+  limitations: [
+    'Production device authentication must remain blocked until a reviewed native provider is installed.',
+    'Expo Go and web cannot prove native non-exportable private-key behavior.',
+  ],
+  platformSupport: ['unavailable'],
+  privateKeyExportable: 'unknown',
   productionReady: false,
+  requiredEvidence: missingNativeProviderEvidence,
+  requiresNativeBuild: true,
+  reviewedImplementation: false,
+  runtimeEvidenceAttached: false,
   supportsRevocation: false,
   supportsRotation: false,
   async generateKeyPair() {
@@ -58,7 +92,15 @@ export const blockedNativeSigningKeyProvider: NativeSigningKeyProvider = {
     return null;
   },
   getEvidence() {
-    return this.evidence;
+    return {
+      evidenceStatus: this.evidenceStatus,
+      evidenceSummary: this.evidenceSummary,
+      keyProtectionLevel: this.keyProtectionLevel,
+      privateKeyExportable: this.privateKeyExportable,
+      requiredEvidence: this.requiredEvidence,
+      reviewedImplementation: this.reviewedImplementation,
+      runtimeEvidenceAttached: this.runtimeEvidenceAttached,
+    };
   },
   async revokeKey() {
     throw new Error('Native non-exportable signing key provider is not installed.');
@@ -71,83 +113,27 @@ export const blockedNativeSigningKeyProvider: NativeSigningKeyProvider = {
   },
 };
 
-export const secureStorePrototypeSigningKeyProviderReadiness: NativeSigningKeyProviderReadinessInput = {
-  id: 'ed25519-noble-os-secure-store-v1',
-  algorithm: 'ed25519',
-  evidence: {
-    evidenceSummary:
-      'Expo SecureStore keeps private bytes outside AsyncStorage but JavaScript can still read the key inside the signing store.',
-    nonExportablePrivateKey: false,
-    privateKeyExportableToJavaScript: true,
-    publicKeyExportOnly: false,
-    reviewedImplementation: false,
-    runtimeEvidenceAttached: false,
-  },
-  keyStorage: 'expo-secure-store',
+export const secureStorePrototypeSigningKeyProviderReadiness: NativeSigningKeyProviderDescriptor = {
+  providerId: 'ed25519-noble-os-secure-store-v1',
+  canExportPublicKeyOnly: false,
+  canGenerateKey: true,
+  canSignChallenge: true,
+  evidenceStatus: 'partial',
+  evidenceSummary:
+    'Expo SecureStore keeps prototype private bytes outside AsyncStorage, but JavaScript can still access key material inside the signing store.',
+  keyProtectionLevel: 'prototype-securestore',
+  limitations: [
+    'Safe for demo device identity signing only.',
+    'Does not prove non-exportable Android Keystore or iOS Keychain/Secure Enclave behavior.',
+    'Must not satisfy production encrypted messaging requirements.',
+  ],
+  platformSupport: ['android', 'ios'],
+  privateKeyExportable: true,
   productionReady: false,
+  requiredEvidence: missingNativeProviderEvidence,
+  requiresNativeBuild: false,
+  reviewedImplementation: false,
+  runtimeEvidenceAttached: false,
   supportsRevocation: true,
   supportsRotation: true,
 };
-
-export function evaluateNativeSigningKeyProviderReadiness(
-  provider: NativeSigningKeyProviderReadinessInput = blockedNativeSigningKeyProvider,
-): NativeSigningKeyProviderReadiness {
-  const blockers: string[] = [];
-
-  if (!provider.productionReady) {
-    blockers.push('Provider is not marked production-ready.');
-  }
-
-  if (provider.keyStorage !== 'native-non-exportable') {
-    blockers.push('Private key storage is not native non-exportable storage.');
-  }
-
-  if (!provider.evidence.reviewedImplementation) {
-    blockers.push('Reviewed native implementation evidence is missing.');
-  }
-
-  if (!provider.evidence.runtimeEvidenceAttached) {
-    blockers.push('Runtime device evidence is missing.');
-  }
-
-  if (!provider.evidence.nonExportablePrivateKey) {
-    blockers.push('Private key non-exportability is not proven.');
-  }
-
-  if (!provider.evidence.publicKeyExportOnly) {
-    blockers.push('Provider has not proven public-key-only export behavior.');
-  }
-
-  if (provider.evidence.privateKeyExportableToJavaScript) {
-    blockers.push('Private key material is exportable to JavaScript.');
-  }
-
-  if (!provider.supportsRotation) {
-    blockers.push('Key rotation support is missing.');
-  }
-
-  if (!provider.supportsRevocation) {
-    blockers.push('Key revocation support is missing.');
-  }
-
-  return {
-    blockers,
-    eligibleForProduction: blockers.length === 0,
-    provider: provider.id,
-    summary:
-      blockers.length === 0
-        ? `${provider.id} is eligible for production device authentication signing.`
-        : `Production native signing key provider remains blocked: ${blockers.join(' ')}`,
-  };
-}
-
-export function assertNativeSigningKeyProviderReadyForProduction(
-  provider?: NativeSigningKeyProviderReadinessInput,
-) {
-  const readiness = evaluateNativeSigningKeyProviderReadiness(provider);
-
-  if (!readiness.eligibleForProduction) {
-    throw new Error(readiness.summary);
-  }
-}
-

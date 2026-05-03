@@ -24,10 +24,8 @@ import {
   type SqlCipherRuntimeVerificationResult,
 } from '../../services/local';
 import type { EncryptedLocalDatabaseStatus } from '../../services/ports';
-import {
-  evaluateNativeSigningKeyProviderReadiness,
-  secureStorePrototypeSigningKeyProviderReadiness,
-} from '../../security/nativeSigningKeyProvider';
+import { secureStorePrototypeSigningKeyProviderReadiness } from '../../security/nativeSigningKeyProvider';
+import { evaluateNativeSigningKeyReadiness } from '../../security/nativeSigningKeyReadiness';
 import { evaluateFileCryptoReadiness } from '../../security/fileCryptoPolicy';
 import {
   evaluatePushProviderReadiness,
@@ -73,7 +71,7 @@ export function SettingsScreen() {
       ? `Available - schema v${encryptedDatabaseStatus.schemaVersion}`
       : encryptedDatabaseStatus.lastError ?? 'Unavailable until development build is installed'
     : `Schema v${encryptedDatabase.schemaVersion} planned`;
-  const nativeSigningReadiness = evaluateNativeSigningKeyProviderReadiness(
+  const nativeSigningReadiness = evaluateNativeSigningKeyReadiness(
     secureStorePrototypeSigningKeyProviderReadiness,
   );
   const fileCryptoReadiness = evaluateFileCryptoReadiness();
@@ -219,6 +217,24 @@ export function SettingsScreen() {
       ? `${migrationResult.migratedCounts.localMessages + migrationResult.migratedCounts.remoteTrustRecords + migrationResult.migratedCounts.outboundQueueItems + migrationResult.migratedCounts.inboundReceipts} records copied`
       : migrationResult.reason ?? 'Migration did not run'
     : t('settings.copiesEncryptedOnly');
+  const nativeSigningStatusLabel = {
+    blocked: t('settings.nativeSigningStatus.blocked'),
+    'development-only': t('settings.nativeSigningStatus.developmentOnly'),
+    ready: t('settings.nativeSigningStatus.ready'),
+    unavailable: t('settings.nativeSigningStatus.unavailable'),
+  }[nativeSigningReadiness.status];
+  const nativeSigningProtectionLabel = {
+    'android-keystore-non-exportable': t('settings.nativeSigningProtection.androidKeystore'),
+    'ios-keychain-non-exportable': t('settings.nativeSigningProtection.iosKeychain'),
+    'ios-secure-enclave-non-exportable': t('settings.nativeSigningProtection.secureEnclave'),
+    'os-backed-exportable-unknown': t('settings.nativeSigningProtection.unknownExportable'),
+    'prototype-securestore': t('settings.nativeSigningProtection.prototypeSecureStore'),
+    unavailable: t('settings.nativeSigningProtection.unavailable'),
+  }[nativeSigningReadiness.keyProtectionLevel];
+  const nativeSigningEvidenceSubtitle =
+    nativeSigningReadiness.missingEvidence.length > 0
+      ? nativeSigningReadiness.missingEvidence.join(' | ')
+      : t('settings.nativeSigningEvidenceComplete');
 
   const checkMigrationReadiness = async () => {
     setCheckingMigrationReadiness(true);
@@ -424,6 +440,30 @@ export function SettingsScreen() {
           title={t('settings.nativeSigningProvider')}
           subtitle={nativeSigningReadiness.summary}
           testID="settings-native-signing-key-provider"
+        />
+        <SettingRow
+          icon={nativeSigningReadiness.safeForProduction ? 'checkmark-circle' : 'alert-circle'}
+          title={t('settings.nativeSigningStatus')}
+          subtitle={nativeSigningStatusLabel}
+          testID="settings-native-signing-key-status"
+        />
+        <SettingRow
+          icon="lock-closed"
+          title={t('settings.nativeSigningProtectionLevel')}
+          subtitle={nativeSigningProtectionLabel}
+          testID="settings-native-signing-key-protection"
+        />
+        <SettingRow
+          icon={nativeSigningReadiness.evidenceStatus === 'complete' ? 'document-text' : 'document-text-outline'}
+          title={t('settings.nativeSigningProductionEvidence')}
+          subtitle={nativeSigningEvidenceSubtitle}
+          testID="settings-native-signing-key-evidence"
+        />
+        <SettingRow
+          icon="information-circle"
+          title={t('settings.nativeSigningPrototypeOnly')}
+          subtitle={t('settings.nativeSigningProductionRequires')}
+          testID="settings-native-signing-key-prototype-note"
         />
         <SettingRow
           icon={status.messageCryptoReady ? 'shield-checkmark' : 'warning'}

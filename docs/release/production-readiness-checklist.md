@@ -11,6 +11,7 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Release smoke workflow passes before promoting a backend build.
 - `npm run release:smoke` passes against the deployed API.
 - `npm run verify:dev-build-config` passes.
+- `npm run verify:native-key-provider-boundary` passes.
 - `npm run verify:signal-adapter-readiness` passes.
 - `npm run verify:signal-integration-plan` passes.
 - `npm run verify:file-crypto-plan` passes.
@@ -53,6 +54,8 @@ CipherChat is still a prototype. This checklist defines the minimum gates before
 - Outbound queue persistence rejects plaintext-shaped fields.
 - Device identity private keys move toward non-exportable Keychain/Keystore usage where possible.
 - Native signing key provider readiness reports reviewed implementation evidence, runtime evidence, non-exportable private keys, public-key-only export behavior, rotation support, and revocation support.
+- Phase 87 native signing key readiness reports platform support, key protection level, evidence status, private-key exportability, required evidence, demo safety, and production safety.
+- SecureStore prototype evidence must not satisfy production non-exportable-key requirements.
 
 ## Server Security
 
