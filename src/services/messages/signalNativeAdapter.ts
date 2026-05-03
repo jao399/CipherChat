@@ -22,6 +22,29 @@ export type SignalNativeAdapterReadinessReport = {
   limitations: string[];
 };
 
+export type SignalAndroidBridgeReadiness = {
+  adapterInstalled: boolean;
+  platform: 'android';
+  library: 'official org.signal libsignal target';
+  androidPackage: 'org.signal:libsignal-android';
+  companionPackage: 'org.signal:libsignal-client';
+  officialLibsignalVersion: string;
+  productionReady: false;
+  missing: string[];
+};
+
+export type SignalAndroidNativeBridge = {
+  getReadiness(): Promise<SignalAndroidBridgeReadiness>;
+  encryptOneToOne(payload: string): Promise<never>;
+  decryptOneToOne(payload: string): Promise<never>;
+};
+
+type ReactNativeModuleContainer = {
+  NativeModules?: {
+    CipherChatSignalBridge?: SignalAndroidNativeBridge;
+  };
+};
+
 export type SignalNativePublicIdentity = {
   accountId: string;
   deviceId: string;
@@ -123,6 +146,16 @@ export type SignalNativeAdapter = {
 
 export const signalNativeAdapterContractVersion = 'signal-native-adapter-contract-v1';
 
+export const officialAndroidLibsignalVersion = '0.86.5';
+
+export const missingAndroidLibsignalBridgeRequirements = [
+  'X3DH identity and prekey generation',
+  'Double Ratchet encrypt/decrypt',
+  'Encrypted Signal session storage',
+  'Safety-number and key-change verification',
+  'External cryptography review evidence',
+];
+
 export const requiredSignalNativeAdapterEvidence = [
   'Pinned official libsignal version for Android and iOS',
   'Android Java/Kotlin bridge proof using official org.signal packages',
@@ -151,4 +184,55 @@ export function isSignalNativeAdapterProductionEvidenceComplete(
     report.officialLibsignalVersion.length > 0 &&
     expectedPrekeyBundleFormat === 'signal-x3dh-v1'
   );
+}
+
+export async function readAndroidSignalBridgeReadiness(
+  bridge?: SignalAndroidNativeBridge,
+): Promise<SignalAndroidBridgeReadiness> {
+  if (!bridge) {
+    return {
+      adapterInstalled: false,
+      androidPackage: 'org.signal:libsignal-android',
+      companionPackage: 'org.signal:libsignal-client',
+      library: 'official org.signal libsignal target',
+      missing: [
+        'Android native bridge module',
+        ...missingAndroidLibsignalBridgeRequirements,
+      ],
+      officialLibsignalVersion: officialAndroidLibsignalVersion,
+      platform: 'android',
+      productionReady: false,
+    };
+  }
+
+  const readiness = await bridge.getReadiness();
+
+  return {
+    ...readiness,
+    adapterInstalled: readiness.adapterInstalled === true,
+    androidPackage: 'org.signal:libsignal-android',
+    companionPackage: 'org.signal:libsignal-client',
+    library: 'official org.signal libsignal target',
+    missing: readiness.productionReady ? [] : readiness.missing,
+    officialLibsignalVersion: readiness.officialLibsignalVersion || officialAndroidLibsignalVersion,
+    platform: 'android',
+    productionReady: false,
+  };
+}
+
+function loadReactNativeModules(): ReactNativeModuleContainer['NativeModules'] | undefined {
+  try {
+    const dynamicRequire = (0, eval)('require') as undefined | ((moduleName: string) => ReactNativeModuleContainer);
+    return dynamicRequire?.('react-native')?.NativeModules;
+  } catch {
+    return undefined;
+  }
+}
+
+export function getInstalledAndroidSignalNativeBridge() {
+  return loadReactNativeModules()?.CipherChatSignalBridge;
+}
+
+export function readInstalledAndroidSignalBridgeReadiness() {
+  return readAndroidSignalBridgeReadiness(getInstalledAndroidSignalNativeBridge());
 }

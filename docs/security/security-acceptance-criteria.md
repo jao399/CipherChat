@@ -25,6 +25,7 @@ These criteria are production blockers. CipherChat must not process production u
 - Production Signal adapter registration must be explicit, startup-checked, and backed by release evidence for the installed native adapter.
 - Production Signal implementation must satisfy the Phase 76 Signal/libsignal integration plan before live one-to-one sends are enabled.
 - Production Signal implementation must satisfy the Gate 2 libsignal feasibility requirements and must not treat the TypeScript native adapter contract as production evidence.
+- The Gate 2a Android libsignal bridge skeleton must not satisfy production Signal readiness until real X3DH, Double Ratchet, encrypted session storage, safety-number behavior, and external review evidence pass.
 - One-time prekey claim routes must consume at most one prekey transactionally and avoid returning reusable prekey arrays for production session setup.
 - Prekey inventory status must expose counts and thresholds only, never key material or message/contact metadata.
 - Prekey top-up routes must accept only client-generated public one-time prekeys from the authenticated current device and must not log or return prekey values.
@@ -100,6 +101,7 @@ These criteria are production blockers. CipherChat must not process production u
 - SQLCipher evidence helper output: `npm run collect:sqlcipher-evidence`
 - Signal integration plan gate output: `npm run verify:signal-integration-plan`
 - Gate 2 feasibility spike evidence: `docs/architecture/gate-02-libsignal-feasibility-spike.md`
+- Gate 2a Android bridge skeleton evidence: `docs/architecture/gate-02a-android-libsignal-bridge-skeleton.md`
 - File crypto plan gate output: `npm run verify:file-crypto-plan`
 - Audit readiness gate output: `npm run verify:audit-readiness`
 - External review package gate output: `npm run verify:external-review-package`

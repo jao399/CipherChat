@@ -110,8 +110,15 @@ export {
 } from './signalAdapterReadiness';
 export {
   isSignalNativeAdapterProductionEvidenceComplete,
+  officialAndroidLibsignalVersion,
+  missingAndroidLibsignalBridgeRequirements,
   requiredSignalNativeAdapterEvidence,
   signalNativeAdapterContractVersion,
+  getInstalledAndroidSignalNativeBridge,
+  readAndroidSignalBridgeReadiness,
+  readInstalledAndroidSignalBridgeReadiness,
+  type SignalAndroidBridgeReadiness,
+  type SignalAndroidNativeBridge,
   type SignalNativeAdapter,
   type SignalNativeAdapterReadinessReport,
   type SignalNativeCreateSessionInput,

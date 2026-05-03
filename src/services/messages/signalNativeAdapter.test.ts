@@ -6,7 +6,10 @@ import { signalX3dhPrekeyBundleFormat } from '../../security/signalPrekeyBundle'
 import {
   clearRegisteredSignalOneToOneCryptoAdapter,
   isSignalNativeAdapterProductionEvidenceComplete,
+  officialAndroidLibsignalVersion,
+  missingAndroidLibsignalBridgeRequirements,
   prototypeMessageEncryptionProvider,
+  readAndroidSignalBridgeReadiness,
   requiredSignalNativeAdapterEvidence,
   selectMessageEncryptionProvider,
   signalNativeAdapterContractVersion,
@@ -62,6 +65,46 @@ describe('Signal native adapter feasibility boundary', () => {
     assert.equal(prototypeMessageEncryptionProvider.id, 'prototype-sha256-envelope-v1');
     assert.equal(prototypeMessageEncryptionProvider.mockReady, true);
     assert.equal(prototypeMessageEncryptionProvider.productionReady, false);
+  });
+
+  it('reports missing Android native bridge without enabling production readiness', async () => {
+    const readiness = await readAndroidSignalBridgeReadiness();
+
+    assert.equal(readiness.adapterInstalled, false);
+    assert.equal(readiness.platform, 'android');
+    assert.equal(readiness.officialLibsignalVersion, officialAndroidLibsignalVersion);
+    assert.equal(readiness.productionReady, false);
+    assert(readiness.missing.includes('Android native bridge module'));
+    assert(readiness.missing.includes('Double Ratchet encrypt/decrypt'));
+    assert.equal(selectMessageEncryptionProvider('live').productionReady, false);
+  });
+
+  it('reports Android bridge skeleton metadata as installed but still production blocked', async () => {
+    const readiness = await readAndroidSignalBridgeReadiness({
+      async getReadiness() {
+        return {
+          adapterInstalled: true,
+          androidPackage: 'org.signal:libsignal-android',
+          companionPackage: 'org.signal:libsignal-client',
+          library: 'official org.signal libsignal target',
+          missing: missingAndroidLibsignalBridgeRequirements,
+          officialLibsignalVersion: officialAndroidLibsignalVersion,
+          platform: 'android',
+          productionReady: false,
+        };
+      },
+      async decryptOneToOne() {
+        throw new Error('not implemented');
+      },
+      async encryptOneToOne() {
+        throw new Error('not implemented');
+      },
+    });
+
+    assert.equal(readiness.adapterInstalled, true);
+    assert.equal(readiness.productionReady, false);
+    assert(readiness.missing.includes('X3DH identity and prekey generation'));
+    assert(readiness.missing.includes('External cryptography review evidence'));
   });
 
   it('requires complete reviewed evidence before a native adapter report can be considered complete', () => {
