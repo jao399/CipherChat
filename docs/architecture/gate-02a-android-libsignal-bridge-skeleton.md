@@ -44,12 +44,12 @@ The skeleton exposes only readiness metadata:
 
 - `adapterInstalled: true`,
 - `platform: android`,
-- `library: official org.signal libsignal target`,
+- `libraryTarget: official libsignal Android artifact`,
 - `androidPackage: org.signal:libsignal-android`,
 - `companionPackage: org.signal:libsignal-client`,
 - `officialLibsignalVersion: 0.86.5`,
 - `productionReady: false`,
-- missing implementation requirements.
+- `missingRequirements` with the implementation and evidence still required.
 
 The skeleton rejects `encryptOneToOne` and `decryptOneToOne` with `CIPHERCHAT_SIGNAL_NOT_IMPLEMENTED`.
 
@@ -60,8 +60,10 @@ Production readiness remains blocked because these are not implemented:
 - X3DH identity and prekey generation,
 - Double Ratchet encrypt/decrypt,
 - encrypted Signal session storage,
-- safety-number and key-change verification,
-- external cryptography review evidence.
+- safety-number verification,
+- key-change warnings,
+- Android runtime evidence,
+- external security review.
 
 ## TypeScript Wrapper
 

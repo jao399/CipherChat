@@ -74,8 +74,9 @@ describe('Signal native adapter feasibility boundary', () => {
     assert.equal(readiness.platform, 'android');
     assert.equal(readiness.officialLibsignalVersion, officialAndroidLibsignalVersion);
     assert.equal(readiness.productionReady, false);
-    assert(readiness.missing.includes('Android native bridge module'));
-    assert(readiness.missing.includes('Double Ratchet encrypt/decrypt'));
+    assert.equal(readiness.libraryTarget, 'official libsignal Android artifact');
+    assert(readiness.missingRequirements.includes('Android native bridge module'));
+    assert(readiness.missingRequirements.includes('Double Ratchet encrypt/decrypt'));
     assert.equal(selectMessageEncryptionProvider('live').productionReady, false);
   });
 
@@ -86,8 +87,8 @@ describe('Signal native adapter feasibility boundary', () => {
           adapterInstalled: true,
           androidPackage: 'org.signal:libsignal-android',
           companionPackage: 'org.signal:libsignal-client',
-          library: 'official org.signal libsignal target',
-          missing: missingAndroidLibsignalBridgeRequirements,
+          libraryTarget: 'official libsignal Android artifact',
+          missingRequirements: missingAndroidLibsignalBridgeRequirements,
           officialLibsignalVersion: officialAndroidLibsignalVersion,
           platform: 'android',
           productionReady: false,
@@ -103,8 +104,8 @@ describe('Signal native adapter feasibility boundary', () => {
 
     assert.equal(readiness.adapterInstalled, true);
     assert.equal(readiness.productionReady, false);
-    assert(readiness.missing.includes('X3DH identity and prekey generation'));
-    assert(readiness.missing.includes('External cryptography review evidence'));
+    assert(readiness.missingRequirements.includes('X3DH session setup'));
+    assert(readiness.missingRequirements.includes('External security review'));
   });
 
   it('requires complete reviewed evidence before a native adapter report can be considered complete', () => {

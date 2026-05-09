@@ -25,12 +25,12 @@ export type SignalNativeAdapterReadinessReport = {
 export type SignalAndroidBridgeReadiness = {
   adapterInstalled: boolean;
   platform: 'android';
-  library: 'official org.signal libsignal target';
+  libraryTarget: 'official libsignal Android artifact';
   androidPackage: 'org.signal:libsignal-android';
   companionPackage: 'org.signal:libsignal-client';
   officialLibsignalVersion: string;
   productionReady: false;
-  missing: string[];
+  missingRequirements: string[];
 };
 
 export type SignalAndroidNativeBridge = {
@@ -149,11 +149,13 @@ export const signalNativeAdapterContractVersion = 'signal-native-adapter-contrac
 export const officialAndroidLibsignalVersion = '0.86.5';
 
 export const missingAndroidLibsignalBridgeRequirements = [
-  'X3DH identity and prekey generation',
+  'X3DH session setup',
   'Double Ratchet encrypt/decrypt',
   'Encrypted Signal session storage',
-  'Safety-number and key-change verification',
-  'External cryptography review evidence',
+  'Safety-number verification',
+  'Key-change warnings',
+  'Android runtime evidence',
+  'External security review',
 ];
 
 export const requiredSignalNativeAdapterEvidence = [
@@ -194,8 +196,8 @@ export async function readAndroidSignalBridgeReadiness(
       adapterInstalled: false,
       androidPackage: 'org.signal:libsignal-android',
       companionPackage: 'org.signal:libsignal-client',
-      library: 'official org.signal libsignal target',
-      missing: [
+      libraryTarget: 'official libsignal Android artifact',
+      missingRequirements: [
         'Android native bridge module',
         ...missingAndroidLibsignalBridgeRequirements,
       ],
@@ -206,14 +208,17 @@ export async function readAndroidSignalBridgeReadiness(
   }
 
   const readiness = await bridge.getReadiness();
+  const missingRequirements = Array.isArray(readiness.missingRequirements)
+    ? readiness.missingRequirements
+    : missingAndroidLibsignalBridgeRequirements;
 
   return {
     ...readiness,
     adapterInstalled: readiness.adapterInstalled === true,
     androidPackage: 'org.signal:libsignal-android',
     companionPackage: 'org.signal:libsignal-client',
-    library: 'official org.signal libsignal target',
-    missing: readiness.productionReady ? [] : readiness.missing,
+    libraryTarget: 'official libsignal Android artifact',
+    missingRequirements: readiness.productionReady ? [] : missingRequirements,
     officialLibsignalVersion: readiness.officialLibsignalVersion || officialAndroidLibsignalVersion,
     platform: 'android',
     productionReady: false,

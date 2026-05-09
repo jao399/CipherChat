@@ -51,20 +51,22 @@ public final class CipherChatSignalBridgeModule extends ReactContextBaseJavaModu
     WritableMap readiness = Arguments.createMap();
     WritableArray missing = Arguments.createArray();
 
-    missing.pushString("X3DH identity and prekey generation");
+    missing.pushString("X3DH session setup");
     missing.pushString("Double Ratchet encrypt/decrypt");
     missing.pushString("Encrypted Signal session storage");
-    missing.pushString("Safety-number and key-change verification");
-    missing.pushString("External cryptography review evidence");
+    missing.pushString("Safety-number verification");
+    missing.pushString("Key-change warnings");
+    missing.pushString("Android runtime evidence");
+    missing.pushString("External security review");
 
     readiness.putBoolean("adapterInstalled", true);
     readiness.putString("platform", "android");
-    readiness.putString("library", "official org.signal libsignal target");
+    readiness.putString("libraryTarget", "official libsignal Android artifact");
     readiness.putString("androidPackage", "org.signal:libsignal-android");
     readiness.putString("companionPackage", "org.signal:libsignal-client");
     readiness.putString("officialLibsignalVersion", LIBSIGNAL_VERSION);
     readiness.putBoolean("productionReady", false);
-    readiness.putArray("missing", missing);
+    readiness.putArray("missingRequirements", missing);
 
     promise.resolve(readiness);
   }
